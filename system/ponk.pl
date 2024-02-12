@@ -21,27 +21,13 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.51 20240209'; # version of the program
+my $VER = '0.01 20240212'; # version of the program
 
-my @features = ('first names',
-                'surnames (male and female tied)',
-                'phone numbers',
-                'e-mails',
-                'street names (incl. multiword)',
-                'street numbers',
-                'town/town part names (incl. multiword)',
-                'ZIP codes',
-                'company names (incl. multiword)',
-                'commercial register number (IČO)',
-                'tax register number (DIČ)',
-                'land registration numbers (registrační čísla pozemků)',
-                'birth registration numbers (rodná čísla)',
-                'dates of birth/death',
-                'agenda reference numbers (čísla jednací)');
+my @features = ('nothing yet');
 
 my $FEATS = join(' • ', @features); 
 
-my $DESC = "<h4>Categories handled in this MasKIT version:</h4>\n<ul>\n";
+my $DESC = "<h4>Features in this PONK version:</h4>\n<ul>\n";
 
 foreach my $feature (@features) {
   $DESC .= "<li>$feature\n";
@@ -49,14 +35,9 @@ foreach my $feature (@features) {
 
 $DESC .= <<END_DESC;
 </ul>
-<h4>Categories NOT yet handled:</h4>
+<h4>Planned features:</h4>
 <ul>
-<li>ID card numbers (čísla občanských průkazů)
-<li>driver licence numbers
-<li>passport numbers
-<li>account numbers
-<li>data box numbers (čísla datových schránek)
-<li>Údaje o spisech: spisové značky, čárové/qr kódy
+<li>TO-DO
 </ul>
 END_DESC
 
@@ -65,7 +46,7 @@ my $log_level = 0; # limited (0=full, 1=limited, 2=anonymous)
 my $udpipe_service_url = 'http://lindat.mff.cuni.cz/services/udpipe/api';
 my $nametag_service_url = 'http://lindat.mff.cuni.cz/services/nametag/api';
 my $hostname = hostname;
-if ($hostname eq 'maskit') { # if running at this server, use versions of udpipe and nametag that do not log texts
+if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe and nametag that do not log texts
   $udpipe_service_url = 'http://udpipe:11001';
   $nametag_service_url = 'http://udpipe:11002';
   $VER .= ' (no text logging)';
@@ -181,7 +162,7 @@ options:  -i|--input-file [input text file name]
          -of|--output-format [output format: txt (default), html, conllu]
           -d|--diff (display the original expressions next to the anonymized versions)
          -ne|--named-entities [scope: 1 - add NameTag marks to the anonymized versions, 2 - to all recognized tokens]
-         -os|--output-statistics (add MasKIT statistics to output; if present, output is JSON with two items: data (in output-format) and stats (in HTML))
+         -os|--output-statistics (add PONK statistics to output; if present, output is JSON with two items: data (in output-format) and stats (in HTML))
          -sf|--store-format [format: log the output in the given format: txt, html, conllu]
          -ss|--store-statistics (log statistics to an HTML file)
           -v|--version (prints the version of the program and ends)
@@ -197,7 +178,7 @@ END_TEXT
 ###################################################################################
 
 mylog(2, "\n####################################################################\n");
-mylog(2, "MasKIT $VER\n");
+mylog(2, "PONK $VER\n");
 
 mylog(0, "Arguments:\n");
  
@@ -266,7 +247,7 @@ if ($add_NE) {
 }
 
 if ($output_statistics) {
-  mylog(0, " - add MasKIT statistics to the output; output will be JSON with two items: data (in $output_format) and stats (in HTML)\n");
+  mylog(0, " - add PONK statistics to the output; output will be JSON with two items: data (in $output_format) and stats (in HTML)\n");
 }
 
 $store_format = lc($store_format) if $store_format;
@@ -281,7 +262,7 @@ if ($store_format) {
 }
 
 if ($store_statistics) {
-  mylog(0, " - log MasKIT statistics in an HTML file\n");
+  mylog(0, " - log PONK statistics in an HTML file\n");
 }
 
 mylog(0, "\n");
@@ -294,13 +275,17 @@ my %class_constraint2replacements; # NameTag class + constraint => replacements 
 my %class_constraint2group; # grouping e.g. first names across cases and surnames across cases and genders together
 my %class2constraints; # which constraints does the class require (if any); the individual constraints are separated by '_'; an empty constraint is represented by 'NoConstraint'
 
+
+my %group2reordering; # reordering of replacements for a given group
+# values of the hash are arrays that contain new indexes for each array index; the length of the array is the same as number of replacements in one replacement line in the given group
+
+=item
+
 mylog(2, "Reading replacements from $replacements_file\n");
 
 open (REPLACEMENTS, '<:encoding(utf8)', $replacements_file)
   or die "Could not open file '$replacements_file' for reading: $!";
 
-my %group2reordering; # reordering of replacements for a given group
-# values of the hash are arrays that contain new indexes for each array index; the length of the array is the same as number of replacements in one replacement line in the given group
 
 my $replacements_count = 0;
 while (<REPLACEMENTS>) {
@@ -336,6 +321,7 @@ mylog(2, "$replacements_count replacement rules have been read from file $replac
 
 close(REPLACEMENTS);
 
+=cut
 
 ###################################################################################
 # Now let us read the text file that should be anonymized
@@ -2152,7 +2138,7 @@ END_HEAD
 
   $stats .= "<body>\n";
 
-  $stats .= "<h3>MasKIT version $VER</h3>\n";
+  $stats .= "<h3>PONK version $VER</h3>\n";
   
   $stats .= "<p>Number of sentences: $sentences_count\n";
   $stats .= "<br/>Number of tokens: $tokens_count\n";
