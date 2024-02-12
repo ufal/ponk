@@ -53,8 +53,6 @@ if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe a
   $log_level = 2; # anonymous
 }
 
-
-
 #############################
 # Colours for html
 
@@ -624,7 +622,7 @@ The message only gets printed (to STDERR) if given $level is greater than or equ
 sub mylog {
   my ($level, $msg) = @_;
   if ($level >= $log_level) {
-    print STDERR "maskit: $msg";
+    print STDERR "ponk: $msg";
   }
 }
 

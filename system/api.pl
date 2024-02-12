@@ -82,7 +82,8 @@ any '/api/process' => sub {
     my @cmd = ('/usr/bin/perl', "$script_dir/ponk.pl",
                '--stdin',
                '--input-format', $input_format, 
-               '--output-format', $output_format);
+               '--output-format', $output_format,
+               '--output-statistics');
     #if ($randomize) {
     #    push(@cmd, '--randomize');
     #}
