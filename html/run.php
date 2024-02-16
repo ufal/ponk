@@ -14,10 +14,16 @@
   });
 
   function doSubmit() {
-    //var model = jQuery('#model :selected').text();
-    //if (!model) return;
+    var input_text;
+    var input_tab = jQuery('#input_tabs>.tab-pane.active');
+    if (input_tab.length > 0 && input_tab.attr('id') == 'input_file') {
+      if (!input_file_content) { alert('Please load a file first.'); return; }
+      input_text = input_file_content;
+    } else {
+      input_text = jQuery('#input').val();
+    }
 
-    var input_text = jQuery('#input').val();
+    //var input_text = jQuery('#input').val();
     //console.log("doSubmit: Input text: ", input_text);
     var input_format = jQuery('input[name=option_input]:checked').val();
     //console.log("doSubmit: Input format: ", input_format);
@@ -114,7 +120,29 @@
   }
   
   
-  
+  jQuery(document).on('change', '#input_file_field', function() {
+    jQuery('#input_file_name').text();
+    input_file_content = null;
+    if (this.files.length > 0) {
+      var file = this.files[0];
+      jQuery('#input_file_name').text(file.name + ' (loading...)');
+      if (!window.FileReader) {
+        jQuery('#input_file_name').text(file.name + ' (load error - file loading API not supported, please use newer browser)').wrapInner('<span class="text-danger"></span>');
+      } else {
+        var reader = new FileReader();
+        reader.onload = function() {
+          input_file_content = reader.result;
+          jQuery('#input_file_name').text(file.name + ' (' + (input_file_content.length/1024).toFixed(1) + 'kb loaded)');
+        }
+        reader.onerror = function() {
+          jQuery('#input_file_name').text(file.name + ' (load error)').wrapInner('<span class="text-danger"></span>');
+        }
+        reader.readAsText(file);
+      }
+    }
+  });
+
+
   function saveAs(blob, file_name) {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -139,7 +167,8 @@
     var stats_blob = new Blob([output_file_stats], {type: "text/html"});
     saveAs(stats_blob, "statistics.html");
   }
-  
+
+
   function removeOriginals(text) { // z výsledného textu v daném formátu vyhodí originální údaje
     if (output_format === 'html') {
       var tempDiv = document.createElement('div'); // Vytvořte dočasný element (např. div)
@@ -281,6 +310,13 @@
      <div class="tab-pane active" id="input_text">
       <textarea id="input" class="form-control" rows="10" cols="80"></textarea>
      </div>
+     <div class="tab-pane" id="input_file">
+      <div class="input-group">
+       <div class="form-control" id="input_file_name"></div>
+       <span class="input-group-btn"><span class="btn btn-success btn-file">Load File ... <input type="file" id="input_file_field"></span></span>
+      </div>
+     </div>
+
     </div>
 
     <button id="submit" class="btn btn-primary form-control" type="submit" style="margin-top: 15px; margin-bottom: 15px" onclick="doSubmit()"><span class="fa fa-arrow-down"></span> Process Input <span class="fa fa-arrow-down"></span></button>
