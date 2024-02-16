@@ -24,16 +24,16 @@
     }
 
     //var input_text = jQuery('#input').val();
-    //console.log("doSubmit: Input text: ", input_text);
+    console.log("doSubmit: Input text: ", input_text);
     var input_format = jQuery('input[name=option_input]:checked').val();
-    //console.log("doSubmit: Input format: ", input_format);
+    console.log("doSubmit: Input format: ", input_format);
     output_format = jQuery('input[name=option_output]:checked').val();
-    //console.log("doSubmit: Output format: ", output_format);
+    console.log("doSubmit: Output format: ", output_format);
     // Zjistíme stav checkboxu s id "option-randomize"
     //var jeZaskrtnuto = $('#option_randomize').prop('checked');
     //console.log("doSubmit: Randomize: ", jeZaskrtnuto);
     var options = {text: input_text, input: input_format, output: output_format};
-    // console.log("doSubmit: options: ", options);
+    console.log("doSubmit: options: ", options);
     // Přidáme parametr "randomize", pokud je checkbox zaškrtnutý
     //if (jeZaskrtnuto) {
     //  options.randomize = null; // Nebo prázdný řetězec, záleží na konkrétní implementaci serveru
@@ -238,21 +238,49 @@
   }
 
 
-  function handleOutputFormatChange() {
+  //function handleOutputFormatChange() {
       //console.log("handleOutputFormatChange - entering the function");
-      var txtRadio = document.getElementById("option_output_txt");
-      var htmlRadio = document.getElementById("option_output_html");
-      var checkbox = document.getElementById("highlightingCheckbox");
+  //    var txtRadio = document.getElementById("option_output_txt");
+  //    var htmlRadio = document.getElementById("option_output_html");
+  //    var checkbox = document.getElementById("highlightingCheckbox");
 
-      if (txtRadio.checked) {
+  //    if (txtRadio.checked) {
         // Zneaktivní checkbox při výběru TXT radio tlačítka
         //console.log("handleOutputFormatChange - disabling the checkbox");
-        checkbox.disabled = true;
-      } else if (htmlRadio.checked) {
-        // Zaktivní checkbox při výběru HTML radio tlačítka
+  //      checkbox.disabled = true;
+  //    } else if (htmlRadio.checked) {
+  //      // Zaktivní checkbox při výběru HTML radio tlačítka
         //console.log("handleOutputFormatChange - enabling the checkbox");
-        checkbox.disabled = false;
-      }
+  //      checkbox.disabled = false;
+  //    }
+  //}
+
+  function handleInputFormatChange() {
+      //console.log("handleInputFormatChange - entering the function");
+      const radioInputDocx = document.getElementById('option_input_docx');
+      const headerInputText = document.getElementById('input_text_header');
+      const headerInputFile = document.getElementById('input_file_header');
+      const tabInputText = document.getElementById('input_text');
+      const tabInputFile = document.getElementById('input_file');
+
+      if (radioInputDocx.checked) {
+        headerInputText.classList.remove('active');
+        tabInputText.classList.remove('active');
+        //tabInputText.setAttribute('aria-selected', false);
+        headerInputFile.classList.add('active');
+        tabInputFile.classList.add('active');
+        //tabInputFile.setAttribute('aria-selected', true);
+      } 
+  }
+
+  function handleInputTextHeaderClicked() {
+    //console.log("handleInputTextHeaderClicked - entering the function");
+    const radioInputDocx = document.getElementById('option_input_docx');
+    const radioInputTXT = document.getElementById('option_input_plaintext');
+    if (radioInputDocx.checked) {
+      radioInputDocx.checked = false;
+      radioInputTXT.checked = true;
+    }
   }
 
 
@@ -270,24 +298,28 @@
 
     <div id="error" class="alert alert-danger" style="display: none"></div>
 
+
+    <!-- ================= OPTIONS ================ -->
+
     <div class="form-horizontal">
       <div class="form-group row">
         <label class="col-sm-2 control-label">Input:</label>
         <div class="col-sm-10">
-          <label title="Tokenize input using a tokenizer" class="radio-inline" id="option_input_plaintext"><input name="option_input" type="radio" value="txt" checked/>Plain text</label>
-          <label title="Tokenize a pre-segmented input using a tokenizer" class="radio-inline" id="option_input_presegmented"><input name="option_input" type="radio" value="presegmented"/>Pre-segmented (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_input" target="_blank">sentence per line</a>)</label>
+          <label title="Plain text input" class="radio-inline" id="option_input_plaintext_label"><input name="option_input" id="option_input_plaintext" type="radio" value="txt" checked/>Plain text</label>
+          <!--label title="Tokenize a pre-segmented input using a tokenizer" class="radio-inline" id="option_input_presegmented"><input name="option_input" type="radio" value="presegmented"/>Pre-segmented (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_input" target="_blank">sentence per line</a>)</label-->
+          <label title="Markdown text" class="radio-inline" id="option_input_markdown_label"><input name="option_input" id="option_input_markdown" type="radio" value="md"/>Markdown text</label>
+          <label title="MS Word .docx file" class="radio-inline" id="option_input_docx_label"><input name="option_input" id="option_input_docx" type="radio" value="docx" onchange="handleInputFormatChange();"/>MS Word .docx file</label>
         </div>
       </div>
       <div class="form-group row">
         <label class="col-sm-2 control-label">Output:</label>
 	<div class="col-sm-10">
-          <label title="TXT with original texts marked with special characters" class="radio-inline">
+          <!--label title="TXT with original texts marked with special characters" class="radio-inline">
             <input name="option_output" type="radio" value="txt" id="option_output_txt" onchange="handleOutputFormatChange();"/>TXT
             (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_maskit_output" target="_blank">marked with special characters</a>)
-          </label>
+          </label-->
           <label title="HTML with colour-encoded analysis of the text" class="radio-inline">
-            <input name="option_output" type="radio" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();"/>HTML
-            (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">colour-marked</a>)
+            <input name="option_output" type="radio" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();"/>HTML<!-- (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">colour-marked</a>)-->
           </label>
         </div>
       </div>
@@ -299,11 +331,13 @@
       </div>
     </div-->
 
+    <!-- ================= INPUT FIELDS ================ -->
+
     <ul class="nav nav-tabs nav-justified nav-tabs-green">
-     <li class="active" style="position:relative"><a href="#input_text" data-toggle="tab"><span class="fa fa-font"></span> Input Text</a>
+     <li id="input_text_header" class="active" style="position:relative" onclick="handleInputTextHeaderClicked();"><a href="#input_text" data-toggle="tab"><span class="fa fa-font"></span> Input Text</a>
           <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="var t=document.getElementById('input'); t.value=''; t.focus();">Delete input text</button>
      </li>
-     <li><a href="#input_file" data-toggle="tab"><span class="fa fa-file-text-o"></span> Input File</a></li>
+     <li id="input_file_header"><a href="#input_file" data-toggle="tab"><span class="fa fa-file-text-o"></span> Input File</a></li>
     </ul>
     <div class="tab-content" id="input_tabs" style="border-right: 1px solid #ddd; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; padding: 15px">
      <div class="tab-pane active" id="input_text">
@@ -320,10 +354,12 @@
 
     <button id="submit" class="btn btn-primary form-control" type="submit" style="margin-top: 15px; margin-bottom: 15px" onclick="doSubmit()"><span class="fa fa-arrow-down"></span> Process Input <span class="fa fa-arrow-down"></span></button>
 
+    <!-- ================= OUTPUT FIELDS ================ -->
+
     <ul class="nav nav-tabs nav-justified nav-tabs-green">
      <li class="active" style="position:relative">
 	  <a href="#output_formatted" data-toggle="tab"><span class="fa fa-font"></span> Output</a>
-          <div style="position:absolute; top: 6px; left: 10px; padding: 0 0em; border: none;">
+          <!--div style="position:absolute; top: 6px; left: 10px; padding: 0 0em; border: none;">
             <div style="display: flex; flex-direction: row;">
               <div style="display: flex; flex-direction: column; align-items: center; margin-right: 8px;">
                 <input type="checkbox" checked id="origsCheckbox" onchange="displayFormattedOutput();">
@@ -334,7 +370,7 @@
                 <span style="font-size: 60%; font-weight: normal; margin-top: 2px;">colours</span>
               </div>
             </div>
-          </div>
+          </div-->
           <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="saveOutput();"><span class="fa fa-download"></span> Save</button>
      </li>
      <li style="position:relative"><a href="#output_stats" data-toggle="tab"><span class="fa fa-table"></span> Statistics</a>
