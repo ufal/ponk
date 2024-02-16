@@ -35,9 +35,9 @@
     var options = {text: input_text, input: input_format, output: output_format};
     // console.log("doSubmit: options: ", options);
     // Přidáme parametr "randomize", pokud je checkbox zaškrtnutý
-    if (jeZaskrtnuto) {
-      options.randomize = null; // Nebo prázdný řetězec, záleží na konkrétní implementaci serveru
-    }
+    //if (jeZaskrtnuto) {
+    //  options.randomize = null; // Nebo prázdný řetězec, záleží na konkrétní implementaci serveru
+    //}
 
     var form_data = null;
     if (window.FormData) {
@@ -303,9 +303,8 @@
      <li class="active" style="position:relative"><a href="#input_text" data-toggle="tab"><span class="fa fa-font"></span> Input Text</a>
           <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="var t=document.getElementById('input'); t.value=''; t.focus();">Delete input text</button>
      </li>
+     <li><a href="#input_file" data-toggle="tab"><span class="fa fa-file-text-o"></span> Input File</a></li>
     </ul>
-
-    
     <div class="tab-content" id="input_tabs" style="border-right: 1px solid #ddd; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; padding: 15px">
      <div class="tab-pane active" id="input_text">
       <textarea id="input" class="form-control" rows="10" cols="80"></textarea>
