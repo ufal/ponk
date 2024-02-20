@@ -21,7 +21,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.01 20240212'; # version of the program
+my $VER = '0.01 20240220'; # version of the program
 
 my @features = ('nothing yet');
 
@@ -52,6 +52,8 @@ if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe a
   $VER .= ' (no text logging)';
   $log_level = 2; # anonymous
 }
+
+$VER .= ', <span style="font-style: normal">status:</span> <font color="green">online</font>';
 
 #############################
 # Colours for html
