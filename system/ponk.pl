@@ -13,6 +13,8 @@ use POSIX qw(strftime); # naming a file with date and time
 use File::Basename;
 use Time::HiRes qw(gettimeofday tv_interval); # to measure how long the program ran
 use Sys::Hostname;
+use IPC::Run qw(run);
+
 
 # STDIN and STDOUT in UTF-8
 binmode STDIN, ':encoding(UTF-8)';
@@ -134,7 +136,7 @@ my $script_dir = dirname($script_path);  # Získá pouze adresář ze získané 
 
 
 if ($version) {
-  print "Anonymizer version $VER.\n";
+  print "PONK version $VER.\n";
   exit 0;
 }
 
@@ -330,9 +332,16 @@ close(REPLACEMENTS);
 my $input_content;
 
 if ($stdin) { # the input text should be read from STDIN
-  $input_content = '';
-  while (<>) {
-    $input_content .= $_;
+
+  if ($input_format eq 'docx') {
+    $input_content = convertFromDocx();
+    $input_format = 'markdown';
+  }
+  else {
+    $input_content = '';
+    while (<>) {
+      $input_content .= $_;
+    }
   }
   my $current_datetime = strftime("%Y%m%d_%H%M%S", localtime);
   $input_file = "stdin_$current_datetime.txt"; # a fake file name for naming the output files
@@ -2426,3 +2435,18 @@ sub call_nametag_part {
     }
 }
 
+sub convertFromDocx {
+    # Načtení docx ze stdin
+    my $word_document = do {
+      local $/;
+      <STDIN>;
+    };
+
+    # Spuštění programu pandoc s předáním parametrů a standardního vstupu
+    my @cmd = ('/usr/bin/pandoc',
+               '-f', 'docx',
+               '-t', 'markdown');
+    my $result;
+    run \@cmd, \$word_document, \$result;
+    return $result;
+}
