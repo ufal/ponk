@@ -24,16 +24,16 @@
     }
 
     //var input_text = jQuery('#input').val();
-    console.log("doSubmit: Input text: ", input_text);
+    //console.log("doSubmit: Input text: ", input_text);
     var input_format = jQuery('input[name=option_input]:checked').val();
-    console.log("doSubmit: Input format: ", input_format);
+    //console.log("doSubmit: Input format: ", input_format);
     output_format = jQuery('input[name=option_output]:checked').val();
-    console.log("doSubmit: Output format: ", output_format);
+    //console.log("doSubmit: Output format: ", output_format);
     // Zjistíme stav checkboxu s id "option-randomize"
     //var jeZaskrtnuto = $('#option_randomize').prop('checked');
     //console.log("doSubmit: Randomize: ", jeZaskrtnuto);
     var options = {text: input_text, input: input_format, output: output_format};
-    console.log("doSubmit: options: ", options);
+    //console.log("doSubmit: options: ", options);
     // Přidáme parametr "randomize", pokud je checkbox zaškrtnutý
     //if (jeZaskrtnuto) {
     //  options.randomize = null; // Nebo prázdný řetězec, záleží na konkrétní implementaci serveru
@@ -58,22 +58,26 @@
       try {
 	  if ("result" in json) {
               output_file_content = json.result;
+              //console.log("Found 'result' in return message:", output_file_content);
               displayFormattedOutput();
 	  }
 	  if ("stats" in json) {
               output_file_stats = json.stats;
+              //console.log("Found 'stats' in return message:", output_file_stats);
               jQuery('#output_stats').html(output_file_stats);
 	  }
 
       } catch(e) {
         jQuery('#submit').html('<span class="fa fa-arrow-down"></span> Process Input <span class="fa fa-arrow-down"></span>');
-        jQuery('#submit').prop('disabled', false);
+	jQuery('#submit').prop('disabled', false);
+	//console.log("Caught an error!");
       }
     }, error: function(jqXHR, textStatus) {
       alert("An error occurred" + ("responseText" in jqXHR ? ": " + jqXHR.responseText : "!"));
     }, complete: function() {
       jQuery('#submit').html('<span class="fa fa-arrow-down"></span> Process Input <span class="fa fa-arrow-down"></span>');
       jQuery('#submit').prop('disabled', false);
+      //console.log("All completed");
     }});
   }
 
@@ -210,30 +214,31 @@
 
 
   function formatOutput() { 
-    var formatted_output;  
+    var formatted_output = output_file_content;  
     // Nejprve checkbox pro zobrazování originálných výrazů
-    var checkbox = document.getElementById("origsCheckbox");
-    if (checkbox.checked) { // zobrazím původní výsledný text (vč. originálů)
-      formatted_output = output_file_content;
-    } else { // vyhodím z výsledného textu originály
-      formatted_output = removeOriginals(output_file_content);
-    }
+    //var checkbox = document.getElementById("origsCheckbox");
+    //if (checkbox.checked) { // zobrazím původní výsledný text (vč. originálů)
+    //  formatted_output = output_file_content;
+    //} else { // vyhodím z výsledného textu originály
+    //  formatted_output = removeOriginals(output_file_content);
+    //}
     // Nyní checkbox pro barevné zvýraznění nových výrazů
-    checkbox = document.getElementById("highlightingCheckbox");
-    if (checkbox.checked) { // zobrazím původní výsledný text (vč. barevného zvýraznění)
+    //checkbox = document.getElementById("highlightingCheckbox");
+    //if (checkbox.checked) { // zobrazím původní výsledný text (vč. barevného zvýraznění)
       // nedělám nic
-    } else { // vyhodím z výsledného textu barevné zvýraznění nových výrazů
-      formatted_output = removeHighlighting(formatted_output);
-    }
+    //} else { // vyhodím z výsledného textu barevné zvýraznění nových výrazů
+    //  formatted_output = removeHighlighting(formatted_output);
+    //}
     return formatted_output;
   }
 
 
   function displayFormattedOutput() { // zobrazí output_file_content podle parametrů nastavených checkboxy
+    //console.log("displayFormattedOutput: Entering the function");
     var formatted_output = formatOutput();
     // Přidání <br> ke každému novému řádku v proměnné with_or_without_origs
     var formatted_content = output_format == "html" ? formatted_output : formatted_output.replace(/\n/g, "\n<br>");
-    //console.log(formatted_content);
+    //console.log("displayFormattedOutput: ", formatted_content);
     jQuery('#output_formatted').html(formatted_content);
   }
 
