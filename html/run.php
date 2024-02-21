@@ -32,7 +32,7 @@
     // Zjistíme stav checkboxu s id "option-randomize"
     //var jeZaskrtnuto = $('#option_randomize').prop('checked');
     //console.log("doSubmit: Randomize: ", jeZaskrtnuto);
-    var options = {text: input_text, input: input_format, output: output_format};
+    var options = {input: input_format, output: output_format};
     //console.log("doSubmit: options: ", options);
     // Přidáme parametr "randomize", pokud je checkbox zaškrtnutý
     //if (jeZaskrtnuto) {
@@ -44,6 +44,15 @@
       form_data = new FormData();
       for (var key in options)
         form_data.append(key, options[key]);
+
+      if (input_format === "docx") {
+        // Při formátu "docx" přidejte binární data jako Blob do FormData
+        var blob = new Blob([input_file_content], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+        form_data.append('text', blob, 'document.docx');
+      } else {
+        // Při jiných formátech přidejte textová data
+        form_data.append('text', input_data);
+      }
     }
 
     output_file_content = null;
@@ -140,8 +149,13 @@
         }
         reader.onerror = function() {
           jQuery('#input_file_name').text(file.name + ' (load error)').wrapInner('<span class="text-danger"></span>');
+	}
+	var input_format = jQuery('input[name=option_input]:checked').val();
+	if (input_format === "docx") {
+          reader.readAsArrayBuffer(file);
+        } else {
+          reader.readAsText(file);
         }
-        reader.readAsText(file);
       }
     }
   });
@@ -170,46 +184,6 @@
     if (!output_file_stats) return;
     var stats_blob = new Blob([output_file_stats], {type: "text/html"});
     saveAs(stats_blob, "statistics.html");
-  }
-
-
-  function removeOriginals(text) { // z výsledného textu v daném formátu vyhodí originální údaje
-    if (output_format === 'html') {
-      var tempDiv = document.createElement('div'); // Vytvořte dočasný element (např. div)
-      tempDiv.innerHTML = text; // nastavte jeho vnitřní HTML kód na daný text
-      var spansToRemove = tempDiv.querySelectorAll('.orig-brackets'); // Získejte všechny elementy span s danou třídou.
-      spansToRemove.forEach(function(span) { // Projděte všechny získané elementy a odstraňte je
-        span.parentNode.removeChild(span);
-      });
-      var finalResult = tempDiv.innerHTML; // Získejte konečný HTML kód bez elementů span dané třídy.
-      return finalResult;
-    }
-    else if (output_format === 'txt') {
-      var regex = /_\[[^\]]*\]/g; // Použití regulárního výrazu pro hledání textu mezi "_[" a "]"
-      var vysledek = text.replace(regex, ''); // Nahrazení nalezeného textu prázdným řetězcem
-      return vysledek;
-    }
-    return text; // při nerozpoznání formátu vracím nezměněný text
-  }
-
-
-  function removeHighlighting(text) { // z textu vyhodí zvýraznění doplněných údajů
-    if (output_format === 'txt') {
-      return text;
-    }
-    else if (output_format === 'html') { 
-      var tempDiv = document.createElement('div'); // Vytvořte dočasný element (např. div)
-      tempDiv.innerHTML = text; // a nastavte jeho vnitřní HTML kód na příslušný obsah
-      var spansToRemove = tempDiv.querySelectorAll('.replacement-text'); // Získání všech elementů span s danou třídou
-      spansToRemove.forEach(function(span) { // Projděte všechny získané elementy a nahraďte je jejich textovým obsahem
-        var textNode = document.createTextNode(span.textContent);
-        span.parentNode.replaceChild(textNode, span);
-      });
-      var finalText = tempDiv.innerHTML; // Získejte konečný text bez elementů span
-      //console.log(finalText);
-      return finalText;
-    }
-    return text; // při nerozpoznání formátu vracím nezměněný text
   }
 
 
