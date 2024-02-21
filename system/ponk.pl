@@ -116,7 +116,7 @@ my $help;
 GetOptions(
     'i|input-file=s'         => \$input_file, # the name of the input file
     'si|stdin'               => \$stdin, # should the input be read from STDIN?
-    'if|input-format=s'      => \$input_format, # input format, possible values: txt, presegmented
+    'if|input-format=s'      => \$input_format, # input format, possible values: txt, markdown, docx
     'rf|replacements-file=s' => \$replacements_file, # the name of the file with replacements
     'r|randomize'            => \$randomize, # if used, the replacements are selected in random order
     'of|output-format=s'     => \$output_format, # output format, possible values: txt, html, conllu
@@ -196,7 +196,7 @@ if (!defined $input_format) {
   mylog(0, " - input format: not specified, set to default $INPUT_FORMAT_DEFAULT\n");
   $input_format = $INPUT_FORMAT_DEFAULT;
 }
-elsif ($input_format !~ /^(txt|presegmented)$/) {
+elsif ($input_format !~ /^(txt|md|docx)$/) {
   mylog(0, " - input format: unknown ($input_format), set to default $INPUT_FORMAT_DEFAULT\n");
   $input_format = $INPUT_FORMAT_DEFAULT;
 }
@@ -333,9 +333,12 @@ my $input_content;
 
 if ($stdin) { # the input text should be read from STDIN
 
+  
+  mylog(2, "reading from stdin, input_format=$input_format\n");
   if ($input_format eq 'docx') {
     $input_content = convertFromDocx();
-    $input_format = 'markdown';
+    mylog(2, "input converted from docx: '$input_content'\n");
+    $input_format = 'md';
   }
   else {
     $input_content = '';
@@ -2437,10 +2440,20 @@ sub call_nametag_part {
 
 sub convertFromDocx {
     # Načtení docx ze stdin
+    binmode stdin;
     my $word_document = do {
-      local $/;
+      local $/; # Nastavení náhrady konce řádku na undef, čímž načte celý obsah
       <STDIN>;
     };
+
+    #=item
+
+    my $soubor = '/home/mirovsky/pokus2.docx';
+    open my $soubor_handle, '>:encoding(utf-8)', $soubor or die "Nelze otevřít soubor '$soubor' pro zápis: $!";
+    print $soubor_handle $word_document;
+    close $soubor_handle;
+
+    #=cut
 
     # Spuštění programu pandoc s předáním parametrů a standardního vstupu
     my @cmd = ('/usr/bin/pandoc',
