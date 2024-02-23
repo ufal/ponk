@@ -14,6 +14,8 @@ use File::Basename;
 use Time::HiRes qw(gettimeofday tv_interval); # to measure how long the program ran
 use Sys::Hostname;
 use IPC::Run qw(run);
+use MIME::Base64;
+use Encode;
 
 
 # STDIN and STDOUT in UTF-8
@@ -54,8 +56,6 @@ if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe a
   $VER .= ' (no text logging)';
   $log_level = 2; # anonymous
 }
-
-$VER .= ', <span style="font-style: normal">status:</span> <font color="green">online</font>';
 
 #############################
 # Colours for html
@@ -337,7 +337,7 @@ if ($stdin) { # the input text should be read from STDIN
   mylog(2, "reading from stdin, input_format=$input_format\n");
   if ($input_format eq 'docx') {
     $input_content = convertFromDocx();
-    mylog(2, "input converted from docx: '$input_content'\n");
+    #mylog(2, "input converted from docx: '$input_content'\n");
     $input_format = 'md';
   }
   else {
@@ -2439,27 +2439,42 @@ sub call_nametag_part {
 }
 
 sub convertFromDocx {
-    # Načtení docx ze stdin
-    binmode stdin;
-    my $word_document = do {
+
+    # Načtení docx kódovaného v Base64 ze stdin
+    my $base64_data = do {
       local $/; # Nastavení náhrady konce řádku na undef, čímž načte celý obsah
       <STDIN>;
     };
 
-    #=item
+    my $word_document = decode_base64($base64_data); # nyní mám původní binární podobu docx
+
+=item
 
     my $soubor = '/home/mirovsky/pokus2.docx';
-    open my $soubor_handle, '>:encoding(utf-8)', $soubor or die "Nelze otevřít soubor '$soubor' pro zápis: $!";
+    open my $soubor_handle, '>:raw', $soubor or die "Nelze otevřít soubor '$soubor' pro zápis: $!";
     print $soubor_handle $word_document;
     close $soubor_handle;
 
-    #=cut
+=cut
 
     # Spuštění programu pandoc s předáním parametrů a standardního vstupu
     my @cmd = ('/usr/bin/pandoc',
                '-f', 'docx',
-               '-t', 'markdown');
+               '-t', 'markdown'); # Nastavit výstup na standardní výstup);
     my $result;
     run \@cmd, \$word_document, \$result;
+
+    # Převedení výsledku do UTF-8
+    $result = decode('UTF-8', $result);
+
+=item
+
+    $soubor = '/home/mirovsky/pokus2.md';
+    open my $soubor_handle, '>:utf8', $soubor or die "Nelze otevřít soubor '$soubor' pro zápis: $!";
+    print $soubor_handle $result;
+    close $soubor_handle;
+
+=cut
+
     return $result;
 }
