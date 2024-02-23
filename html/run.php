@@ -32,7 +32,7 @@
     // Zjistíme stav checkboxu s id "option-randomize"
     //var jeZaskrtnuto = $('#option_randomize').prop('checked');
     //console.log("doSubmit: Randomize: ", jeZaskrtnuto);
-    var options = {input: input_format, output: output_format};
+    var options = {text: input_text, input: input_format, output: output_format};
     //console.log("doSubmit: options: ", options);
     // Přidáme parametr "randomize", pokud je checkbox zaškrtnutý
     //if (jeZaskrtnuto) {
@@ -42,16 +42,8 @@
     var form_data = null;
     if (window.FormData) {
       form_data = new FormData();
-      for (var key in options)
+      for (var key in options) {
         form_data.append(key, options[key]);
-
-      if (input_format === "docx") {
-        // Při formátu "docx" přidejte binární data jako Blob do FormData
-        var blob = new Blob([input_file_content], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-        form_data.append('text', blob, 'document.docx');
-      } else {
-        // Při jiných formátech přidejte textová data
-        form_data.append('text', input_data);
       }
     }
 
@@ -90,6 +82,12 @@
     }});
   }
 
+
+  // Funkce pro kódování binárních dat do Base64
+  function encodeBinaryToBase64(binaryData) {
+    return btoa(String.fromCharCode.apply(null, new Uint8Array(binaryData)));
+  }
+
   
   function getInfo() { // call the server and get the MasKIT version and a list of supported features
 
@@ -113,6 +111,7 @@
       try {
         if ("version" in json) {
 		version = json.version;
+		version += ', <span style="font-style: normal">status:</span> <font color="green">online</font>';
 		//console.log("json.version: ", version);
         }
         if ("features" in json) {
@@ -143,8 +142,14 @@
         jQuery('#input_file_name').text(file.name + ' (load error - file loading API not supported, please use newer browser)').wrapInner('<span class="text-danger"></span>');
       } else {
         var reader = new FileReader();
-        reader.onload = function() {
-          input_file_content = reader.result;
+	reader.onload = function() {
+          var input_format = jQuery('input[name=option_input]:checked').val();
+          if (input_format === "docx") {
+	    //input_file_content = encodeBinaryToBase64(target.result);
+	    input_file_content = encodeBinaryToBase64(reader.result);
+	  } else {
+	    input_file_content = reader.result;
+	  }
           jQuery('#input_file_name').text(file.name + ' (' + (input_file_content.length/1024).toFixed(1) + 'kb loaded)');
         }
         reader.onerror = function() {
