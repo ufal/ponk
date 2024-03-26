@@ -285,7 +285,7 @@ my $conll_data = call_udpipe($conll_segmented, 'parse');
 #  close(OUT);
 
 ###################################################################################
-# Now let us add info about named entities¨ using NameTag REST API
+# Now let us add info about named entities using NameTag REST API
 ###################################################################################
 
 my $conll_data_ne = call_nametag($conll_data);
@@ -331,6 +331,9 @@ foreach my $line (@lines) {
     } elsif ($line =~ /^#\s*text\s*=\s*(.*)/) {
         set_attr($root, 'text', $1);
         #mylog(0, "Reading sentence '$1'\n");
+    } elsif ($line =~ /^#\s*ponk\s*=\s*(.*)/) {
+        set_attr($root, 'ponk', $1);
+        #mylog(0, "Ponk properties of the sentence: '$1'\n");
     } elsif ($line =~ /^#/) { # other comment, store it as well (all other comments in one attribute other_comment with newlines included)
         my $other_comment_so_far = attr($root, 'other_comment') // '';
         set_attr($root, 'other_comment', $other_comment_so_far . $line . "\n");
@@ -410,10 +413,13 @@ if ($root) {
 # end of Jan Štěpánek's modified cycle for reading UD CONLL
 
 
+###############################################
+# Now we have dependency trees of the sentences
+###############################################
 
-###########################################################################################
-# Now we have dependency trees of the sentences; let us search for phrases to be anonymized
-###########################################################################################
+###############################################
+# Let us process MarkDown info if present
+###############################################
 
 my $processing_time;
 # print_log_header();
@@ -426,7 +432,20 @@ foreach $root (@trees) {
   mylog(1, "\n====================================================================\n");
   mylog(1, "Sentence id=" . attr($root, 'id') . ": " . attr($root, 'text') . "\n");
   # print_children($root, "\t");
+
+  # Check if the sentence is a heading (i.e., check if there are some dashes at the end of the sentence
+  my @all_nodes_ord_sorted = sort {attr($a, 'ord') <=> attr($b, 'ord')} descendants($root);
+  my @end_dashes = ();
+  while (scalar(@all_nodes_ord_sorted) and attr($all_nodes_ord_sorted[-1], 'form') eq '-') {
+    push (@end_dashes, pop(@all_nodes_ord_sorted));
+  }
+  if (scalar(@end_dashes) > 2) { # let us say that we need at least three dashes
+    mylog(0, "Found a heading\n");
+    set_property($root, 'ponk', 'is_heading', 1);
+  }
   
+=item
+
   my @nodes = descendants($root);
   $tokens_count += scalar(@nodes) - 1; # without the root
 
@@ -440,7 +459,10 @@ foreach $root (@trees) {
 
     mylog(0, "\nProcessing form '$form' (lemma '$lemma') with NameTag classes '$classes' and feats '$feats'\n");
 
-  }  
+  }
+  
+=cut
+
 }
 
 # print_log_tail();
@@ -770,6 +792,8 @@ END_OUTPUT_HEAD
       $output .= "$newpar\n" if $newpar;
       my $sent_id = attr($root, 'id') // '';
       $output .= "# sent_id = $sent_id\n" if $sent_id;
+      my $ponk = attr($root, 'ponk') // '';
+      $output .= "# ponk = $ponk\n" if $ponk;
       my $text = attr($root, 'text') // '';
       $output .= "# text = $text\n" if $text;
     }

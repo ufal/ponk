@@ -1,7 +1,7 @@
 
 echo "Analyzing input text" >err
 
-echo "Paní Nováková pracuje ve firmě Česká plynárenská, s.r.o." |\
-./system/ponk.pl --stdin --output-format txt 2>>err
+echo "Toto je nadpis\n----------- \n\nToto je první věta prvního odstavce." |\
+./system/ponk.pl --stdin --output-format conllu 2>>err
 
 echo "Analysis finished." >>err
