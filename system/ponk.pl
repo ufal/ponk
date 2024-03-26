@@ -784,7 +784,7 @@ END_OUTPUT_HEAD
       
       # COLLECT INFO ABOUT THE TOKEN
       #my $replacement = attr($node, 'replacement');
-      my $form = $replacement // attr($node, 'form');
+      my $form = attr($node, 'form');
       my $classes = get_NameTag_marks($node) // '';
 
       my $span_start = '';
