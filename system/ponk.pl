@@ -25,7 +25,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.01 20240220'; # version of the program
+my $VER = '0.01 20240326'; # version of the program
 
 my @features = ('nothing yet');
 
@@ -60,29 +60,7 @@ if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe a
 #############################
 # Colours for html
 
-my $color_replacement_text = 'darkred'; # general replacement colour
-
-# NameTag-class specific replacement colours
-my $color_replacement_gu = 'orange'; # town/city
-my $color_replacement_gq = 'orange'; # urban parts
-my $color_replacement_gs = 'magenta'; # street name
-my $color_replacement_ah = 'magenta'; # street number
-my $color_replacement_az = 'magenta'; # zip code
-my $color_replacement_pf = 'red'; # first name
-my $color_replacement_ps = 'red'; # surname
-my $color_replacement_me = 'pink'; # e-mail
-my $color_replacement_if = 'darkcyan'; # company
-my $color_replacement_nk = 'blue'; # IČO
-my $color_replacement_nl = 'blue'; # DIČ
-my $color_replacement_nm = 'brown'; # land registration number (katastrální číslo pozemku)
-my $color_replacement_nxy = 'darkred'; # birth registration number
-my $color_replacement_tabc = 'darkred'; # date of birth
-my $color_replacement_tijk = 'darkred'; # date of death
-my $color_replacement_nr = 'darkviolet'; # agenda reference number (číslo jednací)
-
-# info text colours
-my $color_orig_text = 'darkgreen';
-my $color_source_brackets = 'darkblue';
+my $color_highlight_general = 'darkred'; # general highlighting colour
 
 
 #######################################
@@ -93,15 +71,11 @@ my $OUTPUT_FORMAT_DEFAULT = 'txt';
 # default input format
 my $INPUT_FORMAT_DEFAULT = 'txt';
 # default replacements file name
-my $REPLACEMENTS_FILE_DEFAULT = 'resources/replacements.csv';
-
 
 # variables for arguments
 my $input_file;
 my $stdin;
 my $input_format;
-my $replacements_file;
-my $randomize;
 my $output_format;
 my $diff;
 my $add_NE;
@@ -117,8 +91,6 @@ GetOptions(
     'i|input-file=s'         => \$input_file, # the name of the input file
     'si|stdin'               => \$stdin, # should the input be read from STDIN?
     'if|input-format=s'      => \$input_format, # input format, possible values: txt, markdown, docx
-    'rf|replacements-file=s' => \$replacements_file, # the name of the file with replacements
-    'r|randomize'            => \$randomize, # if used, the replacements are selected in random order
     'of|output-format=s'     => \$output_format, # output format, possible values: txt, html, conllu
     'd|diff'                 => \$diff, # display the original expressions next to the anonymized versions
     'ne|named-entities=s'    => \$add_NE, # add named entities as marked by NameTag (1: to the anonymized versions, 2: to all recognized tokens)
@@ -153,14 +125,12 @@ if ($info) {
 }
 
 if ($help) {
-  print "Anonymizer version $VER.\n";
+  print "PONK version $VER.\n";
   my $text = <<'END_TEXT';
 Usage: maskit.pl [options]
 options:  -i|--input-file [input text file name]
          -si|--stdin (input text provided via stdin)
          -if|--input-format [input format: txt (default) or presegmented]
-         -rf|--replacements-file [replacements file name]
-          -r|--randomize (if used, the replacements are selected in random order)
          -of|--output-format [output format: txt (default), html, conllu]
           -d|--diff (display the original expressions next to the anonymized versions)
          -ne|--named-entities [scope: 1 - add NameTag marks to the anonymized versions, 2 - to all recognized tokens]
@@ -202,21 +172,6 @@ elsif ($input_format !~ /^(txt|md|docx)$/) {
 }
 else {
   mylog(0, " - input format: $input_format\n");
-}
-
-if (!defined $replacements_file) {
-  mylog(0, " - replacements file: not specified, set to default $REPLACEMENTS_FILE_DEFAULT\n");
-  $replacements_file = "$script_dir/$REPLACEMENTS_FILE_DEFAULT";
-}
-else {
-  mylog(0, " - replacements file: $replacements_file\n");
-}
-
-if ($randomize) {
-  mylog(0, " - replacements will be selected in random order\n");
-}
-else {
-  mylog(0, " - replacements will be selected in order as present in the replacements file\n");
 }
 
 $output_format = lc($output_format) if $output_format;
@@ -269,71 +224,15 @@ if ($store_statistics) {
 
 mylog(0, "\n");
 
-###################################################################################
-# Let us first read the file with replacements
-###################################################################################
-
-my %class_constraint2replacements; # NameTag class + constraint => replacements separated by |; the class is separated by '_' from the constraint
-my %class_constraint2group; # grouping e.g. first names across cases and surnames across cases and genders together
-my %class2constraints; # which constraints does the class require (if any); the individual constraints are separated by '_'; an empty constraint is represented by 'NoConstraint'
-
-
-my %group2reordering; # reordering of replacements for a given group
-# values of the hash are arrays that contain new indexes for each array index; the length of the array is the same as number of replacements in one replacement line in the given group
-
-=item
-
-mylog(2, "Reading replacements from $replacements_file\n");
-
-open (REPLACEMENTS, '<:encoding(utf8)', $replacements_file)
-  or die "Could not open file '$replacements_file' for reading: $!";
-
-
-my $replacements_count = 0;
-while (<REPLACEMENTS>) {
-  chomp(); 
-  my $line = $_;
-  $line =~ s/#.*$//; # get rid of comments
-  next if ($line =~ /^\s*$/); # empty line
-  if ($line =~ /^([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]+)$/) {
-    my $class = $1;
-    my $group = $2;
-    my $constraint = $3;
-    my $replacements = $4;
-    if ($randomize) { # randomly mix the replacements (but in the same way for all replacement lines in the same group)
-      #mylog(0, "Before randomization: $group\t$replacements\n");
-      $replacements = reorder_replacements($replacements, $group);
-      #mylog(0, "After randomization:  $group\t$replacements\n");
-    }
-    $class_constraint2replacements{$class . '_' . $constraint} = $replacements;
-    $class_constraint2group{$class . '_' . $constraint} = $group;
-    mylog(0, "Class $class with constraint $constraint, group $group and replacements $replacements\n");
-    $replacements_count++;
-    if ($class2constraints{$class}) { # if there already was a constraint for this class
-      mylog(0, "Note: multiple constraints for class $class.\n");
-      $class2constraints{$class} .= "_";
-    }
-    $class2constraints{$class} .= $constraint;
-  }
-  else {
-    mylog(2, "Unknown format of a line in file $replacements_file:\n$line\n");
-  }
-}
-mylog(2, "$replacements_count replacement rules have been read from file $replacements_file:\n");
-
-close(REPLACEMENTS);
-
-=cut
 
 ###################################################################################
-# Now let us read the text file that should be anonymized
+# Now let us read the text file that should be processed
 ###################################################################################
 
 my $input_content;
 
 if ($stdin) { # the input text should be read from STDIN
 
-  
   mylog(2, "reading from stdin, input_format=$input_format\n");
   if ($input_format eq 'docx') {
     $input_content = convertFromDocx();
@@ -516,11 +415,6 @@ if ($root) {
 # Now we have dependency trees of the sentences; let us search for phrases to be anonymized
 ###########################################################################################
 
-my %group2next_index = ();
-
-my %group_stem2index = (); # a hash keeping info about stems and their replacement index (group . '_' . stem -> replacement index)
-                           # this way I know that Nezbeda, Nezbedová, Nezbedovou etc. (group 'surname', stem 'Nezbed') belong together
-
 my $processing_time;
 # print_log_header();
 
@@ -544,44 +438,8 @@ foreach $root (@trees) {
     my $feats = attr($node, 'feats') // '';
     my $classes = get_NameTag_marks($node) // '';
 
-    # Check if the node is a part of a multiword expression (e.g., a multiword street name) hidden by its predecessor (i.e., by the root of the multiword expr.)
-    my $hidden = attr($node, 'hidden') // '';
-    if ($hidden) {
-      mylog(0, "Skipping node '$form' hidden by '$hidden'\n");
-      next;
-    }
-
-    next if !$classes; # no NameTag class found here
-
     mylog(0, "\nProcessing form '$form' (lemma '$lemma') with NameTag classes '$classes' and feats '$feats'\n");
 
-    foreach my $class (split('~', $classes)) {
-    
-      my $constraints = $class2constraints{$class};
-      if (!$constraints) {
-        mylog(0, "No constraints for NE class '$class', skipping.\n");
-        next;
-      }
-      mylog(0, "Found constraints '$constraints' for NE class '$class'\n");
-
-      foreach my $constraint (split(/_/, $constraints)) { # split the constraints by separator '_' and work with one constraint at a time
-
-        my $matches = check_constraint($node, $constraint); # check if the constraint is met (e.g., Gender=Fem); empty constraint is represented by 'NoConstraint'
-        if (!$matches) {
-          mylog(0, " - the constraint '$constraint' for form '$form' is not met.\n");
-          next;
-        }
-        mylog(0, " - the constraint '$constraint' for form '$form' matches.\n");
-        my $replacement = get_replacement($node, $class, $constraint);
-        mylog(0, "    - replacement in class $class: '$form' -> '$replacement'\n");
-        set_attr($node, 'replacement', $replacement);
-        
-        # Check if this node is a root of a multiword expression such as street name; in that case hide some descendants
-        check_and_hide_multiword($node, $class);
-        
-        last;
-      }
-    }
   }  
 }
 
@@ -641,59 +499,6 @@ sub mylog {
 }
 
 
-=item check_constraint
-
-Check if the constraint is met at the node.
-
-The constraint is a sequence of morphological properties from UD attribute feats, e.g.:
-Gender=Masc|Number=Sing
-A meta property length may be a part of the constraint, e.g. length=3 or length>9
-
-Returns 0 if the constraint (all parts) is not met.
-Otherwise returns 1.
-
-=cut
-
-
-sub check_constraint {
-  my ($node, $constraint) = @_;
-
-  if ($constraint eq 'NoConstraint') { # no constraint, i.e. trivially matched
-    mylog(0, " - no constraint, i.e. trivially matched\n");
-    return 1;
-  }
-
-  my $feats = attr($node, 'feats') // '';
-  my $form = attr($node, 'form') // '';
-  mylog(0, "check_constraint: checking constraint '$constraint' against form '$form' and feats '$feats'\n");
-
-  my @a_constraints = split('\|', $constraint); # get the individul features
-  foreach my $feature (@a_constraints) {
-    mylog(0, " - checking if '$feature' matches\n");
-    if ($feature =~ /^length([<=>])(\d+)$/) {
-      my ($operator, $value) = ($1, $2);
-      my $length = length($form);
-      mylog(0, "     - checking length comparison: '$length $operator $value'\n");      
-      if ($operator eq '=') {
-        return $length == $value;
-      }
-      if ($operator eq '>') {
-        return $length > $value;
-      }
-      if ($operator eq '<') {
-        return $length < $value;
-      }
-    }
-    if ($feats !~ /\b$feature\b/) { # $feature not in $feats
-      mylog(0, "   - constraint $feature not matching; returning 0\n");
-      return 0;
-    }
-    mylog(0, "   - constraint $feature not matches\n");
-  }
-  mylog(0, " - OK, all features matched, the constraint matches.\n");
-  return 1;
-}
-
 =item get_NameTag_marks
 
 Get a list of NameTag marks assigned to the given node; the return value is a string of the marks divided by '~'.
@@ -726,157 +531,6 @@ sub get_NameTag_marks {
   my $node = shift;
   my @values = get_NE_values($node);
   my $marks = join '~', @values;
-  # mylog(0, "get_NameTag_marks: $ne -> $marks\n");
-
-  my $lemma = attr($node, 'lemma') // '';
-  
-  my $parent = $node->getParent;
-  my $parent_lemma = '';
-  if ($parent) {
-    $parent_lemma = attr($parent, 'lemma') // '';
-  }
-  
-  # Birth registration number
-  if (is_birth_number_part1($node)) {
-    return 'nx'; # fake mark for firt part of birth registration number
-  }
-  if (is_birth_number_part2($node)) {
-    return 'ny'; # fake mark for second part of birth registration number
-  }
-
-  # hide 'hlavní' if dependent on 'město' and do not assign any tag to this 'město' 
-  if ($lemma eq 'město') {
-    my @sons_hlavni = grep {attr($_, 'lemma') eq 'hlavní'} $node->getAllChildren;
-    if (@sons_hlavni) {
-      my $hlavni = $sons_hlavni[0];
-      set_attr($hlavni, 'hidden', attr($node, 'ord')); # hiding 'hlavní' in 'hlavní město'
-      return undef; # in this case 'město' should not be a part of the town name (unlike e.g. Nové město nad Metují)
-    }
-  }
-
-  if ($lemma eq '.') { # '.' in e.g. 'ul.' or 'nám.'
-    return undef;
-  }
-  if ($lemma eq 'ulice') {
-    return undef;
-  }
-  if ($lemma eq 'číslo' or $lemma eq 'č') {
-    return undef;
-  }
-  if ($lemma eq '/') { # '/' in e.g. 'Jiráskova 854/3'
-    return undef;
-  }
-
-  # unrecognized second part of a street number (after '/')
-  if ($lemma =~ /^[1-9][0-9]*$/ and $marks !~ /\bah\b/) {
-    my $parent_ne = join('~', get_NE_values($parent));
-    if ($parent_ne =~ /\bah\b/) { # parent was recognized as a street number
-      my @children_slash = grep {attr($_, 'form') eq '/'} $node->getAllChildren;
-      if (@children_slash) { # there is a slash among children
-        return 'ah'; # so this is also a street number
-      }
-    }
-  }
-
-  # street names that are wrongly considered also surnames
-  if ($marks =~ /\bgs\b/ and $marks =~ /\bps\b/) {
-    # check if there are street numbers among children
-    my @children = $node->getAllChildren;
-    foreach my $child (@children) {
-      my $child_ne = join('~', get_NE_values($child));
-      if ($child_ne =~ /\bah\b/) { # a street number among children
-        return 'gs'; # mark this only as a street name, not also as a surname
-      }
-    }
-  }
-
-  # ZIP codes
-  if ($lemma =~ /^[1-9][0-9][0-9]$/ and $marks =~ /\ba[zt]\b/) { # looks like the first part of a ZIP code
-    my @ZIP2_children = grep {attr($_, 'lemma') =~ /^[0-9][0-9]$/ and get_NameTag_marks($_) eq 'ay' } $node->getAllChildren;
-    if (scalar(@ZIP2_children) == 1) { # it really looks like a ZIP code
-      return 'ax'; # a fake class for the first part of a ZIP code
-    }
-  }
-  if ($lemma =~ /^[0-9][0-9]$/ and $marks =~ /\ba[zt]\b/) { # looks like the second part of a ZIP code
-    my $parent = $node->getParent;
-    my $parent_lemma = attr($parent, 'lemma') // '';
-    #my $parent_ne = get_misc_value($parent, 'NE') // '';
-    #my @parent_values = $parent_ne =~ /([A-Za-z][a-z_]?)_[0-9]+/g;
-    #my $parent_marks = join '~', @parent_values;
-    my $parent_marks = join('~', get_NE_values($parent));
-    if ($parent_lemma =~ /^[1-9][0-9][0-9]$/ and $parent_marks=~ /\ba[zt]\b/) { # the parent looks like the first part of a ZIP code
-      return 'ay'; # a fake mark for the second part of a ZIP code
-    }
-  }
-
-  # date of birth/death
-  if (is_day_of_birth($node)) {
-    return 'ta';
-  }
-  if (is_month_of_birth($node)) {
-    return 'tb';
-  }
-  if (is_year_of_birth($node)) {
-    return 'tc';
-  }
-  if (is_day_of_death($node)) {
-    return 'ti';
-  }
-  if (is_month_of_death($node)) {
-    return 'tj';
-  }
-  if (is_year_of_death($node)) {
-    return 'tk';
-  }
-
-  # IČO
-  if (is_ICO($node)) {
-    return 'nk'; # fake mark for IČO
-  }
-
-  # DIČ
-  if (is_DIC($node)) {
-    return 'nl'; # fake mark for DIČ
-  }
-
-  # agenda reference number (číslo jednací)
-  if (is_agenda_ref_number($node)) {
-    return 'nr'; # fake mark for agenda reference number
-  }
-
-  # Street name
-  if (is_street_name($node)) {
-    if ($marks !~ /\bgs\b/) { # looks like a street name but was not recognized by NameTag
-      if (!$marks) { # nothing was recognized by NameTag
-        return 'gs'; # street/square
-      }
-      else {
-        $marks .= '~gs';
-      }
-    }
-  }
-
-  # Urban part
-  if (is_urban_part($node)) {
-    if ($marks !~ /\bgq\b/) { # looks like a street name but was not recognized by NameTag
-      if (!$marks) { # nothing was recognized by NameTag
-        return 'gq'; # urban part
-      }
-      else {
-        $marks .= '~gq';
-      }
-    }
-  }
-
-  # Land register number
-  if (is_land_register_number($node)) {
-    if (!$marks) { # nothing was recognized by NameTag
-      return 'nm'; # fake mark for land register number
-    }
-    else {
-      $marks .= '~nm'; # fake mark for land register number
-    }
-  }
 
   if (!$marks) {
     return undef;
@@ -980,535 +634,6 @@ sub get_NE_values {
 }
 
 
-=item
-
-Returns 1 if it is a day in the expression of someone's date of birth
-
-=cut
-
-sub is_day_of_birth {
-  my ($node) = @_;
-  my $form = attr($node, 'form') // '';;
-  if ($form =~ /^(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31)$/) {
-    my $parent = $node->getParent;
-    return 0 if !$parent;
-    my $parent_form = attr($parent, 'form');
-    if ($parent_form =~ /^(1|2|3|4|5|6|7|8|9|10|11|12)$/) {
-      my @year_brothers = grep {attr($_, 'form') =~ /^[12][09][0-9][0-9]$/} $parent->getAllChildren;
-      if (scalar(@year_brothers) == 1) {
-        my $grandparent = $parent->getParent;
-        return 0 if !$grandparent;
-        my $grandparent_form = attr($grandparent, 'form') // '';
-        my $grandparent_lemma = attr($grandparent, 'lemma') // '';
-        if ($grandparent_lemma =~ /^(narozený)$/ or $grandparent_form =~ /^(nar|n)$/) {
-          return 1;
-        }
-      }
-    }
-  }
-  return 0;
-}
-
-=item
-
-Returns 1 if it is a month in the expression of someone's date of birth
-
-=cut
-
-sub is_month_of_birth {
-  my ($node) = @_;
-  my $form = attr($node, 'form') // '';;
-  if ($form =~ /^(1|2|3|4|5|6|7|8|9|10|11|12)$/) {
-    my $parent = $node->getParent;
-    return 0 if !$parent;
-    my $parent_form = attr($parent, 'form');
-    my $parent_lemma = attr($parent, 'lemma') // '';
-    if ($parent_lemma =~ /^(narozený)$/ or $parent_form =~ /^(nar|n)$/) {
-      my @year_sons = grep {attr($_, 'form') =~ /^[12][09][0-9][0-9]$/} $node->getAllChildren;
-      my @day_sons = grep {attr($_, 'form') =~ /^(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31)$/} $node->getAllChildren;
-      if (scalar(@year_sons) == 1 and scalar(@day_sons)) {
-        return 1;
-      }
-    }
-  }
-  return 0;
-}
-
-=item
-
-Returns 1 if it is a year in the expression of someone's date of birth
-
-=cut
-
-sub is_year_of_birth {
-  my ($node) = @_;
-  my $form = attr($node, 'form') // '';;
-  if ($form =~ /^[12][09][0-9][0-9]$/) {
-    my $parent = $node->getParent;
-    return 0 if !$parent;
-    my $parent_form = attr($parent, 'form');
-    if ($parent_form =~ /^(1|2|3|4|5|6|7|8|9|10|11|12)$/) {
-      my @day_brothers = grep {attr($_, 'form') =~ /^(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31)$/} $parent->getAllChildren;
-      if (scalar(@day_brothers) == 1) {
-        my $grandparent = $parent->getParent;
-        return 0 if !$grandparent;
-        my $grandparent_form = attr($grandparent, 'form') // '';
-        my $grandparent_lemma = attr($grandparent, 'lemma') // '';
-        if ($grandparent_lemma =~ /^(narozený)$/ or $grandparent_form =~ /^(nar|n)$/) {
-          return 1;
-        }
-      }
-    }
-  }
-  return 0;
-}
-
-=item
-
-Returns 1 if it is a day in the expression of someone's date of death
-
-=cut
-
-sub is_day_of_death {
-  my ($node) = @_;
-  my $form = attr($node, 'form') // '';
-  if ($form =~ /^(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31)$/) {
-    my $parent = $node->getParent;
-    return 0 if !$parent;
-    my $parent_form = attr($parent, 'form');
-    if ($parent_form =~ /^(1|2|3|4|5|6|7|8|9|10|11|12)$/) {
-      my @year_brothers = grep {attr($_, 'form') =~ /^[12][09][0-9][0-9]$/} $parent->getAllChildren;
-      if (scalar(@year_brothers) == 1) {
-        my $grandparent = $parent->getParent;
-        return 0 if !$grandparent;
-        my $grandparent_form = attr($grandparent, 'form') // '';
-        my $grandparent_lemma = attr($grandparent, 'lemma') // '';
-        if ($grandparent_lemma =~ /^(zemřelý)$/ or $grandparent_form =~ /^(zem|z)$/) {
-          return 1;
-        }
-      }
-    }
-  }
-  return 0;
-}
-
-=item
-
-Returns 1 if it is a month in the expression of someone's date of death
-
-=cut
-
-sub is_month_of_death {
-  my ($node) = @_;
-  my $form = attr($node, 'form') // '';
-  if ($form =~ /^(1|2|3|4|5|6|7|8|9|10|11|12)$/) {
-    my $parent = $node->getParent;
-    return 0 if !$parent;
-    my $parent_form = attr($parent, 'form');
-    my $parent_lemma = attr($parent, 'lemma') // '';
-    if ($parent_lemma =~ /^(zemřelý)$/ or $parent_form =~ /^(zem|z)$/) {
-      my @year_sons = grep {attr($_, 'form') =~ /^[12][09][0-9][0-9]$/} $node->getAllChildren;
-      my @day_sons = grep {attr($_, 'form') =~ /^(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31)$/} $node->getAllChildren;
-      if (scalar(@year_sons) == 1 and scalar(@day_sons)) {
-        return 1;
-      }
-    }
-  }
-  return 0;
-}
-
-=item
-
-Returns 1 if it is a year in the expression of someone's date of death
-
-=cut
-
-sub is_year_of_death {
-  my ($node) = @_;
-  my $form = attr($node, 'form') // '';
-  if ($form =~ /^[12][09][0-9][0-9]$/) {
-    my $parent = $node->getParent;
-    return 0 if !$parent;
-    my $parent_form = attr($parent, 'form');
-    if ($parent_form =~ /^(1|2|3|4|5|6|7|8|9|10|11|12)$/) {
-      my @day_brothers = grep {attr($_, 'form') =~ /^(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31)$/} $parent->getAllChildren;
-      if (scalar(@day_brothers) == 1) {
-        my $grandparent = $parent->getParent;
-        return 0 if !$grandparent;
-        my $grandparent_form = attr($grandparent, 'form') // '';
-        my $grandparent_lemma = attr($grandparent, 'lemma') // '';
-        if ($grandparent_lemma =~ /^(zemřelý)$/ or $grandparent_form =~ /^(zem|z)$/) {
-          return 1;
-        }
-      }
-    }
-  }
-  return 0;
-}
-
-
-=item
-
-Returns 1 if the given node appears to be a land register number (katastrální číslo pozemku). Otherwise returns 0.
-Technically, it returns 1 if:
-- it is a number
-- and among its predecessors on the part of the path to the root with deprels nmod or nummod (and the final parent of any deprel) is at least one of:
-   - lemma 'pozemek'
-   - or lemma 'číslo' and its parent has form 'p' (p. č.)
-
-=cut
-
-sub is_land_register_number {
-  my $node = shift;
-  my $form = attr($node, 'form') // '';
-  my $deprel = attr($node, 'deprel') // '';
-  if ($form =~ /^\d+$/) { # a number
-    my $parent = $node->getParent;
-    return 0 if !$parent;
-    while ($deprel =~ /^(conj|nmod|nummod)$/) {
-      my $parent_deprel = attr($parent, 'deprel') // '';
-      my $parent_form = attr($parent, 'form') // '';
-      my $parent_lemma = attr($parent, 'lemma') // '';
-      if ($parent_lemma =~ /^pozemek$/) {
-        return 1;
-      }
-      if ($parent_lemma =~ /^číslo$/) {
-        my $grandparent = $parent->getParent;
-        if ($grandparent) {
-          my $grandparent_form = attr($grandparent, 'form') // '';
-          if ($grandparent_form eq 'p') {
-            return 1;
-          }
-        }
-      }
-      $deprel = $parent_deprel;
-      $parent = $parent->getParent;
-    }
-  }
-  return 0;
-}
-
-
-=item
-
-Returns 1 if the given node appears to be an agenda reference number (číslo jednací). Otherwise returns 0.
-Technically, it returns 1 if:
-- it is a number
-- and:
-  - its parent is lemma číslo/č and among the parent's sons there is lemma jednací/j
-  - or its parent is lemma j and among its sons there is lemma číslo/č
-
-=cut
-
-sub is_agenda_ref_number {
-  my $node = shift;
-  my $form = attr($node, 'form') // '';
-  my $deprel = attr($node, 'deprel') // '';
-  if ($form =~ /^\d+$/) { # a number
-    my $parent = $node->getParent;
-    return 0 if !$parent;
-    my $parent_form = lc(attr($parent, 'form')) // '';
-    my $parent_lemma = attr($parent, 'lemma') // '';
-    if ($parent_lemma eq 'číslo' or $parent_form eq 'č') {
-      my @good_sons = grep {attr($_, 'lemma') eq 'jednací' or lc(attr($_, 'form')) eq 'j'} $parent->getAllChildren;
-      if (@good_sons) {
-        return 1;
-      }
-    }
-    if ($parent_lemma eq 'jednací' or $parent_form eq 'j') {
-      my @good_sons = grep {attr($_, 'lemma') eq 'číslo' or lc(attr($_, 'form')) eq 'č'} $parent->getAllChildren;
-      if (@good_sons) {
-        return 1;
-      }
-    }
-  }
-  return 0;
-}
-
-
-=item
-
-Returns 1 if the given node appears to be the first part of a birth registration number. Otherwise returns 0.
-Technically, it returns 1 if:
-- the node is a 6-digit number and:
-   - the first two-digit number is less than 54 and its only son is a 3 digit number
-   - or the first two-digit number is greater than 53 and its only son is a 4 digit number and together the 10-digit number is divisible by 11
-   - or the first two-digit number is greater than 53 and its only son is a 4 digit number, the last digit is 0 and the 9-digit number (without the last digit) divided by 11 gives 10
-- and the grandson is '/'
-
-=cut
-
-sub is_birth_number_part1 {
-  my $node = shift;
-  my $lemma = attr($node, 'lemma') // '';
-
-  if ($lemma =~ /^([0-9][0-9])[0-9][0-9][0-9][0-9]$/) { # might be the first part of a birth registration number
-    #mylog(0, "is_birth_number_part1: six-digit number\n");
-    my $year = $1;
-    my @sons = $node->getAllChildren;
-    my @RC2_children = grep {attr($_, 'lemma') =~ /^[0-9][0-9][0-9][0-9]?$/} @sons;
-    if (scalar(@sons) == 1 and scalar(@RC2_children) == 1) { # it has the only one and correct son
-      #mylog(0, "is_birth_number_part1: single three- or four-digit number\n");
-      my $son = $RC2_children[0];
-      my @grandsons = $son->getAllChildren;
-      if (scalar(@grandsons) == 1 and attr($grandsons[0], 'lemma') eq '/') { # the only grandson is '/'
-        my $RC2 = attr($son, 'lemma');
-        #mylog(0, "is_birth_number_part1: grandson '/', year: '$year', son: '$RC2', length: " . length($RC2) . "\n");
-        if ($year < 54 and length($RC2) == 3) {
-          #mylog(0, "is_birth_number_part1: year<54 and three-digit number\n");
-          return 1; # a birth registration number up to the year 1953
-        }
-        if ($year > 53 and length($RC2) == 4) { # might be a birth reg. number since 1954
-          #mylog(0, "is_birth_number_part1: year>53 and four-digit number\n");
-          my $whole = $lemma . $RC2;
-          my $remainder = $whole % 11;
-          if ($remainder == 0) { # divisible by 11
-            return 1;
-          }
-          if (substr($whole, -1) eq '0') { # last digit is 0
-            my $whole_without_last = substr($whole, 0, -1);
-            $remainder = $whole_without_last % 11;
-            if ($remainder == 10) { # the first 9-digit part after division by 11 gives 10
-              return 1;
-            }
-          }
-        }
-      }
-    }
-  }
-  return 0;
-}
-
-sub is_birth_number_part2 {
-  my $node = shift;
-  my $parent = $node->getParent;
-  if (is_birth_number_part1($parent)) {
-    return 1;
-  }
-  return 0;
-}
-
-
-
-=item
-
-Returns 1 if the given node appears to be an IČO. Otherwise returns 0.
-Technically, it returns 1 if:
-- either the node represents an 8-digit number
-- or it is a number of length 1-8 and its parent is 'IČO' or 'IČ' (also 'ICO' and 'IC')
-
-=cut
-
-sub is_ICO {
-  my $node = shift;
-  my $form = attr($node, 'form');
-  if ($form =~ /^\d{8}$/) { # eight digits
-    return 1;
-  }
-  if ($form =~ /^\d{1,8}$/) { # max eight digits
-    my $parent = $node->getParent;
-    my $parent_lemma = attr($parent, 'lemma') // '';
-    if ($parent_lemma =~ /^I[ČC](O)?$/) {
-      return 1;
-    }
-  }
-  return 0;
-}
-
-
-=item
-
-Returns 1 if the given node appears to be a DIČ (VAT ID). Otherwise returns 0.
-Technically, it returns 1 if:
-- either the node represents an 8-12 digit number preceded by two capital letters
-- or it is a number of length 2-12 (optionally preceded by preceded by two capital letters) and its parent is 'DIČ' (also 'DIC')
-
-=cut
-
-sub is_DIC {
-  my $node = shift;
-  my $form = attr($node, 'form');
-  if ($form =~ /^[A-Z][A-Z]\d{8,12}$/) { # two capital letters and eight to twelve digits
-    return 1;
-  }
-  if ($form =~ /^([A-Z][A-Z])?\d{2,12}$/) { # optionally two capital letters and two to twelve digits
-    my $parent = $node->getParent;
-    my $parent_lemma = attr($parent, 'lemma') // '';
-    if ($parent_lemma =~ /^DI[ČC]$/) {
-      return 1;
-    }
-  }
-  return 0;
-}
-
-
-=item
-
-Returns 1 if the given node appears to be an urban part (numeric or string). Otherwise returns 0.
-Technically, it returns 1 if:
-- the form is a number or (starts with a capital letter and and it is an adjective or a noun (incl. a proper noun))
-- and NameTag did not assign any g-mark to it
-- the parent has 'gu' mark
-
-=cut
-
-sub is_urban_part {
-  my $node = shift;
-  my $form = attr($node, 'form');
-  my $upostag = attr($node, 'upostag');
-  if ($form =~ /^\d{1,2}$/ or ($form =~ /^\p{Upper}/ and $upostag =~ /^(ADJ|NOUN|PROPN)$/)) { # is a 1 or 2-digit number or starts with a capital letter and is a noun/adjective
-    my @nametag_g_marks = grep {/^g/} get_NE_values($node);
-    if (!scalar(@nametag_g_marks)) { # no g-mark assigned to the node
-      my $parent = $node->getParent;
-      my @nametag_gu_marks = grep {/gu/} get_NE_values($parent);
-      if (@nametag_gu_marks) {
-        return 1;
-      }
-    }
-  }
-  return 0;
-}
-
-
-=item
-
-Returns 1 if the given node appears to be a name of a street. Otherwise returns 0.
-Technically, it returns 1 if:
-either:
-- the form starts with a capital letter
-- and it is an adjective or a noun (incl. a proper noun)
-- and NameTag did not assign any g-mark to it (because also town may depend on 'ulice', e.g. in "ulice Kralická v Prostějově"
-- and the lemma of the parent is 'ulice'
-or:
-- the form starts with a capital letter
-- and it is an adjective or a noun (incl. a proper noun)
-- and NameTag did not assign any g-mark to it (because also town may depend on 'ulice', e.g. in "ulice Kralická v Prostějově"
-- and NameTag assigned 'ps' to it (surname)
-- and there is a number among its sons
-
-
-=cut
-
-sub is_street_name {
-  my $node = shift;
-  my $form = attr($node, 'form');
-  my $upostag = attr($node, 'upostag');
-  if ($form =~ /^\p{Upper}/ and $upostag =~ /^(ADJ|NOUN|PROPN)$/) { # starts with a capital letter and is a noun/adjective
-    my @nametag_g_marks = grep {/^g/} get_NE_values($node);
-    if (!scalar(@nametag_g_marks)) { # no g-mark assigned to the node
-      my $parent = $node->getParent;
-      my $parent_lemma = attr($parent, 'lemma') // '';
-      if ($parent_lemma =~ /^ulice$/) {
-        return 1;
-      }
-      my @number_sons = grep {attr($_, 'form') =~ /^\d+$/} $node->getAllChildren;
-      if (@number_sons) {
-        my @nametag_ps_marks = grep {/ps/} get_NE_values($node);
-        if (@nametag_ps_marks) {
-          return 1;
-        }
-      }
-    }
-  }
-  return 0;
-}
-
-
-=item check_and_hide_multiword
-
-Checks if the node is a root of a multiword expression such as a street name (Nábřeží Kapitána Jaroše); in that case hides some of the descendants.
-The nodes are hidden by setting attribute 'hidden' to id (i.e., ord) of the root of the multiword phrase.
-If the last hidden node has SpaceAfter=No, it is set at the "root" node
-
-=cut
-
-sub check_and_hide_multiword {
-  my ($node, $class) = @_;
-  my @hidden_nodes = check_and_hide_multiword_recursive(attr($node, 'ord'), $node, $class);
-  if (@hidden_nodes) {
-    my @sorted = sort {attr($a, 'ord') <=> attr($b, 'ord')} @hidden_nodes;
-    my $last = $sorted[-1]; # the last of the hidden nodes
-    my $SpaceAfter = get_misc_value($last, 'SpaceAfter') // '';
-    my $SpaceAfterOrig = get_misc_value($node, 'SpaceAfter') // '';
-    if ($SpaceAfter eq 'No') { # we need to set this property for $node
-      set_property($node, 'misc', 'SpaceAfter', 'No');
-      if ($SpaceAfterOrig ne 'No') { # but we need to leave info that originally there was space here (for displaying orig text)
-        set_property($node, 'misc', 'SpaceAfterOrig', 'Yes');
-      }
-    }
-    my $SpacesAfter = get_misc_value($last, 'SpacesAfter') // '';
-    if ($SpacesAfter) { # we need to set this property for $node
-      set_property($node, 'misc', 'SpacesAfter', $SpacesAfter);
-    }
-  }
-}
-    
-sub check_and_hide_multiword_recursive {
-  my ($id, $node, $class) = @_;
-  my @name_parts = ();
-  my @recursive_name_parts = ();
-  if ($class eq 'gs') { # a street name
-    @name_parts = grep {grep {/gs/} get_NameTag_marks($_) and attr($_, 'deprel') =~ /(amod|nmod|flat|case)/}
-                  grep {attr($_, 'form') ne 'PSČ'}
-                  $node->getAllChildren;
-    foreach my $street_name_part (@name_parts) {
-      set_attr($street_name_part, 'hidden', $id);
-      mylog(0, "Hiding street name part " . attr($street_name_part, 'form') . "\n");
-      @recursive_name_parts = check_and_hide_multiword_recursive($id, $street_name_part, $class);
-    }
-  }
-  elsif ($class eq 'gu' or $class eq 'gq') { # a town / town part
-    @name_parts = grep {grep {/(gu|gq)/} get_NameTag_marks($_) and attr($_, 'deprel') =~ /(amod|nmod|flat|case|nummod)/}
-                  grep {attr($_, 'form') ne 'PSČ'}
-                  $node->getAllChildren;
-    foreach my $town_name_part (@name_parts) {
-      set_attr($town_name_part, 'hidden', $id);
-      mylog(0, "Hiding town name part " . attr($town_name_part, 'form') . "\n");
-      my @puncts = grep {attr($_, 'deprel') eq 'punct'} $town_name_part->getAllChildren; # punctuation such as in "Praha 7 - Holešovice"
-      foreach my $punct (@puncts) {
-        set_attr($punct, 'hidden', $id);
-        mylog(0, "Hiding punctuation in town name '" . attr($punct, 'form') . "'\n");
-      }
-      push(@name_parts, @puncts);
-      @recursive_name_parts = check_and_hide_multiword_recursive($id, $town_name_part, $class);
-    }
-  }
-  elsif ($class eq 'if') { # companies, concerns...
-    @name_parts = grep {grep {/(if)/} get_NE_values($_) and attr($_, 'deprel') =~ /(amod|nmod|flat|case|nummod)/}
-                  grep {attr($_, 'form') ne 'PSČ'}
-                  $node->getAllChildren;
-    foreach my $company_name_part (@name_parts) {
-      set_attr($company_name_part, 'hidden', $id);
-      mylog(0, "Hiding company name part " . attr($company_name_part, 'form') . "\n");
-      my @puncts = grep {attr($_, 'deprel') eq 'punct'} $company_name_part->getAllChildren; # punctuation
-      foreach my $punct (@puncts) {
-        set_attr($punct, 'hidden', $id);
-        mylog(0, "Hiding punctuation in company name '" . attr($punct, 'form') . "'\n");
-      }
-      push(@name_parts, @puncts);
-      @recursive_name_parts = check_and_hide_multiword_recursive($id, $company_name_part, $class);
-    }
-  }
-  elsif ($class eq 'nr') { # a fake mark for agenda reference number (číslo jednací)
-    @name_parts = grep {attr($_, 'upostag') eq 'NUM' and attr($_, 'deprel') eq 'compound'}
-                  $node->getAllChildren;
-    foreach my $name_part (@name_parts) {
-      set_attr($name_part, 'hidden', $id);
-      mylog(0, "Hiding agenda reference number part " . attr($name_part, 'form') . "\n");
-      my @puncts = grep {attr($_, 'deprel') eq 'punct'} $name_part->getAllChildren; # punctuation
-      foreach my $punct (@puncts) {
-        set_attr($punct, 'hidden', $id);
-        mylog(0, "Hiding punctuation in agenda reference number '" . attr($punct, 'form') . "'\n");
-      }
-      push(@name_parts, @puncts);
-      @recursive_name_parts = check_and_hide_multiword_recursive($id, $name_part, $class);
-    }
-  }
-  
-  push(@name_parts, @recursive_name_parts);
-  return @name_parts;
-}
-
 =item set_property
 
 In the given attribute at the given node (e.g., 'misc'), it sets the value of the given property.
@@ -1529,121 +654,6 @@ sub set_property {
 
 
 =item
-
-# Funkce pro přeházení prvků v $replacements podle uloženého pořadí pro danou skupinu
-my %group2reordering; # reordering of replacements for a given group
-# values of the hash are arrays that contain new indexes for each array index; the length of the array is the same as number of replacements in one replacement line in the given group
-
-=cut
-sub reorder_replacements {
-    my ($replacements, $group) = @_;
-
-    # Pokud pro danou skupinu ještě nejsou uložené přeházené indexy, vytvoř je
-    unless (exists $group2reordering{$group}) {
-        my @indices = shuffle_indices(split(/\|/, $replacements));
-        $group2reordering{$group} = \@indices;
-    }
-
-    # Přeházení prvků podle uložených indexů
-    my @shuffled = map { (split(/\|/, $replacements))[$_] } @{$group2reordering{$group}};
-
-    # Vrácení přeházených prvků jako řetězec oddělený svislítky
-    return join('|', @shuffled);
-}
-
-# Funkce pro náhodné přeházení indexů v poli
-sub shuffle_indices {
-    my @indices = 0..$#_;
-    for my $i (reverse 1..$#_) {
-        my $j = int rand ($i+1);
-        @indices[$i, $j] = @indices[$j, $i];
-    }
-    return @indices;
-}
-
-
-sub get_replacement {
-  my ($node, $class, $constraint) = @_;
-
-  my $lemma = attr($node, 'lemma') // '';
-  my $form = attr($node, 'form') // '';
-  my $stem = get_stem_from_lemma($lemma);
-
-=item
-
-  # check if this lemma with this NameTag class has already been replaced
-  my $replacement = $replaced{$class . '_' . $lemma};
-  if ($replacement) {
-    return $replacement;
-  }
-
-=cut
-
-  my $class_constraint = $class . '_' . $constraint;
-  my $replacements = $class_constraint2replacements{$class_constraint};
-  if (!$replacements) {
-    mylog(0, "No replacements for NE class '$class' and constraint '$constraint', skipping.\n");
-    next;
-  }
-  mylog(0, "  - found replacements '$replacements' for class '$class' and constraint '$constraint'\n");
-  my @a_replacements = split('\|', $replacements);
-  my $group = $class_constraint2group{$class_constraint};
-  
-  my $replacement;
-  # check if this stem in this group has already been replaced
-  my $replacement_index = $group_stem2index{$group . '_' . $stem};
-  if (defined($replacement_index)) {
-    mylog(0, "get_replacement: Found a previously assigned replacement index for group $group and stem $stem: $replacement_index\n");
-    my $number_of_replacements = scalar(@a_replacements);
-    if ($replacement_index >= $number_of_replacements) { # maximum index exceeded
-      $replacement = '[' . $class . '_#' . $replacement_index . ']';
-      mylog(0, "    - maximum replacement index $number_of_replacements exceeded by requested index $replacement_index!\n");
-    }
-    else {
-      $replacement = $a_replacements[$replacement_index];
-    }
-  }
-  my $new = 0;
-  while (!defined($replacement_index)) { # this stem within this group has not yet been seen, so use a new index
-    mylog(0, "get_replacement: Unseen group $group and stem $stem, assigning a new replacement index\n");
-    $replacement_index = $group2next_index{$group} // 0;
-    $group2next_index{$group}++;
-    $new = 1;
-    my $number_of_replacements = scalar(@a_replacements);
-    if ($replacement_index >= $number_of_replacements) { # maximum index exceeded
-      $replacement = '[' . $class . '_#' . $replacement_index . ']';
-      mylog(0, "    - maximum replacement index $number_of_replacements exceeded by requested index $replacement_index!\n");
-    }
-    else {
-      $replacement = $a_replacements[$replacement_index];
-      if (lc($replacement) eq lc($form)) { # the replacement is accidentally equal to the original form (e.g., Praze vs. Praze); let us skip this replacement index
-        mylog(0, "    - the replacement is equal to the original form ($form); let us skip this replacement index ($replacement_index)\n");
-        $replacement_index = undef; # run the while cycle one more time to use the next replacement index
-      }
-    }
-  }
-  if ($new) { # let us store the index for this stem with this group
-    mylog(0, "get_replacement: Storing a newly assigned replacement index ($replacement_index) for group $group and stem $stem\n");
-    $group_stem2index{$group . '_' . $stem} = $replacement_index;
-  }
-  if ($form =~ /^\p{Lu}+$/) { # the original form is capitalized
-    $replacement = uc($replacement); # capitalize also the replacement
-  }
-  return $replacement;
-}
-
-
-sub get_stem_from_lemma {
-  my $lemma = shift;
-  $lemma =~ s/ová$//; # Sedláčková (Sedláček), but also Vondrušková (Vondruška)
-  $lemma =~ s/á$//; # Mírovská
-  $lemma =~ s/ý$//; # Mírovský
-  $lemma =~ s/í$//; # Krejčí
-  $lemma =~ s/a$//; # Vondruška (Vondrušková), Svoboda (Svobodová)
-  $lemma =~ s/[rlkšs]$//; # Sedláček (Sedláčková), Orel (Orlová), Burger (Burgrová), Lukeš (Lukšová) etc.
-  $lemma =~ s/e$//; # cont.
-  return $lemma;
-}
 
 
 =item has_child_with_lemma
@@ -1680,30 +690,6 @@ sub get_misc_value {
   return undef;
 }  
 
-=item
-
-sub get_misc_value {
-    my ($node, $jmeno_featury) = @_;
-    my $text = attr($node, 'misc') // '';
-    
-    my %featury;
-    
-    # Rozdělení textu na featury
-    my @featury_sekvence = split /\|/, $text;
-    
-    # Parsování každé featury a uložení do hash
-    foreach my $featura (@featury_sekvence) {
-        if ($featura =~ /^(\w+)=(.+)$/) {
-            my ($jmeno, $hodnota) = ($1, $2);
-            $featury{$jmeno} = $hodnota;
-        }
-    }
-    
-    # Vrácení hodnoty featury, pokud existuje
-    return $featury{$jmeno_featury};
-}
-
-=cut
 
 =item get_feat_value
 
@@ -1742,66 +728,8 @@ sub get_output {
 <head>
   <style>
         /* source classes colours */
-        .replacement-text {
-            color: $color_replacement_text;
-            text-decoration: underline;
-            font-weight: bold
-        }
-        .replacement-text-gu {
-            color: $color_replacement_gu;
-        }
-        .replacement-text-gq {
-            color: $color_replacement_gq;
-        }
-        .replacement-text-gs {
-            color: $color_replacement_gs;
-        }
-        .replacement-text-ah {
-            color: $color_replacement_ah;
-        }
-        .replacement-text-az {
-            color: $color_replacement_az;
-        }
-        .replacement-text-pf {
-            color: $color_replacement_pf;
-        }
-        .replacement-text-ps {
-            color: $color_replacement_ps;
-        }
-        .replacement-text-me {
-            color: $color_replacement_me;
-        }
-        .replacement-text-if {
-            color: $color_replacement_if;
-        }
-        .replacement-text-nk {
-            color: $color_replacement_nk;
-        }
-        .replacement-text-nl {
-            color: $color_replacement_nl;
-        }
-        .replacement-text-nm {
-            color: $color_replacement_nm;
-        }
-        .replacement-text-nxy {
-            color: $color_replacement_nxy;
-        }
-        .replacement-text-tabc {
-            color: $color_replacement_tabc;
-        }
-        .replacement-text-tijk {
-            color: $color_replacement_tijk;
-        }
-        .replacement-text-nr {
-            color: $color_replacement_nr;
-        }
-        .orig-text {
-            color: $color_orig_text;
-            text-decoration: line-through;
-        }
-        .orig-brackets {
-            color: $color_source_brackets;
-            vertical-align: sub;
+        .highlighted-text {
+            color: $color_highlight_general;
         }
   </style>
 </head>
@@ -1813,18 +741,6 @@ END_OUTPUT_HEAD
 
   my $first_sent = 1; # for sentence separation in txt and html formats (first sentence in the file should not be separated)
   
-=item
-
-  # for conllu:
-  my $SD_phrase_count = 0; # counting citation phrases
-  my $SD_source_count = 0; # counting citation sources
-  my $SD_count; # for keeping the number of the current event
-  my $inside_SD = 0; # for dealing with multi-token events
-  my $end_of_SD = 0; # dtto
-  my $SD_type = ''; # type of the event - P for phrases, S for sources
-  my $SD_subtype = ''; # source type
-
-=cut
 
   foreach $root (@trees) {
 
@@ -1858,28 +774,6 @@ END_OUTPUT_HEAD
       $output .= "# text = $text\n" if $text;
     }
 
-=item maybe not needed since using SpacesAfter
-
-    # sentence separation in txt and html formats
-    if ($format =~ /^(txt|html)$/) {
-      if ($first_sent) {
-        $first_sent = 0;
-      }
-      else {
-        if ($input_format eq 'presegmented') { # each sentence should go to its own line
-          $output .= "\n";
-          if ($format eq 'html') {
-            $output .= '<br>';
-          }
-        }
-        else {
-          $output .= ' ';
-        }
-      }
-    }
-
-=cut
-
     # PRINT THE SENTENCE TOKEN BY TOKEN
     my @nodes = sort {attr($a, 'ord') <=> attr($b, 'ord')} descendants($root);
     my $space_before = '';
@@ -1889,7 +783,7 @@ END_OUTPUT_HEAD
       next if attr($node, 'hidden'); # do not output hidden nodes (originally parts of multiword expressions such as multiword street names)
       
       # COLLECT INFO ABOUT THE TOKEN
-      my $replacement = attr($node, 'replacement');
+      #my $replacement = attr($node, 'replacement');
       my $form = $replacement // attr($node, 'form');
       my $classes = get_NameTag_marks($node) // '';
 
@@ -1897,88 +791,20 @@ END_OUTPUT_HEAD
       my $span_end = '';
       my $info_span = '';
 
+=item
+
       if ($replacement and $format eq 'html') {
-        my $span_class = 'replacement-text';
+        my $span_class = 'highlighted-text';
         if ($classes =~/\bgu\b/) {
           $span_class .= ' replacement-text-gu';
-        }
-        elsif ($classes =~/\bgq\b/) {
-          $span_class .= ' replacement-text-gq';
-        }
-        elsif ($classes =~/\bgs\b/) {
-          $span_class .= ' replacement-text-gs';
-        }
-        elsif ($classes =~/\bpf\b/) {
-          $span_class .= ' replacement-text-pf';
-        }
-        elsif ($classes =~/\bps\b/) {
-          $span_class .= ' replacement-text-ps';
-        }
-        elsif ($classes =~/\bah\b/) {
-          $span_class .= ' replacement-text-ah';
-        }
-        elsif ($classes =~/\ba[xyz]\b/) {
-          $span_class .= ' replacement-text-az';
-        }
-        elsif ($classes =~/\bme\b/) {
-          $span_class .= ' replacement-text-me';
-        }
-        elsif ($classes =~/\bif\b/) {
-          $span_class .= ' replacement-text-if';
-        }
-        elsif ($classes =~/\bnk\b/) {
-          $span_class .= ' replacement-text-nk';
-        }
-        elsif ($classes =~/\bnl\b/) {
-          $span_class .= ' replacement-text-nl';
-        }
-        elsif ($classes =~/\bnm\b/) {
-          $span_class .= ' replacement-text-nm';
-        }
-        elsif ($classes =~/\bn[xy]\b/) {
-          $span_class .= ' replacement-text-nxy';
-        }
-        elsif ($classes =~/\bt[abc]\b/) {
-          $span_class .= ' replacement-text-tabc';
-        }
-        elsif ($classes =~/\bt[ijk]\b/) {
-          $span_class .= ' replacement-text-tijk';
-        }
-        elsif ($classes =~/\bnr\b/) {
-          $span_class .= ' replacement-text-nr';
         }
         $span_start = "<span class=\"$span_class\">";
         $span_end = '</span>';
       }
-      
-      if (($diff and $replacement) or ($add_NE and $classes and $replacement) or ($add_NE and $add_NE == 2 and $classes)) { # should the original form and/or NE class be displayed as well?
-        if ($format eq 'txt') {
-          $info_span = '_[';
-        }
-        elsif ($format eq 'html') {
-          $info_span = '<span class="orig-brackets">[';
-        }
-        if ($add_NE and $classes) {
-          $info_span .= $classes;
-          $info_span .= '/' if ($diff and $replacement);
-        }
-        if ($diff and $replacement) {
-          if ($format eq 'html') {
-            $info_span .= '<span class="orig-text">';
-          }
-          $info_span .= get_original($node); # usually just attr($node, 'form') but more complex if hidden nodes below
-          if ($format eq 'html') {
-            $info_span .= '</span>';
-          }
-        }
-        if ($format eq 'txt') {
-          $info_span .= ']';
-        }
-        elsif ($format eq 'html') {
-          $info_span .= ']</span>';
-        }
-      }
-      
+
+=cut
+
+
       # PRINT THE TOKEN
       if ($format =~ /^(txt|html)$/) {
         my $SpaceAfter = get_misc_value($node, 'SpaceAfter') // '';
@@ -2073,21 +899,6 @@ END_OUTPUT_HEAD
   return $output;
   
 } # get_output
-
-
-=item get_original
-
-Returns the original form of this node. Usually it is just attr($node, 'form') but sometimes it contains also hidden nodes from the subtree pointing to this node.
-
-=cut
-
-sub get_original {
-  my $node = shift;
-  my $ord = attr($node, 'ord');
-  my @hidden_descendants = grep {attr($_, 'hidden') and attr($_, 'hidden') eq $ord} descendants($node);
-  push(@hidden_descendants, $node);
-  return surface_text(@hidden_descendants);
-}
 
 
 =item surface_text
