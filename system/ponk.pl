@@ -25,7 +25,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.01 20240326'; # version of the program
+my $VER = '0.01 20240327'; # version of the program
 
 my @features = ('nothing yet');
 
@@ -417,53 +417,183 @@ if ($root) {
 # Now we have dependency trees of the sentences
 ###############################################
 
+my $processing_time;
+# print_log_header();
+
+# variables for statistics
+my $sentences_count = scalar(@trees);
+my $tokens_count = 0;
+foreach my $root (@trees) { # count number of tokens
+  $tokens_count += scalar(descendants($root));
+}
+
 ###############################################
 # Let us process MarkDown info if present
 ###############################################
 
-my $processing_time;
-# print_log_header();
+if ($input_format eq 'md') {
 
-# variables and hashes for statistics
-my $sentences_count = scalar(@trees);
-my $tokens_count = 0;
+  my $inside_bold = 0;
+  
+  foreach my $root (@trees) {
+    mylog(1, "\n====================================================================\n");
+    mylog(1, "Sentence id=" . attr($root, 'id') . ": " . attr($root, 'text') . "\n");
+    # print_children($root, "\t");
 
-foreach $root (@trees) {
-  mylog(1, "\n====================================================================\n");
-  mylog(1, "Sentence id=" . attr($root, 'id') . ": " . attr($root, 'text') . "\n");
-  # print_children($root, "\t");
+    my @all_nodes_ord_sorted = sort {attr($a, 'ord') <=> attr($b, 'ord')} descendants($root);
+    my $sentence_length = scalar(@all_nodes_ord_sorted);
 
-  # Check if the sentence is a heading (i.e., check if there are some dashes at the end of the sentence
-  my @all_nodes_ord_sorted = sort {attr($a, 'ord') <=> attr($b, 'ord')} descendants($root);
-  my @end_dashes = ();
-  while (scalar(@all_nodes_ord_sorted) and attr($all_nodes_ord_sorted[-1], 'form') eq '-') {
-    push (@end_dashes, pop(@all_nodes_ord_sorted));
-  }
-  if (scalar(@end_dashes) > 2) { # let us say that we need at least three dashes
-    mylog(0, "Found a heading\n");
-    set_property($root, 'ponk', 'is_heading', 1);
+    ################################
+    # MainHeading
+    # ============
+    ################################
+    # Check if the sentence is a main heading (i.e., check if there are some equal marks at the end of the sentence
+    my @end_equal_marks = ();
+    my @nodes_copy = @all_nodes_ord_sorted;
+    while (scalar(@nodes_copy) and attr($nodes_copy[-1], 'form') eq '=') {
+      push (@end_equal_marks, pop(@nodes_copy));
+    }
+    if (scalar(@end_equal_marks) > 2) { # let us say that we need at least three equal marks
+      mylog(0, "Found a main heading marked by a sequence of '='\n");
+      set_property($root, 'ponk', 'MainHeading', 1);
+    }
+
+    ################################
+    # # MainHeading (marked by one '#')
+    ################################
+    # Check if the sentence is a main heading (i.e., check if there is '# ' at the beginning)
+    if ($sentence_length > 1) {
+      if (attr($all_nodes_ord_sorted[0], 'form') eq '#') { # the first token is '#'
+        my $SpaceAfter = get_property($all_nodes_ord_sorted[0], 'misc', 'SpaceAfter') // 'Yes';
+        if ($SpaceAfter eq 'Yes') {
+          mylog(0, "Found a main heading marked by a '#' prefix\n");
+          set_property($root, 'ponk', 'MainHeading', 1);
+        }
+      }
+    }
+      
+    ################################
+    # Heading
+    # -------
+    ################################
+    # Check if the sentence is a heading (i.e., check if there are some dashes at the end of the sentence
+    my @end_dashes = ();
+    my @nodes_copy = @all_nodes_ord_sorted;
+    while (scalar(@nodes_copy) and attr($nodes_copy[-1], 'form') eq '-') {
+      push (@end_dashes, pop(@nodes_copy));
+    }
+    if (scalar(@end_dashes) > 2) { # let us say that we need at least three dashes
+      mylog(0, "Found a heading marked by a sequence of '-'\n");
+      set_property($root, 'ponk', 'Heading', 1);
+    }
+
+    ################################
+    # ## Heading (marked by '##')
+    ################################
+    # Check if the sentence is a heading (i.e., check if there is '## ' at the beginning)
+    if ($sentence_length > 2) {
+      if (attr($all_nodes_ord_sorted[0], 'form') eq '#') { # the first token is '#'
+        my $SpaceAfter = get_property($all_nodes_ord_sorted[0], 'misc', 'SpaceAfter') // 'Yes';
+        if ($SpaceAfter eq 'No') {
+          if (attr($all_nodes_ord_sorted[1], 'form') eq '#') { # the second token is '#'
+            $SpaceAfter = get_property($all_nodes_ord_sorted[1], 'misc', 'SpaceAfter') // 'Yes';
+            if ($SpaceAfter eq 'Yes') {
+              mylog(0, "Found a heading marked by a '##' prefix\n");
+              set_property($root, 'ponk', 'Heading', 1);
+            }
+          }
+        }
+      }
+    }
+
+    ################################
+    # ### SmallHeading (marked by '###')
+    ################################
+    # Check if the sentence is a small heading (i.e., check if there is '### ' at the beginning)
+    if ($sentence_length > 3) {
+      if (attr($all_nodes_ord_sorted[0], 'form') eq '#') { # the first token is '#'
+        my $SpaceAfter = get_property($all_nodes_ord_sorted[0], 'misc', 'SpaceAfter') // 'Yes';
+        if ($SpaceAfter eq 'No') {
+          if (attr($all_nodes_ord_sorted[1], 'form') eq '#') { # the second token is '#'
+            $SpaceAfter = get_property($all_nodes_ord_sorted[1], 'misc', 'SpaceAfter') // 'Yes';
+            if ($SpaceAfter eq 'No') {
+              if (attr($all_nodes_ord_sorted[2], 'form') eq '#') { # the third token is '#'
+                $SpaceAfter = get_property($all_nodes_ord_sorted[2], 'misc', 'SpaceAfter') // 'Yes';
+                if ($SpaceAfter eq 'Yes') {
+                  mylog(0, "Found a small heading marked by a '###' prefix\n");
+                  set_property($root, 'ponk', 'SmallHeading', 1);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    # Now let us go through individual tokens
+    
+    for(my $i=0; $i<$sentence_length; $i++) {
+      my $node = $all_nodes_ord_sorted[$i];
+
+      my $form = attr($node, 'form') // '';
+      my $lemma = attr($node, 'lemma') // '';
+      #my $tag = attr($node, 'xpostag') // '';
+      #my $feats = attr($node, 'feats') // '';
+      #my $classes = get_NameTag_marks($node) // '';
+
+      mylog(0, "\nProcessing form '$form' (lemma '$lemma')\n");
+      #mylog(0, "\nProcessing form '$form' (lemma '$lemma') with NameTag classes '$classes' and feats '$feats'\n");
+
+      ################################
+      # **bold text**
+      ################################
+      # Search for a start or end bold ('**')
+      if ($form eq '*') {
+        if ($i < $sentence_length - 1
+          and attr($all_nodes_ord_sorted[$i+1], 'form') eq '*'  # the next token is also '*'
+          and ($i == $sentence_length - 2 or attr($all_nodes_ord_sorted[$i+2], 'form') ne '*')  # the sentence either end with the next token or there are no more consequtive '*'
+          and ($i == 0 or attr($all_nodes_ord_sorted[$i-1], 'form') ne '*')) { # and there is no '*' just before the actual token
+          # We have found '**', i.e. a start or an end of bold
+          $inside_bold = 1 - $inside_bold;
+          mylog(0, "Found a bold mark ('**'); inside_bold changed to: '$inside_bold'\n");
+          set_property($all_nodes_ord_sorted[$i], 'misc', 'PonkMD', 1); # mark both stars as a markdown mark
+          set_property($all_nodes_ord_sorted[$i+1], 'misc', 'PonkMD', 1);
+        }
+      }
+
+      ################################
+      # __bold text__
+      ################################
+      # Search for a start or end bold ('__')
+      if ($form eq '_') {
+        if ($i < $sentence_length - 1
+          and attr($all_nodes_ord_sorted[$i+1], 'form') eq '_'  # the next token is also '_'
+          and ($i == $sentence_length - 2 or attr($all_nodes_ord_sorted[$i+2], 'form') ne '_')  # the sentence either end with the next token or there are no more consequtive '_'
+          and ($i == 0 or attr($all_nodes_ord_sorted[$i-1], 'form') ne '_')) { # and there is no '_' just before the actual token
+          # We have found '__', i.e. a start or an end of bold
+          $inside_bold = 1 - $inside_bold;
+          mylog(0, "Found a bold mark ('__'); inside_bold changed to: '$inside_bold'\n");
+          set_property($all_nodes_ord_sorted[$i], 'misc', 'PonkMD', 1); # mark both underscores as a markdown mark
+          set_property($all_nodes_ord_sorted[$i+1], 'misc', 'PonkMD', 1);
+        }
+      }
+
+      my $is_md = get_property($all_nodes_ord_sorted[$i], 'misc', 'PonkMD'); 
+      
+      if ($inside_bold and !$is_md) {
+        set_property($all_nodes_ord_sorted[$i], 'misc', 'PonkBold', 1);
+      }
+      
+    }
+
   }
   
-=item
+} # end of processing markdown if needed
 
-  my @nodes = descendants($root);
-  $tokens_count += scalar(@nodes) - 1; # without the root
 
-  foreach my $node (@nodes) {
-  
-    my $lemma = attr($node, 'lemma') // '';
-    my $tag = attr($node, 'xpostag') // '';
-    my $form = attr($node, 'form') // '';
-    my $feats = attr($node, 'feats') // '';
-    my $classes = get_NameTag_marks($node) // '';
-
-    mylog(0, "\nProcessing form '$form' (lemma '$lemma') with NameTag classes '$classes' and feats '$feats'\n");
-
-  }
-  
-=cut
-
-}
+#####################################################
+# The whole text has been processed, let us finish up
+#####################################################
 
 # print_log_tail();
 
@@ -672,6 +802,29 @@ sub set_property {
   my @sorted = sort @values;
   my $new_value = join('|', @sorted);
   set_attr($node, $attr, $new_value);
+}
+
+
+=item get_property
+
+From the given attribute at the given node (e.g., 'misc'), it gets the value of the given property (or undef if not set).
+
+=cut
+
+sub get_property {
+  my ($node, $attr, $property) = @_;
+  # mylog(0, "get_property: '$attr', '$property', '$value'\n");
+  my $attr_value = attr($node, $attr);
+  return undef if !$attr_value;
+  # mylog(0, "get_property: attr_value: '$attr_value'\n");
+  my @attr_properties = grep {$_ =~ /^$property\b/} grep {$_ ne ''} grep {defined} split('\|', $attr_value);
+  return undef if !scalar(@attr_properties);
+  my $attr_property = $attr_properties[0]; # expect each property to appear only once
+  if ($attr_property =~ /$property=(.+)/) {
+    my $value = $1;
+    return $value;
+  }
+  return undef;
 }
 
 
