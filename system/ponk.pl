@@ -266,6 +266,76 @@ mylog(2, "input file: $input_file\n");
 
 
 ############################################################################################
+# Let us parse the MarkDown (if needed) and remove the marks from the text
+############################################################################################
+
+my @markdown = (); # to store recognized (and removed) markdown marks with offset links to $pure_input_content
+# the format of these stored marks and links: e.g., "Bold:567:573", meaning the text between these
+# two offset positions is bold
+
+if ($input_format eq 'md') {
+  mylog(0, "Preprocessing MarkDown text...\n");
+  my @text = split (//, $input_content);
+  my $pure_input_content = '';
+  my $text_length = scalar(@text);
+  push(@text, "\n"); 
+  push(@text, "\n"); # add two newlines at the end so I do not have to check if I am out of the array boundaries if I reach two chars forward
+  my $pure_text_offset = 0;
+  my $bold_start_offset = -1;
+  my $italics_start_offset = -1;
+
+  for (my $i=0; $i<$text_length; $i++) { # read the text char after char
+    my $char = $text[$i];
+    my $next_char = $text[$i+1];
+    my $next_next_char = $text[$i+2];
+
+    ################################
+    # **bold text** or __bold text__
+    ################################
+    # Search for a start or end bold ('**' or '__')
+    if (($char eq '*' and $next_char eq '*' and $next_next_char ne '*')
+     or ($char eq '_' and $next_char eq '_' and $next_next_char ne '_')) {
+      # We have found '**' or '__', i.e. a start or an end of bold
+      if ($bold_start_offset != -1) { # $bold_start_offset set, i.e. this mark is the end
+        push(@markdown, "Bold:$bold_start_offset:$pure_text_offset");
+        mylog(0, "Storing a MarkDown bold mark: 'Bold:$bold_start_offset:$pure_text_offset'\n");
+        $bold_start_offset = -1;
+      }
+      else { # this is a start of bold
+        $bold_start_offset = $pure_text_offset;  
+      }
+      $i+=1; # skip also the next character
+      next;
+    }
+
+    ################################
+    # *italics text* or _italics text_
+    ################################
+    # Search for a start or end italics ('*' or '_')
+    if (($char eq '*' and $next_char ne '*')
+     or ($char eq '_' and $next_char ne '_')) {
+      # We have found '*' or '_', i.e. a start or an end of italics
+      if ($italics_start_offset != -1) { # $italics_start_offset set, i.e. this mark is the end
+        push(@markdown, "Italics:$italics_start_offset:$pure_text_offset");
+        mylog(0, "Storing a MarkDown italics mark: 'Italics:$italics_start_offset:$pure_text_offset'\n");
+        $italics_start_offset = -1;
+      }
+      else { # this is a start of italics
+        $italics_start_offset = $pure_text_offset;  
+      }
+      next;
+    }
+
+    $pure_input_content .= $char;
+    $pure_text_offset++;
+  }
+  $input_content = $pure_input_content;
+  mylog(0, "MarkDown preprocessing finished...\n");
+  mylog(0, "MarkDown marks:\n" . join("\n", @markdown) . "\n");
+  mylog(0, "$pure_input_content\n");
+}
+
+############################################################################################
 # Let us tokenize and segmet the file using UDPipe REST API with PDT-C 1.0 model
 # This model is better for segmentation of texts with many dots in the middle of sentences.
 ############################################################################################
@@ -544,6 +614,8 @@ if ($input_format eq 'md') {
       mylog(0, "\nProcessing form '$form' (lemma '$lemma')\n");
       #mylog(0, "\nProcessing form '$form' (lemma '$lemma') with NameTag classes '$classes' and feats '$feats'\n");
 
+=item
+
       ################################
       # **bold text**
       ################################
@@ -577,6 +649,8 @@ if ($input_format eq 'md') {
           set_property($all_nodes_ord_sorted[$i+1], 'misc', 'PonkMD', 1);
         }
       }
+      
+=cut
 
       my $is_md = get_property($all_nodes_ord_sorted[$i], 'misc', 'PonkMD'); 
       
