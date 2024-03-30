@@ -90,7 +90,7 @@ my $help;
 GetOptions(
     'i|input-file=s'         => \$input_file, # the name of the input file
     'si|stdin'               => \$stdin, # should the input be read from STDIN?
-    'if|input-format=s'      => \$input_format, # input format, possible values: txt, markdown, docx
+    'if|input-format=s'      => \$input_format, # input format, possible values: txt, md, docx
     'of|output-format=s'     => \$output_format, # output format, possible values: txt, html, conllu
     'd|diff'                 => \$diff, # display the original expressions next to the anonymized versions
     'ne|named-entities=s'    => \$add_NE, # add named entities as marked by NameTag (1: to the anonymized versions, 2: to all recognized tokens)
@@ -130,7 +130,7 @@ if ($help) {
 Usage: maskit.pl [options]
 options:  -i|--input-file [input text file name]
          -si|--stdin (input text provided via stdin)
-         -if|--input-format [input format: txt (default) or presegmented]
+         -if|--input-format [input format: txt (default), md, docx]
          -of|--output-format [output format: txt (default), html, conllu]
           -d|--diff (display the original expressions next to the anonymized versions)
          -ne|--named-entities [scope: 1 - add NameTag marks to the anonymized versions, 2 - to all recognized tokens]
@@ -265,6 +265,7 @@ mylog(2, "input file: $input_file\n");
 # mylog(0, $input_content);
 
 
+
 ############################################################################################
 # Let us parse the MarkDown (if needed) and remove the marks from the text
 ############################################################################################
@@ -279,15 +280,119 @@ if ($input_format eq 'md') {
   my $pure_input_content = '';
   my $text_length = scalar(@text);
   push(@text, "\n"); 
-  push(@text, "\n"); # add two newlines at the end so I do not have to check if I am out of the array boundaries if I reach two chars forward
+  push(@text, "\n"); 
+  push(@text, "\n"); 
+  push(@text, "\n"); 
+  push(@text, "\n"); 
+  push(@text, "\n"); # add six newlines at the end so I do not have to check if I am out of the array boundaries if I reach six chars forward
   my $pure_text_offset = 0;
   my $bold_start_offset = -1;
   my $italics_start_offset = -1;
+  my $prev_char = '\n'; # for, e.g., recognizing a new line; at the beginning, let us pretend that the prev. char was a newline
 
+  my $heading_start_offset = -1;
+  my $heading_level = 0;
+  my $heading_type = '';
+  
   for (my $i=0; $i<$text_length; $i++) { # read the text char after char
     my $char = $text[$i];
     my $next_char = $text[$i+1];
     my $next_next_char = $text[$i+2];
+
+    if ($char eq "\n") { # a new line
+      if ($heading_level) { # a heading was read and ends here
+        my $heading_end_offset = $heading_type eq 'prefixed' ? $pure_text_offset : $pure_text_offset - 1; # "-1" means without a newline
+        push(@markdown, "Heading$heading_level:$heading_start_offset:$heading_end_offset");
+        mylog(0, "Storing a MarkDown Heading$heading_level mark: 'Heading$heading_level:$heading_start_offset:$heading_end_offset'\n");
+        $heading_level = 0;
+        $heading_type = '';
+        $heading_start_offset = -1
+      }
+    }
+    
+    ################################
+    # # Heading1 (marked by '# ')
+    ################################
+    # Check if Heading1 starts here (i.e., check if there is '# ' at the beginning of the line here)
+    if ($prev_char eq "\n" and $char eq '#' and $next_char eq ' ') {
+      mylog(0, "Found a Heading1 prefix mark '# '\n");
+      $heading_start_offset = $pure_text_offset;
+      $heading_level = 1;
+      $heading_type = 'prefixed';
+      $i+=1; # skip also the space
+      $prev_char = ' ';
+      next;
+    }
+
+    ################################
+    # # Heading2 (marked by '## ')
+    ################################
+    # Check if Heading2 starts here (i.e., check if there is '## ' at the beginning of the line here)
+    if ($prev_char eq "\n" and $char eq '#' and $next_char eq '#' and $next_next_char eq ' ') {
+      mylog(0, "Found a Heading2 prefix mark '## '\n");
+      $heading_start_offset = $pure_text_offset;
+      $heading_level = 2;
+      $heading_type = 'prefixed';
+      $i+=2; # skip also the second '#' and the space
+      $prev_char = ' ';
+      next;
+    }
+
+    ################################
+    # # Heading3 (marked by '### ')
+    ################################
+    # Check if Heading3 starts here (i.e., check if there is '### ' at the beginning of the line here)
+    if ($prev_char eq "\n" and $char eq '#' and $next_char eq '#' and $next_next_char eq '#' and $text[$i+3] eq ' ') {
+      mylog(0, "Found a Heading3 prefix mark '### '\n");
+      $heading_start_offset = $pure_text_offset;
+      $heading_level = 3;
+      $heading_type = 'prefixed';
+      $i+=3; # skip also the second and third '#' and the space
+      $prev_char = ' ';
+      next;
+    }
+
+    ################################
+    # # Heading4 (marked by '#### ')
+    ################################
+    # Check if Heading4 starts here (i.e., check if there is '#### ' at the beginning of the line here)
+    if ($prev_char eq "\n" and $char eq '#' and $next_char eq '#' and $next_next_char eq '#' and $text[$i+3] eq '#' and $text[$i+4] eq ' ') {
+      mylog(0, "Found a Heading4 prefix mark '#### '\n");
+      $heading_start_offset = $pure_text_offset;
+      $heading_level = 4;
+      $heading_type = 'prefixed';
+      $i+=4; # skip also the second, third and fourth '#' and the space
+      $prev_char = ' ';
+      next;
+    }
+
+    ################################
+    # # Heading5 (marked by '##### ')
+    ################################
+    # Check if Heading5 starts here (i.e., check if there is '##### ' at the beginning of the line here)
+    if ($prev_char eq "\n" and $char eq '#' and $next_char eq '#' and $next_next_char eq '#' and $text[$i+3] eq '#' and $text[$i+4] eq '#' and $text[$i+5] eq ' ') {
+      mylog(0, "Found a Heading5 prefix mark '##### '\n");
+      $heading_start_offset = $pure_text_offset;
+      $heading_level = 5;
+      $heading_type = 'prefixed';
+      $i+=5; # skip also the second, third, fourth and firfth '#' and the space
+      $prev_char = ' ';
+      next;
+    }
+
+    ################################
+    # # Heading6 (marked by '###### ')
+    ################################
+    # Check if Heading6 starts here (i.e., check if there is '###### ' at the beginning of the line here)
+    if ($prev_char eq "\n" and $char eq '#' and $next_char eq '#' and $next_next_char eq '#' and $text[$i+3] eq '#' and $text[$i+4] eq '#' and $text[$i+5] eq '#' and $text[$i+6] eq ' ') {
+      mylog(0, "Found a Heading6 prefix mark '###### '\n");
+      $heading_start_offset = $pure_text_offset;
+      $heading_level = 6;
+      $heading_type = 'prefixed';
+      $i+=6; # skip also the second, third, fourth, fifth and sixth '#' and the space
+      $prev_char = ' ';
+      next;
+    }
 
     ################################
     # **bold text** or __bold text__
@@ -305,6 +410,7 @@ if ($input_format eq 'md') {
         $bold_start_offset = $pure_text_offset;  
       }
       $i+=1; # skip also the next character
+      $prev_char = $next_char;
       next;
     }
 
@@ -323,11 +429,13 @@ if ($input_format eq 'md') {
       else { # this is a start of italics
         $italics_start_offset = $pure_text_offset;  
       }
+      $prev_char = $char;
       next;
     }
 
     $pure_input_content .= $char;
     $pure_text_offset++;
+    $prev_char = $char;
   }
   $input_content = $pure_input_content;
   mylog(0, "MarkDown preprocessing finished...\n");
@@ -335,12 +443,16 @@ if ($input_format eq 'md') {
   mylog(0, "$pure_input_content\n");
 }
 
+
+
 ############################################################################################
 # Let us tokenize and segmet the file using UDPipe REST API with PDT-C 1.0 model
 # This model is better for segmentation of texts with many dots in the middle of sentences.
 ############################################################################################
 
 my $conll_segmented = call_udpipe($input_content, 'segment');
+
+
 
 ####################################################################################
 # Let us parse the tokenized and segmented text using UDPipe REST API with UD model
@@ -353,6 +465,8 @@ my $conll_data = call_udpipe($conll_segmented, 'parse');
 #  open(OUT, '>:encoding(utf8)', "$input_file.conll") or die "Cannot open file '$input_file.conll' for writing: $!";
 #  print OUT $conll_data;
 #  close(OUT);
+
+
 
 ###################################################################################
 # Now let us add info about named entities using NameTag REST API
@@ -526,20 +640,6 @@ if ($input_format eq 'md') {
     if (scalar(@end_equal_marks) > 2) { # let us say that we need at least three equal marks
       mylog(0, "Found a main heading marked by a sequence of '='\n");
       set_property($root, 'ponk', 'MainHeading', 1);
-    }
-
-    ################################
-    # # MainHeading (marked by one '#')
-    ################################
-    # Check if the sentence is a main heading (i.e., check if there is '# ' at the beginning)
-    if ($sentence_length > 1) {
-      if (attr($all_nodes_ord_sorted[0], 'form') eq '#') { # the first token is '#'
-        my $SpaceAfter = get_property($all_nodes_ord_sorted[0], 'misc', 'SpaceAfter') // 'Yes';
-        if ($SpaceAfter eq 'Yes') {
-          mylog(0, "Found a main heading marked by a '#' prefix\n");
-          set_property($root, 'ponk', 'MainHeading', 1);
-        }
-      }
     }
       
     ################################
