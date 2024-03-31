@@ -294,6 +294,9 @@ if ($input_format eq 'md') {
   my $heading_level = 0;
   my $heading_type = '';
   
+  my $underlined_heading = '';
+  my $underlined_heading_length = 0;
+  
   for (my $i=0; $i<$text_length; $i++) { # read the text char after char
     my $char = $text[$i];
     my $next_char = $text[$i+1];
@@ -306,7 +309,23 @@ if ($input_format eq 'md') {
         mylog(0, "Storing a MarkDown Heading$heading_level mark: 'Heading$heading_level:$heading_start_offset:$heading_end_offset'\n");
         $heading_level = 0;
         $heading_type = '';
-        $heading_start_offset = -1
+        $heading_start_offset = -1;
+        # dořešit, zda sem dát "next" a zda ten newline dát taky do pure textu
+      }
+      if ($underlined_heading) {
+        # tady nastavit předchozí řádek jako heading
+        $underlined_heading = '';
+      }
+    }
+    
+    if ($underlined_heading) { # check if an underlined heading continues here
+      if ($underlined_heading ne $char) {
+        $underlined_heading = '';
+        $underlined_heading_length = 0;
+      }
+      else {
+        $underlined_heading_length++;
+        next;
       }
     }
     
@@ -391,6 +410,28 @@ if ($input_format eq 'md') {
       $heading_type = 'prefixed';
       $i+=6; # skip also the second, third, fourth, fifth and sixth '#' and the space
       $prev_char = ' ';
+      next;
+    }
+    
+    ################################
+    # Heading1
+    # ========
+    ################################
+    # Check if Heading1 mark starts here (i.e., check if underlining by '=' starts here)
+    if ($prev_char eq "\n" and $char eq '=') {
+      $underlined_heading = '=';
+      $underlined_heading_length = 1;
+      next;
+    }
+    
+    ################################
+    # Heading2
+    # --------
+    ################################
+    # Check if Heading2 mark starts here (i.e., check if underlining by '-' starts here)
+    if ($prev_char eq "\n" and $char eq '-') {
+      $underlined_heading = '-';
+      $underlined_heading_length = 1;
       next;
     }
 
@@ -611,158 +652,38 @@ foreach my $root (@trees) { # count number of tokens
   $tokens_count += scalar(descendants($root));
 }
 
+
 ###############################################
-# Let us process MarkDown info if present
+# Let us put the parsed MarkDown info into the trees if needed
 ###############################################
+
+# The markdown info is stored in array @markdown
+# the format of these stored marks and links: e.g., "Bold:567:573", meaning the text between these
+# two offset positions is bold
 
 if ($input_format eq 'md') {
+  mylog(0, "Including MarkDown info into the trees...\n");
 
-  my $inside_bold = 0;
-  
-  foreach my $root (@trees) {
-    mylog(1, "\n====================================================================\n");
-    mylog(1, "Sentence id=" . attr($root, 'id') . ": " . attr($root, 'text') . "\n");
-    # print_children($root, "\t");
-
-    my @all_nodes_ord_sorted = sort {attr($a, 'ord') <=> attr($b, 'ord')} descendants($root);
-    my $sentence_length = scalar(@all_nodes_ord_sorted);
-
-    ################################
-    # MainHeading
-    # ============
-    ################################
-    # Check if the sentence is a main heading (i.e., check if there are some equal marks at the end of the sentence
-    my @end_equal_marks = ();
-    my @nodes_copy = @all_nodes_ord_sorted;
-    while (scalar(@nodes_copy) and attr($nodes_copy[-1], 'form') eq '=') {
-      push (@end_equal_marks, pop(@nodes_copy));
-    }
-    if (scalar(@end_equal_marks) > 2) { # let us say that we need at least three equal marks
-      mylog(0, "Found a main heading marked by a sequence of '='\n");
-      set_property($root, 'ponk', 'MainHeading', 1);
-    }
-      
-    ################################
-    # Heading
-    # -------
-    ################################
-    # Check if the sentence is a heading (i.e., check if there are some dashes at the end of the sentence
-    my @end_dashes = ();
-    my @nodes_copy = @all_nodes_ord_sorted;
-    while (scalar(@nodes_copy) and attr($nodes_copy[-1], 'form') eq '-') {
-      push (@end_dashes, pop(@nodes_copy));
-    }
-    if (scalar(@end_dashes) > 2) { # let us say that we need at least three dashes
-      mylog(0, "Found a heading marked by a sequence of '-'\n");
-      set_property($root, 'ponk', 'Heading', 1);
-    }
-
-    ################################
-    # ## Heading (marked by '##')
-    ################################
-    # Check if the sentence is a heading (i.e., check if there is '## ' at the beginning)
-    if ($sentence_length > 2) {
-      if (attr($all_nodes_ord_sorted[0], 'form') eq '#') { # the first token is '#'
-        my $SpaceAfter = get_property($all_nodes_ord_sorted[0], 'misc', 'SpaceAfter') // 'Yes';
-        if ($SpaceAfter eq 'No') {
-          if (attr($all_nodes_ord_sorted[1], 'form') eq '#') { # the second token is '#'
-            $SpaceAfter = get_property($all_nodes_ord_sorted[1], 'misc', 'SpaceAfter') // 'Yes';
-            if ($SpaceAfter eq 'Yes') {
-              mylog(0, "Found a heading marked by a '##' prefix\n");
-              set_property($root, 'ponk', 'Heading', 1);
-            }
-          }
-        }
-      }
-    }
-
-    ################################
-    # ### SmallHeading (marked by '###')
-    ################################
-    # Check if the sentence is a small heading (i.e., check if there is '### ' at the beginning)
-    if ($sentence_length > 3) {
-      if (attr($all_nodes_ord_sorted[0], 'form') eq '#') { # the first token is '#'
-        my $SpaceAfter = get_property($all_nodes_ord_sorted[0], 'misc', 'SpaceAfter') // 'Yes';
-        if ($SpaceAfter eq 'No') {
-          if (attr($all_nodes_ord_sorted[1], 'form') eq '#') { # the second token is '#'
-            $SpaceAfter = get_property($all_nodes_ord_sorted[1], 'misc', 'SpaceAfter') // 'Yes';
-            if ($SpaceAfter eq 'No') {
-              if (attr($all_nodes_ord_sorted[2], 'form') eq '#') { # the third token is '#'
-                $SpaceAfter = get_property($all_nodes_ord_sorted[2], 'misc', 'SpaceAfter') // 'Yes';
-                if ($SpaceAfter eq 'Yes') {
-                  mylog(0, "Found a small heading marked by a '###' prefix\n");
-                  set_property($root, 'ponk', 'SmallHeading', 1);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    # Now let us go through individual tokens
-    
-    for(my $i=0; $i<$sentence_length; $i++) {
-      my $node = $all_nodes_ord_sorted[$i];
-
-      my $form = attr($node, 'form') // '';
-      my $lemma = attr($node, 'lemma') // '';
-      #my $tag = attr($node, 'xpostag') // '';
-      #my $feats = attr($node, 'feats') // '';
-      #my $classes = get_NameTag_marks($node) // '';
-
-      mylog(0, "\nProcessing form '$form' (lemma '$lemma')\n");
-      #mylog(0, "\nProcessing form '$form' (lemma '$lemma') with NameTag classes '$classes' and feats '$feats'\n");
+  mylog(0, "  TODO\n";
 
 =item
 
-      ################################
-      # **bold text**
-      ################################
-      # Search for a start or end bold ('**')
-      if ($form eq '*') {
-        if ($i < $sentence_length - 1
-          and attr($all_nodes_ord_sorted[$i+1], 'form') eq '*'  # the next token is also '*'
-          and ($i == $sentence_length - 2 or attr($all_nodes_ord_sorted[$i+2], 'form') ne '*')  # the sentence either end with the next token or there are no more consequtive '*'
-          and ($i == 0 or attr($all_nodes_ord_sorted[$i-1], 'form') ne '*')) { # and there is no '*' just before the actual token
-          # We have found '**', i.e. a start or an end of bold
-          $inside_bold = 1 - $inside_bold;
-          mylog(0, "Found a bold mark ('**'); inside_bold changed to: '$inside_bold'\n");
-          set_property($all_nodes_ord_sorted[$i], 'misc', 'PonkMD', 1); # mark both stars as a markdown mark
-          set_property($all_nodes_ord_sorted[$i+1], 'misc', 'PonkMD', 1);
-        }
-      }
+      set_property($root, 'ponk', 'Heading', 1);
+      set_property($root, 'ponk', 'Heading', 2);
+      ...
+      set_property($node, 'misc', 'ponk-Bold', 1);
 
-      ################################
-      # __bold text__
-      ################################
-      # Search for a start or end bold ('__')
-      if ($form eq '_') {
-        if ($i < $sentence_length - 1
-          and attr($all_nodes_ord_sorted[$i+1], 'form') eq '_'  # the next token is also '_'
-          and ($i == $sentence_length - 2 or attr($all_nodes_ord_sorted[$i+2], 'form') ne '_')  # the sentence either end with the next token or there are no more consequtive '_'
-          and ($i == 0 or attr($all_nodes_ord_sorted[$i-1], 'form') ne '_')) { # and there is no '_' just before the actual token
-          # We have found '__', i.e. a start or an end of bold
-          $inside_bold = 1 - $inside_bold;
-          mylog(0, "Found a bold mark ('__'); inside_bold changed to: '$inside_bold'\n");
-          set_property($all_nodes_ord_sorted[$i], 'misc', 'PonkMD', 1); # mark both underscores as a markdown mark
-          set_property($all_nodes_ord_sorted[$i+1], 'misc', 'PonkMD', 1);
-        }
-      }
-      
-=cut
+=cut    
 
-      my $is_md = get_property($all_nodes_ord_sorted[$i], 'misc', 'PonkMD'); 
-      
-      if ($inside_bold and !$is_md) {
-        set_property($all_nodes_ord_sorted[$i], 'misc', 'PonkBold', 1);
-      }
-      
-    }
+  mylog(0, "Finished including MarkDown info into the trees.\n");
+}
 
-  }
-  
-} # end of processing markdown if needed
+###############################################
+# Let us process the parsed text
+###############################################
+
+
+# Tady bude vlastní funkcionalita PONKu
 
 
 #####################################################
