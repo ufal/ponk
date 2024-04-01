@@ -288,13 +288,18 @@ if ($input_format eq 'md') {
   my $pure_text_offset = 0;
   my $bold_start_offset = -1;
   my $italics_start_offset = -1;
-  my $prev_char = '\n'; # for, e.g., recognizing a new line; at the beginning, let us pretend that the prev. char was a newline
+  my $prev_char = "\n"; # for, e.g., recognizing a new line; at the beginning, let us pretend that the prev. char was a newline
 
+  # variables for prefixed headings:
   my $heading_start_offset = -1;
   my $heading_level = 0;
   my $heading_type = '';
-  
-  my $underlined_heading = '';
+
+  # variables for underlined headings:
+  my $line_start_offset = 0;
+  my $prev_line_start_offset = -1;
+  my $prev_line_end_offset = -1;
+  my $underlined_heading = ''; # '=' or '-' to indicate an ongoing reading of heading underlining
   my $underlined_heading_length = 0;
   
   for (my $i=0; $i<$text_length; $i++) { # read the text char after char
@@ -310,12 +315,22 @@ if ($input_format eq 'md') {
         $heading_level = 0;
         $heading_type = '';
         $heading_start_offset = -1;
-        # dořešit, zda sem dát "next" a zda ten newline dát taky do pure textu
       }
       if ($underlined_heading) {
-        # tady nastavit předchozí řádek jako heading
+        # setting the previous line as the heading:
+        my $underlined_heading_level = $underlined_heading eq '=' ? 1 : 2;
+        push(@markdown, "Heading$underlined_heading_level:$prev_line_start_offset:$prev_line_end_offset");
+        mylog(0, "Storing a MarkDown Heading$underlined_heading_level mark: 'Heading$underlined_heading_level:$prev_line_start_offset:$prev_line_end_offset'\n");
         $underlined_heading = '';
+        $prev_line_start_offset = $line_start_offset;
+        $prev_line_end_offset = $pure_text_offset;
+        $line_start_offset = $pure_text_offset + 1; # after the newline
+        $prev_char = $char;
+        next; # this newline will not be put to the pure text (instead of one, there would be two now (with the newline after the heading))
       }
+      $prev_line_start_offset = $line_start_offset;
+      $prev_line_end_offset = $pure_text_offset;
+      $line_start_offset = $pure_text_offset + 1; # after the newline
     }
     
     if ($underlined_heading) { # check if an underlined heading continues here
@@ -325,6 +340,7 @@ if ($input_format eq 'md') {
       }
       else {
         $underlined_heading_length++;
+        $prev_char = $char;
         next;
       }
     }
@@ -421,6 +437,7 @@ if ($input_format eq 'md') {
     if ($prev_char eq "\n" and $char eq '=') {
       $underlined_heading = '=';
       $underlined_heading_length = 1;
+      $prev_char = $char;
       next;
     }
     
@@ -432,6 +449,7 @@ if ($input_format eq 'md') {
     if ($prev_char eq "\n" and $char eq '-') {
       $underlined_heading = '-';
       $underlined_heading_length = 1;
+      $prev_char = $char;
       next;
     }
 
@@ -664,7 +682,7 @@ foreach my $root (@trees) { # count number of tokens
 if ($input_format eq 'md') {
   mylog(0, "Including MarkDown info into the trees...\n");
 
-  mylog(0, "  TODO\n";
+  mylog(0, "  TODO\n");
 
 =item
 
