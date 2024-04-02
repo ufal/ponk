@@ -25,7 +25,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.01 20240327'; # version of the program
+my $VER = '0.01 20240402'; # version of the program
 
 my @features = ('nothing yet');
 
@@ -541,7 +541,7 @@ my $conll_data_ne = call_nametag($conll_data);
 
 
 ###################################################################################
-# Let us parse the CONLL format into Tree::Simple tree structures (one tree per sentence)
+# Let us parse the CoNLL format into Tree::Simple tree structures (one tree per sentence)
 ###################################################################################
 
 my @lines = split("\n", $conll_data_ne);
@@ -555,7 +555,9 @@ my $max_end = 0;
 
 my $multiword = ''; # store a multiword line to keep with the following token
 
-# the following cycle for reading UD CONLL is modified from Jan Štěpánek's UD TrEd extension
+my %start_offset2node = (); # a hash for mapping an offset to a node that starts at the position
+
+# the following cycle for reading UD CoNLL is modified from Jan Štěpánek's UD TrEd extension
 foreach my $line (@lines) {
     chomp($line);
     #mylog(0, "Line: $line\n");
@@ -585,7 +587,7 @@ foreach my $line (@lines) {
         _create_structure($root);
         set_attr($root, 'start', $min_start);
         set_attr($root, 'end', $max_end);
-        $min_start = $min_start = 10000;
+        $min_start = 10000;
         $max_end = 0;
         push(@trees, $root);
         #mylog(0, "End of sentence id='" . attr($root, 'id') . "'.\n\n");
@@ -635,6 +637,7 @@ foreach my $line (@lines) {
           my ($start, $end) = ($1, $2);
           set_attr($node, 'start', $start);
           set_attr($node, 'end', $end);
+          $start_offset2node{$start} = $node;
           $min_start = $start if $start < $min_start;
           $max_end = $end if $end > $max_end;          
         }
@@ -653,7 +656,7 @@ if ($root) {
     $root = undef;
     #warn "Emtpy line missing at the end of input\n";
 }
-# end of Jan Štěpánek's modified cycle for reading UD CONLL
+# end of Jan Štěpánek's modified cycle for reading UD CoNLL
 
 
 ###############################################
@@ -678,20 +681,44 @@ foreach my $root (@trees) { # count number of tokens
 # The markdown info is stored in array @markdown
 # the format of these stored marks and links: e.g., "Bold:567:573", meaning the text between these
 # two offset positions is bold
+# Links from an offset to the node that starts at that offset are stored in %start_offset2node
 
 if ($input_format eq 'md') {
   mylog(0, "Including MarkDown info into the trees...\n");
 
-  mylog(0, "  TODO\n");
+  foreach my $mark (@markdown) {
+    my ($type, $start, $end) = split(':', $mark);
+    mylog(0, "  - ($type, $start, $end)\n");
+    
+    if ($type =~ /^Heading(\d)$/) {
+      my $heading_level = $1;
+      my $heading_first_node = $start_offset2node{$start};
+      if ($heading_first_node) {
+        mylog(0, "    - found heading_first_node with form '" . attr($heading_first_node, 'form') . "'\n");
+        my $heading_root = root($heading_first_node);
+        set_property($heading_root, 'ponk', 'Heading', $heading_level);
+      }
+    }
+    
+    elsif ($type eq 'Bold') {
+      for (my $i=$start; $i<$end; $i++) { # let us find all nodes between $start and $end and set the PonkBold misc property
+        my $node = $start_offset2node{$i};
+        if ($node) {
+          set_property($node, 'misc', 'PonkBold', 1);
+        }
+      }
+    }
 
-=item
+    elsif ($type eq 'Italics') {
+      for (my $i=$start; $i<$end; $i++) { # let us find all nodes between $start and $end and set the PonkItalics misc property
+        my $node = $start_offset2node{$i};
+        if ($node) {
+          set_property($node, 'misc', 'PonkItalics', 1);
+        }
+      }
+    }
 
-      set_property($root, 'ponk', 'Heading', 1);
-      set_property($root, 'ponk', 'Heading', 2);
-      ...
-      set_property($node, 'misc', 'ponk-Bold', 1);
-
-=cut    
+  }
 
   mylog(0, "Finished including MarkDown info into the trees.\n");
 }
@@ -1347,10 +1374,16 @@ sub descendants {
   
 sub root {
   my $node = shift;
-  while ($node->getParent) {
-    $node = $node->getParent;
+
+  my $parent = $node->getParent;
+#  while ($parent and $parent ne 'root' and $parent ne 'ROOT') { # to be sure - the documentation says 'ROOT', in practice its 'root'
+  while ($parent and $parent ne 'root' and $parent ne 'ROOT') { # to be sure - the documentation says 'ROOT', in practice its 'root'
+    # mylog(0, "root: found a parent\n");
+    $node = $parent;
+    $parent = $node->getParent;
   }
   return $node;
+
 }
 
 
