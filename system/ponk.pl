@@ -25,7 +25,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.01 20240402'; # version of the program
+my $VER = '0.01 20240409'; # version of the program
 
 my @features = ('nothing yet');
 
@@ -1056,6 +1056,7 @@ END_OUTPUT_HEAD
 
   my $first_sent = 1; # for sentence separation in txt and html formats (first sentence in the file should not be separated)
   
+  my $space_before = ''; # for storing info about SpaceAfter until the next token is printed
 
   foreach $root (@trees) {
 
@@ -1093,7 +1094,6 @@ END_OUTPUT_HEAD
 
     # PRINT THE SENTENCE TOKEN BY TOKEN
     my @nodes = sort {attr($a, 'ord') <=> attr($b, 'ord')} descendants($root);
-    my $space_before = '';
 
     foreach my $node (@nodes) {
 
@@ -1151,9 +1151,9 @@ END_OUTPUT_HEAD
 
         $output .= "$space_before$span_start$form$span_end$info_span";
 
-        $space_before = ($SpaceAfter eq 'No') ? '' : ' '; # this way there will not be space after the last token of the sentence
-
-        # $output .= "($SpacesAfter)"; # debug info
+        $space_before = ($SpaceAfter eq 'No' or $SpacesAfter) ? '' : ' '; # store info about a space until the next token is about to be printed
+        
+        # $output .= "\ndebug info: SpaceAfter='$SpacesAfter', space_before = '$space_before'\n";
         # handle extra spaces and newlines in SpaceAfter
         if ($SpacesAfter =~ /^(\\s|\\r|\\n)+$/) { # SpacesAfter informs that there were newlines or extra spaces in the original text here
           if ($format eq 'html') {
@@ -1172,8 +1172,8 @@ END_OUTPUT_HEAD
             $SpacesAfter =~ s/\\n/\n/g;
             $SpacesAfter =~ s/\\s/ /g;
           }
-          $output .= $SpacesAfter;          
         }
+        $output .= $SpacesAfter;          
         
       }
       elsif ($format eq 'conllu') {
