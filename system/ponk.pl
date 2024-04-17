@@ -1027,7 +1027,7 @@ sub get_feat_value {
 
 =item get_output
 
-Returns the input text with marked sources in the given format (one of: txt, html, conllu).
+Returns the processed input text in the given format (one of: txt, html, conllu).
 
 =cut
 
@@ -1060,8 +1060,6 @@ END_OUTPUT_HEAD
 
   foreach $root (@trees) {
 
-#=item 
-
     # PARAGRAPH SEPARATION (txt, html)
     if (attr($root, 'newpar') and $format =~ /^(txt|html)$/) {
       $first_sent = 1;
@@ -1074,8 +1072,6 @@ END_OUTPUT_HEAD
       }
       $output .= "<p>\n" if $format eq 'html';
     }
-
-#=cut
 
     # SENTENCE HEADER (conllu)
     if ($format eq 'conllu') {
