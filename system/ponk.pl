@@ -25,7 +25,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.01 20240409'; # version of the program
+my $VER = '0.01 20240422'; # version of the program
 
 my @features = ('nothing yet');
 
@@ -1125,7 +1125,7 @@ END_OUTPUT_HEAD
         my $SpacesBefore = get_misc_value($node, 'SpacesBefore') // ''; # newlines etc. in the original text; seems to be sometimes used with presegmented input
 
         # handle extra spaces and newlines in SpaceBefore (seems to be sometimes used with presegmented input)
-        if ($SpacesBefore =~ /^(\\s|\\r|\\n)+$/) { # SpacesBefore informs that there were newlines or extra spaces in the original text here
+        if ($SpacesBefore =~ /^(\\s|\\r|\\n|\\t)+$/) { # SpacesBefore informs that there were newlines or extra spaces in the original text here
           if ($format eq 'html') {
             $SpacesBefore =~ s/\\r//g;
             while ($SpacesBefore =~ /\\s\\s/) {
@@ -1136,11 +1136,13 @@ END_OUTPUT_HEAD
               $SpacesBefore =~ s/\\n\\n/\n<p><\/p>\\n/;
             }
             $SpacesBefore =~ s/\\n/\n<br>/g;            
+            $SpacesBefore =~ s/\\t/&nbsp; /;
           }
           else { # txt
             $SpacesBefore =~ s/\\r/\r/g;
             $SpacesBefore =~ s/\\n/\n/g;
             $SpacesBefore =~ s/\\s/ /g;
+            $SpacesBefore =~ s/\\t/  /g;
           }
           $output .= $SpacesBefore;          
         }
@@ -1151,7 +1153,7 @@ END_OUTPUT_HEAD
         
         # $output .= "\ndebug info: SpaceAfter='$SpacesAfter', space_before = '$space_before'\n";
         # handle extra spaces and newlines in SpaceAfter
-        if ($SpacesAfter =~ /^(\\s|\\r|\\n)+$/) { # SpacesAfter informs that there were newlines or extra spaces in the original text here
+        if ($SpacesAfter =~ /^(\\s|\\r|\\n|\\t)+$/) { # SpacesAfter informs that there were newlines or extra spaces in the original text here
           if ($format eq 'html') {
             $SpacesAfter =~ s/\\r//g;
             while ($SpacesAfter =~ /\\s\\s/) {
@@ -1162,14 +1164,16 @@ END_OUTPUT_HEAD
               $SpacesAfter =~ s/\\n\\n/\n<\/p><p>\\n/;
             }
             $SpacesAfter =~ s/\\n/\n<br>/g;            
+            $SpacesAfter =~ s/\\t/&nbsp; /;
           }
           else { # txt
             $SpacesAfter =~ s/\\r/\r/g;
             $SpacesAfter =~ s/\\n/\n/g;
             $SpacesAfter =~ s/\\s/ /g;
+            $SpacesAfter =~ s/\\t/  /g;
           }
         }
-        $output .= $SpacesAfter;          
+        $output .= $SpacesAfter;
         
       }
       elsif ($format eq 'conllu') {
