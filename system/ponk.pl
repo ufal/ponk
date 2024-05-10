@@ -782,7 +782,7 @@ else { # statistics should be a part of output, i.e. output will be JSON with tw
   # Encode the Perl data structure into a JSON string
   my $json_string = encode_json($json_data);
   # Print the JSON string to STDOUT
-  print $json_string;  
+  print $json_string;
 }
 
 if ($store_format) { # log the anonymized text in the given format in a file
@@ -1307,7 +1307,7 @@ END_HEAD
   $stats .= "<br/>Processing time: $rounded_time sec.\n";
   $stats .= "</p>\n";
   
-  $stats .= "<h3>Measures from PONK-APP1</h3>\n";
+  $stats .= "<h4>Measures from PONK-APP1</h4>\n";
   my $app1_string = app1_metrics2string('html', $app1_metrics);
   $stats .= $app1_string;
   
