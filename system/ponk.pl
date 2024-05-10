@@ -73,15 +73,12 @@ my $color_highlight_general = 'darkred'; # general highlighting colour
 my $OUTPUT_FORMAT_DEFAULT = 'txt';
 # default input format
 my $INPUT_FORMAT_DEFAULT = 'txt';
-# default replacements file name
 
 # variables for arguments
 my $input_file;
 my $stdin;
 my $input_format;
 my $output_format;
-my $diff;
-my $add_NE;
 my $output_statistics;
 my $store_format;
 my $store_statistics;
@@ -95,8 +92,6 @@ GetOptions(
     'si|stdin'               => \$stdin, # should the input be read from STDIN?
     'if|input-format=s'      => \$input_format, # input format, possible values: txt, md, docx
     'of|output-format=s'     => \$output_format, # output format, possible values: txt, html, conllu
-    'd|diff'                 => \$diff, # display the original expressions next to the anonymized versions
-    'ne|named-entities=s'    => \$add_NE, # add named entities as marked by NameTag (1: to the anonymized versions, 2: to all recognized tokens)
     'os|output-statistics'   => \$output_statistics, # adds statistics to the output; if present, output is JSON with two items: data (in output-format) and stats (in HTML)
     'sf|store-format=s'      => \$store_format, # log the result in the given format: txt, html, conllu
     'ss|store-statistics'    => \$store_statistics, # should statistics be logged as an HTML file?
@@ -135,8 +130,6 @@ options:  -i|--input-file [input text file name]
          -si|--stdin (input text provided via stdin)
          -if|--input-format [input format: txt (default), md, docx]
          -of|--output-format [output format: txt (default), html, conllu]
-          -d|--diff (display the original expressions next to the anonymized versions)
-         -ne|--named-entities [scope: 1 - add NameTag marks to the anonymized versions, 2 - to all recognized tokens]
          -os|--output-statistics (add PONK statistics to output; if present, output is JSON with two items: data (in output-format) and stats (in HTML))
          -sf|--store-format [format: log the output in the given format: txt, html, conllu]
          -ss|--store-statistics (log statistics to an HTML file)
@@ -188,22 +181,6 @@ elsif ($output_format !~ /^(txt|html|conllu)$/) {
 }
 else {
   mylog(0, " - output format: $output_format\n");
-}
-
-if ($diff) {
-  mylog(0, " - display the original expressions next to the anonymized versions\n");
-}
-
-if ($add_NE) {
-  if ($add_NE == 1) {
-    mylog(0, " - add named entities as marked by NameTag to the anonymized versions\n");
-  }
-  elsif ($add_NE == 2) {
-    mylog(0, " - add named entities as marked by NameTag to all recognized tokens\n");  
-  }
-  else {
-    mylog(0, " - unknown value of -ne/--named-entities parameter ($add_NE); no NameTag marks will be printed\n");    
-  }
 }
 
 if ($output_statistics) {
