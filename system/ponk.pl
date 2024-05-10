@@ -4,6 +4,7 @@ use warnings;
 use utf8;
 use open qw(:std :utf8);
 use LWP::UserAgent;
+use HTTP::Request::Common; # for calling ponk-app1
 use URI::Escape;
 use JSON;
 use Tree::Simple;
@@ -16,7 +17,7 @@ use Sys::Hostname;
 use IPC::Run qw(run);
 use MIME::Base64;
 use Encode;
-
+use Data::Dumper;
 
 # STDIN and STDOUT in UTF-8
 binmode STDIN, ':encoding(UTF-8)';
@@ -25,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.01 20240422'; # version of the program
+my $VER = '0.01 20240510'; # version of the program
 
 my @features = ('nothing yet');
 
@@ -48,11 +49,13 @@ END_DESC
 my $log_level = 0; # limited (0=full, 1=limited, 2=anonymous)
 
 my $udpipe_service_url = 'http://lindat.mff.cuni.cz/services/udpipe/api';
-my $nametag_service_url = 'http://lindat.mff.cuni.cz/services/nametag/api';
+my $nametag_service_url = 'http://lindat.mff.cuni.cz/services/nametag/api'; 
+my $ponk_app1_service_url = 'http://quest.ms.mff.cuni.cz/ponk-app1';
 my $hostname = hostname;
 if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe and nametag that do not log texts
   $udpipe_service_url = 'http://udpipe:11001';
   $nametag_service_url = 'http://udpipe:11002';
+  $ponk_app1_service_url = 'http://ponk-app1:8000'; # for now, in practice no difference from the original URL
   $VER .= ' (no text logging)';
   $log_level = 2; # anonymous
 }
@@ -729,6 +732,24 @@ if ($input_format eq 'md') {
 
 
 # Tady bude vlastní funkcionalita PONKu
+
+
+#################################################
+# Calling PONK-APP1
+#################################################
+
+my $conll_for_ponk_app1 = get_output('conllu');
+my ($modified_conllu, $metrics_json) = call_ponk_app1($conll_for_ponk_app1);
+
+# Export the modified trees to a file (for debugging, not needed for further processing)
+open(OUT, '>:encoding(utf8)', "$input_file.export_ponk1.conllu") or die "Cannot open file '$input_file.export_ponk1.conllu' for writing: $!";
+print OUT $modified_conllu;
+close(OUT);
+# Export the metrics (for debugging, not needed for further processing)
+open(OUT, '>:encoding(utf8)', "$input_file.export_ponk1.metrics") or die "Cannot open file '$input_file.export_ponk1.metrics' for writing: $!";
+print OUT $metrics_json;
+close(OUT);
+
 
 
 #####################################################
@@ -1479,6 +1500,7 @@ sub call_udpipe {
         # Zpracování odpovědi
         my $result = $json_response->{result};
         # print STDERR "UDPipe result:\n$result\n";
+        mylog(2, "Call UDPipe: Success.\n");
         return $result;
     } else {
         mylog(2, "call_udpipe: URL: $url\n");
@@ -1504,7 +1526,7 @@ sub call_nametag {
     my $result = '';
     
     # Let us call NameTag api for each X sentences separately, as too large input produces an error.
-    my $max_sentences = 100; # 5 was too large at first attempt, so let us hope 1 is safe enough.
+    my $max_sentences = 1000; # 5 was too large at first attempt, so let us hope 1 is safe enough.
     
     my $conll_part = '';
     my $sent_count = 0;
@@ -1529,7 +1551,8 @@ sub call_nametag {
 
 =item call_nametag_part
 
-Now actuall calling NameTag REST API for a small part of the input (to avoid error caused by a long argument).
+Now actually calling NameTag REST API for a small part of the input (to avoid error caused by a long argument).
+!!! This splitting to small parts is no longer needed, as POST is used !!!
 Returns the text in UD CONLL-NE format.
 If an error occurs, the function just returns the input conll text unchanged.
 
@@ -1564,6 +1587,7 @@ sub call_nametag_part {
         # Zpracování odpovědi
         my $result = $json_response->{result};
         # mylog(0, "NameTag result:\n$result\n");
+        mylog(2, "Call NameTag: Success.\n");
         return $result;
     } else {
         mylog(2, "call_nametag_part: URL: $url\n");
@@ -1571,6 +1595,65 @@ sub call_nametag_part {
         return $conll; 
     }
 }
+
+
+######### CALLING PONK-APP1 #########
+
+=item call_ponk_app1
+
+Calling PONK-APP1 REST API; the text to be processed is passed in the argument in UD CONLL format
+Returns an array of two members:
+ - the text in UD CONLL format with additional info in misc
+ - JSON of measured metrics
+If an error occurs, the function just returns the input conll text unchanged and a simple JSON with an error message.
+
+=cut
+
+sub call_ponk_app1 {
+    my $conllu = shift;
+
+    # Nastavení URL pro volání REST::API s parametry
+    my $url = "$ponk_app1_service_url/raw";
+    mylog(2, "Call PONK-APP1: URL=$url\n");
+
+    my $ua = LWP::UserAgent->new;
+
+    # Převedení řetězce na bajty
+    my $conllu_bytes = encode("UTF-8", $conllu);
+
+    # Vytvoření POST požadavku s obsahem z proměnné $conllu_bytes
+    my $request = POST $url,
+        Content_Type => 'form-data',
+        Content => [
+          file => [
+            undef,                  # undef znamená, že LWP::UserAgent vygeneruje název souboru
+            'data.conllu',     # Jméno souboru na straně serveru - bez toho to nefunguje
+            Content => $conllu_bytes     # Obsah souboru
+          ]
+        ];
+
+    # Odeslání požadavku
+    my $res = $ua->request($request);
+
+    # Zkontrolování, zda byla odpověď úspěšná
+    if ($res->is_success) {
+        # Získání odpovědi v JSON formátu
+        my $json_response = decode_json($res->content);
+        # Zpracování odpovědi
+        my $modified_conllu = $json_response->{'modified_conllu'};
+        my $metrics_json = $json_response->{'metrics'};
+        # mylog(0, "PONK-APP1 modified_conllu:\n$modified_conllu\nPONK-APP1 metrics JSON:\n" . Dumper($metrics_json) . "\n");
+        mylog(2, "Call PONK-APP1: Success.\n");
+        return ($modified_conllu, $metrics_json);
+    } else {
+        mylog(2, "call_ponk_app1: URL: $url\n");
+        mylog(2, "call_ponk_app1: Error: " . $res->status_line . "\n");
+        return ($conllu, '[{"error":' . $res->status_line . '}]'); 
+    }
+
+}
+
+
 
 sub convertFromDocx {
 
