@@ -26,9 +26,9 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.01 20240510'; # version of the program
+my $VER = '0.1 20240510'; # version of the program
 
-my @features = ('nothing yet');
+my @features = ('testink ponk-app1');
 
 my $FEATS = join(' • ', @features); 
 
@@ -130,7 +130,7 @@ if ($info) {
 if ($help) {
   print "PONK version $VER.\n";
   my $text = <<'END_TEXT';
-Usage: maskit.pl [options]
+Usage: ponk.pl [options]
 options:  -i|--input-file [input text file name]
          -si|--stdin (input text provided via stdin)
          -if|--input-format [input format: txt (default), md, docx]
@@ -726,12 +726,12 @@ if ($input_format eq 'md') {
   mylog(0, "Finished including MarkDown info into the trees.\n");
 }
 
-###############################################
-# Let us process the parsed text
-###############################################
 
 
-# Tady bude vlastní funkcionalita PONKu
+##################################################################
+# Let us process the parsed text (the actual PONK functionality)
+##################################################################
+
 
 
 #################################################
@@ -739,15 +739,15 @@ if ($input_format eq 'md') {
 #################################################
 
 my $conll_for_ponk_app1 = get_output('conllu');
-my ($modified_conllu, $metrics_json) = call_ponk_app1($conll_for_ponk_app1);
+my ($app1_conllu, $app1_metrics) = call_ponk_app1($conll_for_ponk_app1);
 
 # Export the modified trees to a file (for debugging, not needed for further processing)
-open(OUT, '>:encoding(utf8)', "$input_file.export_ponk1.conllu") or die "Cannot open file '$input_file.export_ponk1.conllu' for writing: $!";
-print OUT $modified_conllu;
+open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
+print OUT $app1_conllu;
 close(OUT);
 # Export the metrics (for debugging, not needed for further processing)
-open(OUT, '>:encoding(utf8)', "$input_file.export_ponk1.metrics") or die "Cannot open file '$input_file.export_ponk1.metrics' for writing: $!";
-print OUT $metrics_json;
+open(OUT, '>:encoding(utf8)', "$input_file.export_app1.metrics") or die "Cannot open file '$input_file.export_app1.metrics' for writing: $!";
+print OUT app1_metrics2string('txt', $app1_metrics);
 close(OUT);
 
 
@@ -1306,7 +1306,11 @@ END_HEAD
   my $rounded_time = sprintf("%.1f", $processing_time);
   $stats .= "<br/>Processing time: $rounded_time sec.\n";
   $stats .= "</p>\n";
-
+  
+  $stats .= "<h3>Measures from PONK-APP1</h3>\n";
+  my $app1_string = app1_metrics2string('html', $app1_metrics);
+  $stats .= $app1_string;
+  
   $stats .= "$DESC\n";
   
   $stats .= "</body>\n";
@@ -1648,12 +1652,36 @@ sub call_ponk_app1 {
     } else {
         mylog(2, "call_ponk_app1: URL: $url\n");
         mylog(2, "call_ponk_app1: Error: " . $res->status_line . "\n");
-        return ($conllu, '[{"error":' . $res->status_line . '}]'); 
+        return ($conllu, [{"APP1 Error" => $res->status_line}]); 
     }
 
 }
 
+=item app1_metrisc2string
 
+Given format (html or txt) and a decoded JSON with metrics from app1 (ref to array of hashes), produce a string to display
+
+=cut
+
+sub app1_metrics2string {
+  my ($format, $refar_metrics) = @_;
+  my $text = '';
+  foreach my $metric (@$refar_metrics) {
+    my %h_metric = %$metric;
+    foreach my $name (keys %h_metric) {
+      if ($format eq 'html') {
+        $text .= "$name: $h_metric{$name}<br/>\n";
+      }
+      else { # txt
+        $text .= "$name: $h_metric{$name}\n";
+      }
+    }
+  }
+  return $text;
+}
+
+
+################################################
 
 sub convertFromDocx {
 
