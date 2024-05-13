@@ -1137,7 +1137,7 @@ END_OUTPUT_HEAD
         my @app1_miscs = get_app1_miscs(attr($node, 'misc')); # array of misc values from ponk-app1
         if (@app1_miscs) {
           my $span_class = 'highlighted-text-app1';
-          my $tooltip = join(' ,', @app1_miscs);
+          my $tooltip = join(', ', @app1_miscs);
           $span_start = "<span class=\"$span_class\" title=\"$tooltip\">";
           $span_end = '</span>';
         }
