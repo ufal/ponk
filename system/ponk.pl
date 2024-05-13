@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.1 20240510'; # version of the program
+my $VER = '0.11 20240513'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -64,7 +64,7 @@ if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe a
 # Colours for html
 
 my $color_highlight_general = 'darkred'; # general highlighting colour
-
+my $color_highlight_app1 = 'darkgreen'; # highlighting colour for ponk-app1
 
 #######################################
 
@@ -521,122 +521,12 @@ my $conll_data_ne = call_nametag($conll_data);
 
 
 ###################################################################################
-# Let us parse the CoNLL format into Tree::Simple tree structures (one tree per sentence)
+# Let us parse the CoNLL-U format into Tree::Simple tree structures (one tree per sentence)
 ###################################################################################
 
-my @lines = split("\n", $conll_data_ne);
+my ($ref_ha_start_offset2node, @trees) = parse_conllu($conll_data_ne);
+my %start_offset2node = %$ref_ha_start_offset2node;
 
-my @trees = (); # array of trees in the document
-
-my $root; # a single root
-
-my $min_start = 10000; # from indexes of the tokens, we will get indexes of the sentence
-my $max_end = 0;
-
-my $multiword = ''; # store a multiword line to keep with the following token
-
-my %start_offset2node = (); # a hash for mapping an offset to a node that starts at the position
-
-# the following cycle for reading UD CoNLL is modified from Jan Štěpánek's UD TrEd extension
-foreach my $line (@lines) {
-    chomp($line);
-    #mylog(0, "Line: $line\n");
-    if ($line =~ /^#/ && !$root) {
-        $root = Tree::Simple->new({}, Tree::Simple->ROOT);
-        #mylog(0, "Beginning of a new sentence!\n");
-    }
-
-    if ($line =~ /^#\s*newdoc/) { # newdoc
-        set_attr($root, 'newdoc', $line); # store the whole line incl. e.g. id = ...
-    } elsif ($line =~ /^#\s*newpar/) { # newpar
-        set_attr($root, 'newpar', $line); # store the whole line incl. e.g. id = ...
-    } elsif ($line =~ /^#\s*sent_id\s=\s*(\S+)/) {
-        my $sent_id = $1; # substr $sent_id, 0, 0, 'PML-' if $sent_id =~ /^(?:[0-9]|PML-)/;
-        set_attr($root, 'id', $sent_id);
-    } elsif ($line =~ /^#\s*text\s*=\s*(.*)/) {
-        set_attr($root, 'text', $1);
-        #mylog(0, "Reading sentence '$1'\n");
-    } elsif ($line =~ /^#\s*ponk\s*=\s*(.*)/) {
-        set_attr($root, 'ponk', $1);
-        #mylog(0, "Ponk properties of the sentence: '$1'\n");
-    } elsif ($line =~ /^#/) { # other comment, store it as well (all other comments in one attribute other_comment with newlines included)
-        my $other_comment_so_far = attr($root, 'other_comment') // '';
-        set_attr($root, 'other_comment', $other_comment_so_far . $line . "\n");
-        
-    } elsif ($line =~ /^$/) { # empty line, i.e. end of a sentence
-        _create_structure($root);
-        set_attr($root, 'start', $min_start);
-        set_attr($root, 'end', $max_end);
-        $min_start = 10000;
-        $max_end = 0;
-        push(@trees, $root);
-        #mylog(0, "End of sentence id='" . attr($root, 'id') . "'.\n\n");
-        $root = undef;
-
-    } else { # a token
-        my ($n, $form, $lemma, $upos, $xpos, $feats, $head, $deprel,
-            $deps, $misc) = split (/\t/, $line);
-        $_ eq '_' and undef $_
-            for $xpos, $feats, $deps, $misc;
-
-        # $misc = 'Treex::PML::Factory'->createList( [ split /\|/, ($misc // "") ]);
-        #if ($n =~ /-/) {
-        #    _create_multiword($n, $root, $misc, $form);
-        #    next
-        #}
-        if ($n =~ /-/) { # a multiword line, store it to keep with the next token
-          $multiword = $line;
-          next;
-        }
-        
-        #$feats = _create_feats($feats);
-        #$deps = [ map {
-        #    my ($parent, $func) = split /:/;
-        #    'Treex::PML::Factory'->createContainer($parent,
-        #                                            {func => $func});
-        #} split /\|/, ($deps // "") ];
-
-        my $node = Tree::Simple->new({});
-        set_attr($node, 'ord', $n);
-        set_attr($node, 'form', $form);
-        set_attr($node, 'lemma', $lemma);
-        set_attr($node, 'deprel', $deprel);
-        set_attr($node, 'upostag', $upos);
-        set_attr($node, 'xpostag', $xpos);
-        set_attr($node, 'feats', $feats);
-        set_attr($node, 'deps', $deps); # 'Treex::PML::Factory'->createList($deps),
-        set_attr($node, 'misc', $misc);
-        set_attr($node, 'head', $head);
-        
-        if ($multiword) { # the previous line was a multiword, store it at the current token
-          set_attr($node, 'multiword', $multiword);
-          $multiword = '';
-        }
-        
-        if ($misc and $misc =~ /TokenRange=(\d+):(\d+)\b/) {
-          my ($start, $end) = ($1, $2);
-          set_attr($node, 'start', $start);
-          set_attr($node, 'end', $end);
-          $start_offset2node{$start} = $node;
-          $min_start = $start if $start < $min_start;
-          $max_end = $end if $end > $max_end;          
-        }
-        
-        $root->addChild($node);
-        
-    }
-}
-# If there wasn't an empty line at the end of the file, we need to process the last tree here:
-if ($root) {
-    _create_structure($root);
-    set_attr($root, 'start', $min_start);
-    set_attr($root, 'end', $max_end);
-    push(@trees, $root);
-    #mylog(0, "End of sentence id='" . attr($root, 'id') . "'.\n\n");
-    $root = undef;
-    #warn "Emtpy line missing at the end of input\n";
-}
-# end of Jan Štěpánek's modified cycle for reading UD CoNLL
 
 
 ###############################################
@@ -706,7 +596,9 @@ if ($input_format eq 'md') {
 
 
 ##################################################################
+##################################################################
 # Let us process the parsed text (the actual PONK functionality)
+##################################################################
 ##################################################################
 
 
@@ -719,13 +611,23 @@ my $conll_for_ponk_app1 = get_output('conllu');
 my ($app1_conllu, $app1_metrics) = call_ponk_app1($conll_for_ponk_app1);
 
 # Export the modified trees to a file (for debugging, not needed for further processing)
-open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
-print OUT $app1_conllu;
-close(OUT);
+# open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
+# print OUT $app1_conllu;
+# close(OUT);
 # Export the metrics (for debugging, not needed for further processing)
-open(OUT, '>:encoding(utf8)', "$input_file.export_app1.metrics") or die "Cannot open file '$input_file.export_app1.metrics' for writing: $!";
-print OUT app1_metrics2string('txt', $app1_metrics);
-close(OUT);
+# open(OUT, '>:encoding(utf8)', "$input_file.export_app1.metrics") or die "Cannot open file '$input_file.export_app1.metrics' for writing: $!";
+# print OUT app1_metrics2string('txt', $app1_metrics);
+# close(OUT);
+
+
+
+#####################################
+# Parse the CoNLL-U from PONK-APP1
+#####################################
+
+
+($ref_ha_start_offset2node, @trees) = parse_conllu($app1_conllu);
+%start_offset2node = %$ref_ha_start_offset2node;
 
 
 
@@ -787,6 +689,127 @@ sub mylog {
     print STDERR "ponk: $msg";
   }
 }
+
+
+sub parse_conllu {
+  my $conllu = shift;
+
+  my @lines = split("\n", $conllu);
+
+  my @trees = (); # array of trees in the document
+
+  my $root; # a single root
+
+  my $min_start = 10000; # from indexes of the tokens, we will get indexes of the sentence
+  my $max_end = 0;
+
+  my $multiword = ''; # store a multiword line to keep with the following token
+
+  my %start_offset_to_node = (); # a hash for mapping an offset to a node that starts at the position
+
+  # the following cycle for reading UD CoNLL is modified from Jan Štěpánek's UD TrEd extension
+  foreach my $line (@lines) {
+      chomp($line);
+      #mylog(0, "Line: $line\n");
+      if ($line =~ /^#/ && !$root) {
+          $root = Tree::Simple->new({}, Tree::Simple->ROOT);
+          #mylog(0, "Beginning of a new sentence!\n");
+      }
+
+      if ($line =~ /^#\s*newdoc/) { # newdoc
+          set_attr($root, 'newdoc', $line); # store the whole line incl. e.g. id = ...
+      } elsif ($line =~ /^#\s*newpar/) { # newpar
+          set_attr($root, 'newpar', $line); # store the whole line incl. e.g. id = ...
+      } elsif ($line =~ /^#\s*sent_id\s=\s*(\S+)/) {
+          my $sent_id = $1; # substr $sent_id, 0, 0, 'PML-' if $sent_id =~ /^(?:[0-9]|PML-)/;
+          set_attr($root, 'id', $sent_id);
+      } elsif ($line =~ /^#\s*text\s*=\s*(.*)/) {
+          set_attr($root, 'text', $1);
+          #mylog(0, "Reading sentence '$1'\n");
+      } elsif ($line =~ /^#\s*ponk\s*=\s*(.*)/) {
+          set_attr($root, 'ponk', $1);
+          #mylog(0, "Ponk properties of the sentence: '$1'\n");
+      } elsif ($line =~ /^#/) { # other comment, store it as well (all other comments in one attribute other_comment with newlines included)
+          my $other_comment_so_far = attr($root, 'other_comment') // '';
+          set_attr($root, 'other_comment', $other_comment_so_far . $line . "\n");
+          
+      } elsif ($line =~ /^$/) { # empty line, i.e. end of a sentence
+          _create_structure($root);
+          set_attr($root, 'start', $min_start);
+          set_attr($root, 'end', $max_end);
+          $min_start = 10000;
+          $max_end = 0;
+          push(@trees, $root);
+          #mylog(0, "End of sentence id='" . attr($root, 'id') . "'.\n\n");
+          $root = undef;
+
+      } else { # a token
+          my ($n, $form, $lemma, $upos, $xpos, $feats, $head, $deprel,
+              $deps, $misc) = split (/\t/, $line);
+          $_ eq '_' and undef $_
+              for $xpos, $feats, $deps, $misc;
+
+          # $misc = 'Treex::PML::Factory'->createList( [ split /\|/, ($misc // "") ]);
+          #if ($n =~ /-/) {
+          #    _create_multiword($n, $root, $misc, $form);
+          #    next
+          #}
+          if ($n =~ /-/) { # a multiword line, store it to keep with the next token
+            $multiword = $line;
+            next;
+          }
+          
+          #$feats = _create_feats($feats);
+          #$deps = [ map {
+          #    my ($parent, $func) = split /:/;
+          #    'Treex::PML::Factory'->createContainer($parent,
+          #                                            {func => $func});
+          #} split /\|/, ($deps // "") ];
+
+          my $node = Tree::Simple->new({});
+          set_attr($node, 'ord', $n);
+          set_attr($node, 'form', $form);
+          set_attr($node, 'lemma', $lemma);
+          set_attr($node, 'deprel', $deprel);
+          set_attr($node, 'upostag', $upos);
+          set_attr($node, 'xpostag', $xpos);
+          set_attr($node, 'feats', $feats);
+          set_attr($node, 'deps', $deps); # 'Treex::PML::Factory'->createList($deps),
+          set_attr($node, 'misc', $misc);
+          set_attr($node, 'head', $head);
+          
+          if ($multiword) { # the previous line was a multiword, store it at the current token
+            set_attr($node, 'multiword', $multiword);
+            $multiword = '';
+          }
+          
+          if ($misc and $misc =~ /TokenRange=(\d+):(\d+)\b/) {
+            my ($start, $end) = ($1, $2);
+            set_attr($node, 'start', $start);
+            set_attr($node, 'end', $end);
+            $start_offset_to_node{$start} = $node;
+            $min_start = $start if $start < $min_start;
+            $max_end = $end if $end > $max_end;          
+          }
+          
+          $root->addChild($node);
+          
+      }
+  }
+  # If there wasn't an empty line at the end of the file, we need to process the last tree here:
+  if ($root) {
+      _create_structure($root);
+      set_attr($root, 'start', $min_start);
+      set_attr($root, 'end', $max_end);
+      push(@trees, $root);
+      #mylog(0, "End of sentence id='" . attr($root, 'id') . "'.\n\n");
+      $root = undef;
+      #warn "Emtpy line missing at the end of input\n";
+  }
+  # end of Jan Štěpánek's modified cycle for reading UD CoNLL
+  return (\%start_offset_to_node, @trees);
+}
+
 
 
 =item get_NameTag_marks
@@ -1044,6 +1067,10 @@ sub get_output {
         .highlighted-text {
             color: $color_highlight_general;
         }
+        .highlighted-text-app1 {
+            color: $color_highlight_app1;
+            font-weight: bold;
+        }
   </style>
 </head>
 END_OUTPUT_HEAD
@@ -1056,7 +1083,7 @@ END_OUTPUT_HEAD
   
   my $space_before = ''; # for storing info about SpaceAfter until the next token is printed
 
-  foreach $root (@trees) {
+  foreach my $root (@trees) {
 
     # PARAGRAPH SEPARATION (txt, html)
     if (attr($root, 'newpar') and $format =~ /^(txt|html)$/) {
@@ -1102,18 +1129,19 @@ END_OUTPUT_HEAD
       my $span_end = '';
       my $info_span = '';
 
-=item
 
-      if ($replacement and $format eq 'html') {
-        my $span_class = 'highlighted-text';
-        if ($classes =~/\bgu\b/) {
-          $span_class .= ' replacement-text-gu';
+      # INFO FROM PONK-APP1
+      #if ($replacement and $format eq 'html') {
+      if ($format eq 'html') {
+        #mylog(0, "Going to get app1 miscs for word '$form'\n");
+        my @app1_miscs = get_app1_miscs(attr($node, 'misc')); # array of misc values from ponk-app1
+        if (@app1_miscs) {
+          my $span_class = 'highlighted-text-app1';
+          my $tooltip = join(' ,', @app1_miscs);
+          $span_start = "<span class=\"$span_class\" title=\"$tooltip\">";
+          $span_end = '</span>';
         }
-        $span_start = "<span class=\"$span_class\">";
-        $span_end = '</span>';
       }
-
-=cut
 
 
       # PRINT THE TOKEN
@@ -1216,6 +1244,25 @@ END_OUTPUT_HEAD
 } # get_output
 
 
+=item get_app1_miscs
+
+Given the value of the misc attribute, return an array of values from ponk-app1
+
+=cut
+
+sub get_app1_miscs {
+  my $misc = shift;
+  # mylog(0, "get_app1_miscs: misc='$misc'\n");
+  return undef if !$misc;
+  my @miscs = split(/\|/, $misc);
+  # mylog(0, "get_app1_miscs: found " . scalar(@miscs) . " misc values.\n");
+  my @app1_miscs = grep {/^(rule_|PonkApp1)/} @miscs;
+  # mylog(0, "get_app1_miscs: found " . scalar(@app1_miscs) . " ponk-app1 misc values.\n");
+  return @app1_miscs;
+}
+
+
+
 =item surface_text
 
 Given array of nodes, give surface text they represent
@@ -1307,7 +1354,7 @@ sub get_sentence {
   my $range = shift;
   if ($range =~ /^(\d+):(\d+)/) {
     my ($start, $end) = ($1, $2);
-    foreach $root (@trees) { # go through all sentences
+    foreach my $root (@trees) { # go through all sentences
       if (attr($root, 'start') <= $start and attr($root, 'end') >= $end) { # we found the tree
         return attr($root, 'text');
       }

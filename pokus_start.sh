@@ -3,6 +3,6 @@ echo "Analyzing input text" >err
 
 FILE=data/pokus.md
 
-./system/ponk.pl --input-file $FILE --input-format md --output-format txt --store-format conllu 2>>err
+./system/ponk.pl --input-file $FILE --input-format md --output-format html --store-format conllu 2>>err
 
 echo "Analysis finished." >>err
