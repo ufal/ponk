@@ -7,7 +7,9 @@
   <table class="table table-striped table-bordered">
   <tr>
       <th>Authors</th>
-      <td>Jiří Mírovský, Silvie Cinková, Barbora Hladká</td>
+      <td>Jiří Mírovský, Silvie Cinková, Barbora Hladká
+      <br>subapplication 1: Ivan Kraus, Arnold Stanovský
+      </td>
   </tr>
   <tr>
       <th>Homepage</th>
