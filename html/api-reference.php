@@ -29,7 +29,7 @@ handling.</p>
 </tr>
 <tr>
     <td><a href="#process">process</a></td>
-    <td><a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk" target="_blank">process the text and highlight low-accessibility parts</a></td>
+    <td><a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk" target="_blank">process the text and highlight low-readability parts</a></td>
     <td>GET/POST</td>
 </tr>
 <tr>
