@@ -1100,7 +1100,9 @@ END_OUTPUT_HEAD
   my $first_sent = 1; # for sentence separation in txt and html formats (first sentence in the file should not be separated)
   
   my $space_before = ''; # for storing info about SpaceAfter until the next token is printed
-
+  
+  my $html_sentence_element = ''; # it may be set, e.g., to h1 for level 1 headings
+  
   foreach my $root (@trees) {
 
     # PARAGRAPH SEPARATION (txt, html)
@@ -1113,9 +1115,23 @@ END_OUTPUT_HEAD
         $output .= "\n</p>\n" if $format eq 'html';
         # $output .= "\n\n" if $format eq 'txt'; # maybe not needed since using SpacesAfter and SpacesBefore
       }
+      
       $output .= "<p>\n" if $format eq 'html';
     }
 
+    # check if this sentence is a heading
+    my $sentence_ponk = attr($root, 'ponk') // '';
+    if ($sentence_ponk =~ /Heading=(\d)/) { # a heading
+      my $elem = $1;
+      if ($format eq 'html') {
+        $html_sentence_element = "h$elem";
+      }
+    }
+    
+    if ($format eq 'html' and $html_sentence_element) {
+      $output .= "<$html_sentence_element>";
+    }
+    
     # SENTENCE HEADER (conllu)
     if ($format eq 'conllu') {
       $output .= attr($root, 'other_comment') // '';
@@ -1133,10 +1149,16 @@ END_OUTPUT_HEAD
 
     # PRINT THE SENTENCE TOKEN BY TOKEN
     my @nodes = sort {attr($a, 'ord') <=> attr($b, 'ord')} descendants($root);
+    my $number_of_tokens = scalar(@nodes);
 
+    my $stored_spaces_after_last_token = ''; # spaces after at the last token need to wait for, e.g., closing tag for a heading
+    my $token_number = 0;
+    
     foreach my $node (@nodes) {
-
-      next if attr($node, 'hidden'); # do not output hidden nodes (originally parts of multiword expressions such as multiword street names)
+    
+      $token_number++;
+    
+      # from MasKIT, not needed: next if attr($node, 'hidden'); # do not output hidden nodes (originally parts of multiword expressions such as multiword street names)
       
       # COLLECT INFO ABOUT THE TOKEN
       #my $replacement = attr($node, 'replacement');
@@ -1217,9 +1239,15 @@ END_OUTPUT_HEAD
             $SpacesAfter =~ s/\\t/  /g;
           }
         }
-        $output .= $SpacesAfter;
+        if ($token_number eq $number_of_tokens) {
+          $stored_spaces_after_last_token = $SpacesAfter;
+        }
+        else {
+          $output .= $SpacesAfter;
+        }
         
       }
+      
       elsif ($format eq 'conllu') {
         my $ord = attr($node, 'ord') // '_';
         my $lemma = attr($node, 'lemma') // '_';
@@ -1240,6 +1268,17 @@ END_OUTPUT_HEAD
         $output .= "$ord\t$form\t$lemma\t$upostag\t$xpostag\t$feats\t$head\t$deprel\t$deps\t$misc\n";
       }
 
+    }
+
+    if ($format eq 'html' and $html_sentence_element) {
+      $output .= "</$html_sentence_element>";
+      $html_sentence_element = '';
+    }
+    
+    if ($format =~ /^(html|txt)$/) {
+      if ($stored_spaces_after_last_token) {
+        $output .= $stored_spaces_after_last_token;
+      }
     }
 
     # sentence separation in the conllu format needs to be here (also the last sentence should be ended with \n)
