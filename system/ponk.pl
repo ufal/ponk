@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.11 20240513'; # version of the program
+my $VER = '0.12 20240801'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -46,19 +46,26 @@ $DESC .= <<END_DESC;
 </ul>
 END_DESC
 
-my $log_level = 0; # limited (0=full, 1=limited, 2=anonymous)
+my $logging_level = 2; # default log level, can be changed using the -ll parameter (0=full, 1=limited, 2=anonymous)
+
+my %logging_level_label = (0 => 'full', 1 => 'limited', 2 => 'anonymous');
 
 my $udpipe_service_url = 'http://lindat.mff.cuni.cz/services/udpipe/api';
 my $nametag_service_url = 'http://lindat.mff.cuni.cz/services/nametag/api'; 
 my $ponk_app1_service_url = 'http://quest.ms.mff.cuni.cz/ponk-app1';
+
+=item testing the hostname no longer needed, anonymous logging level is default
+
 my $hostname = hostname;
 if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe and nametag that do not log texts
   $udpipe_service_url = 'http://udpipe:11001';
   $nametag_service_url = 'http://udpipe:11002';
   $ponk_app1_service_url = 'http://ponk-app1:8000'; # for now, in practice no difference from the original URL
   $VER .= ' (no text logging)';
-  $log_level = 2; # anonymous
+  $logging_level = 2; # anonymous
 }
+
+=cut
 
 #############################
 # Colours for html
@@ -82,6 +89,7 @@ my $output_format;
 my $output_statistics;
 my $store_format;
 my $store_statistics;
+my $logging_level_override;
 my $version;
 my $info;
 my $help;
@@ -95,11 +103,15 @@ GetOptions(
     'os|output-statistics'   => \$output_statistics, # adds statistics to the output; if present, output is JSON with two items: data (in output-format) and stats (in HTML)
     'sf|store-format=s'      => \$store_format, # log the result in the given format: txt, html, conllu
     'ss|store-statistics'    => \$store_statistics, # should statistics be logged as an HTML file?
+    'll|logging-level=s'     => \$logging_level_override, # override the default (anonymous) logging level (0=full, 1=limited, 2=anonymous)
     'v|version'              => \$version, # print the version of the program and exit
     'n|info'                 => \$info, # print the info (program version and supported features) as JSON and exit
     'h|help'                 => \$help, # print a short help and exit
 );
 
+if (defined($logging_level_override)) {
+  $logging_level = $logging_level_override;
+}
 
 my $script_path = $0;  # Získá název spuštěného skriptu s cestou
 my $script_dir = dirname($script_path);  # Získá pouze adresář ze získané cesty
@@ -133,6 +145,7 @@ options:  -i|--input-file [input text file name]
          -os|--output-statistics (add PONK statistics to output; if present, output is JSON with two items: data (in output-format) and stats (in HTML))
          -sf|--store-format [format: log the output in the given format: txt, html, conllu]
          -ss|--store-statistics (log statistics to an HTML file)
+         -ll|--logging-level (override the default (anonymous) logging level (0=full, 1=limited, 2=anonymous))
           -v|--version (prints the version of the program and ends)
           -n|--info (prints the program version and supported features as JSON and ends)
           -h|--help (prints a short help and ends)
@@ -145,8 +158,9 @@ END_TEXT
 # Summarize the program arguments to the log (except for --version and --help)
 ###################################################################################
 
-mylog(2, "\n####################################################################\n");
-mylog(2, "PONK $VER\n");
+mylog(2, "####################################################################\n");
+mylog(2, "PONK $VER (logging level: $logging_level - $logging_level_label{$logging_level})\n");
+mylog(2, "####################################################################\n");
 
 mylog(0, "Arguments:\n");
  
@@ -200,6 +214,10 @@ if ($store_format) {
 
 if ($store_statistics) {
   mylog(0, " - log PONK statistics in an HTML file\n");
+}
+
+if (defined($logging_level_override)) {
+  mylog(2, " - logging level override: $logging_level_override - $logging_level_label{$logging_level_override}\n");
 }
 
 mylog(0, "\n");
@@ -678,14 +696,14 @@ if ($store_format) { # log the anonymized text in the given format in a file
 
 =item log
 
-A function to print log (debug) info based on $log_level (0=full, 1=limited, 2=anonymous).
-The message only gets printed (to STDERR) if given $level is greater than or equal to global $log_level.
+A function to print log (debug) info based on $logging_level (0=full, 1=limited, 2=anonymous).
+The message only gets printed (to STDERR) if given $level is greater than or equal to global $logging_level.
 
 =cut
 
 sub mylog {
   my ($level, $msg) = @_;
-  if ($level >= $log_level) {
+  if ($level >= $logging_level) {
     print STDERR "ponk: $msg";
   }
 }
