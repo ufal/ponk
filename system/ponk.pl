@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.12 20240801'; # version of the program
+my $VER = '0.13 20240805'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -1153,6 +1153,9 @@ END_OUTPUT_HEAD
 
     my $stored_spaces_after_last_token = ''; # spaces after at the last token need to wait for, e.g., closing tag for a heading
     my $token_number = 0;
+
+    my $bold_continuation = 0; # bold text continues from previous tokens (within a single sentence)
+    my $italics_continuation = 0; # italics text continues from previous tokens (within a single sentence)
     
     foreach my $node (@nodes) {
     
@@ -1168,7 +1171,42 @@ END_OUTPUT_HEAD
       my $span_start = '';
       my $span_end = '';
       my $info_span = '';
+      
+      # take care of BOLD text
+      my $bold_start = '';
+      my $bold_end = '';
 
+      my $is_bold = get_misc_value($node, 'PonkBold') // '';
+      if ($bold_continuation and !$is_bold) { # end of bold before this token
+        $bold_continuation = 0;
+        if ($format eq 'html') {
+          $bold_end = '</b>';
+        }
+      }
+      elsif (!$bold_continuation and $is_bold) { # bold starts before this token
+        $bold_continuation = 1;
+        if ($format eq 'html') {
+          $bold_start = '<b>';
+        }
+      }
+
+      # take care of ITALICS text
+      my $italics_start = '';
+      my $italics_end = '';
+
+      my $is_italics = get_misc_value($node, 'PonkItalics') // '';
+      if ($italics_continuation and !$is_italics) { # end of italics before this token
+        $italics_continuation = 0;
+        if ($format eq 'html') {
+          $italics_end = '</i>';
+        }
+      }
+      elsif (!$italics_continuation and $is_italics) { # italics starts before this token
+        $italics_continuation = 1;
+        if ($format eq 'html') {
+          $italics_start = '<i>';
+        }
+      }
 
       # INFO FROM PONK-APP1
       #if ($replacement and $format eq 'html') {
@@ -1213,7 +1251,7 @@ END_OUTPUT_HEAD
           $output .= $SpacesBefore;          
         }
 
-        $output .= "$space_before$span_start$form$span_end$info_span";
+        $output .= "$italics_end$bold_end$space_before$span_start$bold_start$italics_start$form$span_end$info_span";
 
         $space_before = ($SpaceAfter eq 'No' or $SpacesAfter) ? '' : ' '; # store info about a space until the next token is about to be printed
         
