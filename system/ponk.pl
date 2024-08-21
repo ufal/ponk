@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.13 20240805'; # version of the program
+my $VER = '0.14 20240821'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -274,6 +274,7 @@ my @markdown = (); # to store recognized (and removed) markdown marks with offse
 
 if ($input_format eq 'md') {
   mylog(0, "Preprocessing MarkDown text...\n");
+  $input_content =~ s/\r\n|\n/\n/g; # unification of line ends
   my @text = split (//, $input_content);
   my $pure_input_content = '';
   my $text_length = scalar(@text);
