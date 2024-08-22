@@ -229,12 +229,15 @@ mylog(0, "\n");
 
 my $input_content;
 
-if ($stdin) { # the input text should be read from STDIN
+##### Reading from STDIN #####
 
+if ($stdin) { # the input text should be read from STDIN
   mylog(2, "reading from stdin, input_format=$input_format\n");
+  
   if ($input_format eq 'docx') {
-    $input_content = convertFromDocx();
-    #mylog(2, "input converted from docx: '$input_content'\n");
+    $input_content = convertSTDINFromDocxBase64();
+    mylog(2, " - stdin converted from docx encoded in Base64 to md\n");
+    # mylog(0, "'$input_content'\n");
     $input_format = 'md';
   }
   else {
@@ -245,20 +248,36 @@ if ($stdin) { # the input text should be read from STDIN
   }
   my $current_datetime = strftime("%Y%m%d_%H%M%S", localtime);
   $input_file = "stdin_$current_datetime.txt"; # a fake file name for naming the output files
+}
 
-} elsif ($input_file) { # the input text should be read from a file
-  open my $file_handle, '<:encoding(utf8)', $input_file
-    or die "Cannot open file '$input_file' for reading: $!";
+##### Reading from a file #####
 
-  $input_content = do { local $/; <$file_handle> }; # reading the file into a variable
-  close $file_handle;
+elsif ($input_file) { # the input text should be read from a file
+  mylog(2, "reading from input file: $input_file, input_format=$input_format\n");
+  
+  if ($input_format eq 'docx') { # binary docx format
+    open my $fh, '<:raw', $input_file
+      or die "Cannot open file '$input_file' for reading: $!";
+    # Načtení celého souboru do proměnné bez specifikace počtu bajtů
+    local $/ = undef;  # Nastavení, aby Perl četl celý soubor najednou
+    my $input_data_binary = <$fh>;
+    close $fh;
+    $input_content = convertFromDocx($input_data_binary);
+    mylog(2, " - input file converted from docx to md\n");
+    # mylog(0, "'$input_content'\n");
+    $input_format = 'md';
+  }
+  else { # text formats (txt, md)
+    open my $file_handle, '<:encoding(utf8)', $input_file
+      or die "Cannot open file '$input_file' for reading: $!";
 
+    $input_content = do { local $/; <$file_handle> }; # reading the file into a variable
+    close $file_handle;
+  }
 } else {
   mylog(2, "No input to process! Exiting!\n");
   exit -1;
 }
-
-mylog(2, "input file: $input_file\n");
 
 # mylog(0, $input_content);
 
@@ -1803,7 +1822,7 @@ sub app1_metrics2string {
 
 ################################################
 
-sub convertFromDocx {
+sub convertSTDINFromDocxBase64 {
 
     # Načtení docx kódovaného v Base64 ze stdin
     my $base64_data = do {
@@ -1822,12 +1841,20 @@ sub convertFromDocx {
 
 =cut
 
+    my $converted_to_md = convertFromDocx($word_document);
+    
+    return $converted_to_md;
+}
+    
+sub convertFromDocx {
+    my $docx_binary = shift;
+
     # Spuštění programu pandoc s předáním parametrů a standardního vstupu
     my @cmd = ('/usr/bin/pandoc',
                '-f', 'docx',
                '-t', 'markdown'); # Nastavit výstup na standardní výstup);
     my $result;
-    run \@cmd, \$word_document, \$result;
+    run \@cmd, \$docx_binary, \$result;
 
     # Převedení výsledku do UTF-8
     $result = decode('UTF-8', $result);
