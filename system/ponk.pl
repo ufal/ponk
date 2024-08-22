@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.14 20240821'; # version of the program
+my $VER = '0.15 20240822'; # version of the program
 
 my @features = ('testink ponk-app1');
 
