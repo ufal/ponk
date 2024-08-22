@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.15 20240822'; # version of the program
+my $VER = '0.16 20240822'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -98,8 +98,8 @@ my $help;
 GetOptions(
     'i|input-file=s'         => \$input_file, # the name of the input file
     'si|stdin'               => \$stdin, # should the input be read from STDIN?
-    'if|input-format=s'      => \$input_format, # input format, possible values: txt, md, docx
-    'of|output-format=s'     => \$output_format, # output format, possible values: txt, html, conllu
+    'if|input-format=s'      => \$input_format, # input format, possible values: txt, md, docx (and for internal purposes of the API server, also docxBase64)
+    'of|output-format=s'     => \$output_format, # output format, possible values: html, txt, md, conllu
     'os|output-statistics'   => \$output_statistics, # adds statistics to the output; if present, output is JSON with two items: data (in output-format) and stats (in HTML)
     'sf|store-format=s'      => \$store_format, # log the result in the given format: txt, html, conllu
     'ss|store-statistics'    => \$store_statistics, # should statistics be logged as an HTML file?
@@ -141,7 +141,7 @@ Usage: ponk.pl [options]
 options:  -i|--input-file [input text file name]
          -si|--stdin (input text provided via stdin)
          -if|--input-format [input format: txt (default), md, docx]
-         -of|--output-format [output format: txt (default), html, conllu]
+         -of|--output-format [output format: html (default), txt, md, conllu]
          -os|--output-statistics (add PONK statistics to output; if present, output is JSON with two items: data (in output-format) and stats (in HTML))
          -sf|--store-format [format: log the output in the given format: txt, html, conllu]
          -ss|--store-statistics (log statistics to an HTML file)
@@ -176,7 +176,7 @@ if (!defined $input_format) {
   mylog(0, " - input format: not specified, set to default $INPUT_FORMAT_DEFAULT\n");
   $input_format = $INPUT_FORMAT_DEFAULT;
 }
-elsif ($input_format !~ /^(txt|md|docx)$/) {
+elsif ($input_format !~ /^(txt|md|docx|docxBase64)$/) {
   mylog(0, " - input format: unknown ($input_format), set to default $INPUT_FORMAT_DEFAULT\n");
   $input_format = $INPUT_FORMAT_DEFAULT;
 }
@@ -189,7 +189,7 @@ if (!defined $output_format) {
   mylog(0, " - output format: not specified, set to default $OUTPUT_FORMAT_DEFAULT\n");
   $output_format = $OUTPUT_FORMAT_DEFAULT;
 }
-elsif ($output_format !~ /^(txt|html|conllu)$/) {
+elsif ($output_format !~ /^(txt|html|md|conllu)$/) {
   mylog(0, " - output format: unknown ($output_format), set to default $OUTPUT_FORMAT_DEFAULT\n");
   $output_format = $OUTPUT_FORMAT_DEFAULT;
 }
@@ -203,7 +203,7 @@ if ($output_statistics) {
 
 $store_format = lc($store_format) if $store_format;
 if ($store_format) {
-  if ($store_format =~ /^(txt|html|conllu)$/) {
+  if ($store_format =~ /^(txt|html|md|conllu)$/) {
     mylog(0, " - log the output to a file in $store_format\n");
   }
   else {
@@ -235,6 +235,12 @@ if ($stdin) { # the input text should be read from STDIN
   mylog(2, "reading from stdin, input_format=$input_format\n");
   
   if ($input_format eq 'docx') {
+    $input_content = convertSTDINFromDocx();
+    mylog(2, " - stdin converted from binary docx to md\n");
+    # mylog(0, "'$input_content'\n");
+    $input_format = 'md';
+  }
+  elsif ($input_format eq 'docxBase64') { # for communication via API server
     $input_content = convertSTDINFromDocxBase64();
     mylog(2, " - stdin converted from docx encoded in Base64 to md\n");
     # mylog(0, "'$input_content'\n");
@@ -1822,7 +1828,20 @@ sub app1_metrics2string {
 
 ################################################
 
-sub convertSTDINFromDocxBase64 {
+sub convertSTDINFromDocx { # for reading binary docx file from STDIN (used if ponk is run from command line)
+    binmode STDIN;
+    # Načtení binárního docx ze stdin
+    local $/ = undef;
+
+    # Načtení celého STDIN do proměnné
+    my $word_document = <STDIN>;
+
+    my $converted_to_md = convertFromDocx($word_document);
+    
+    return $converted_to_md;
+}
+
+sub convertSTDINFromDocxBase64 { # for reading docx file encoded in Base64 from STDIN (used internally in communication via API server)
 
     # Načtení docx kódovaného v Base64 ze stdin
     my $base64_data = do {
@@ -1832,21 +1851,12 @@ sub convertSTDINFromDocxBase64 {
 
     my $word_document = decode_base64($base64_data); # nyní mám původní binární podobu docx
 
-=item
-
-    my $soubor = '/home/mirovsky/pokus2.docx';
-    open my $soubor_handle, '>:raw', $soubor or die "Nelze otevřít soubor '$soubor' pro zápis: $!";
-    print $soubor_handle $word_document;
-    close $soubor_handle;
-
-=cut
-
     my $converted_to_md = convertFromDocx($word_document);
     
     return $converted_to_md;
 }
     
-sub convertFromDocx {
+sub convertFromDocx { # converting binary docx file do MarkDown
     my $docx_binary = shift;
 
     # Spuštění programu pandoc s předáním parametrů a standardního vstupu
