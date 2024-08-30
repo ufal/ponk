@@ -1,7 +1,5 @@
 <?php $main_page=basename(__FILE__); require('header.php') ?>
 
-<?php require('about.html') ?>
-
 <script type="text/javascript"><!--
   var input_file_content = null;
   var output_file_content = null;
@@ -128,6 +126,10 @@
       var info = "<h4>PONK server info</h4>\n<ul><li>version: <i>" + version + "</i>\n<li>supported features: <i>" + features + "</i>\n</ul>\n";
       jQuery('#server_info').html(info).show();
       //console.log("Info: ", info);
+      var short_info = "&nbsp; version: <i>" + version + "</i>";
+      jQuery('#server_short_info').html(short_info).show();
+      //console.log("Info: ", info);
+      
     }});
   }
   
@@ -270,18 +272,39 @@
 
 --></script>
 
+<div class="panel panel-default">
+  <div class="panel-heading" role="tab" id="aboutHeading">
+    <div class="collapsed" role="button" data-toggle="collapse" href="#aboutContent" aria-expanded="false" aria-controls="aboutContent">
+      <span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span> PONK is an on-line tool and REST API service for analyzing readability of Czech legal texts.
+    </div>
+  </div>
+  <div id="aboutContent" class="panel-collapse collapse" role="tabpanel" aria-labelledby="aboutHeading">
+
+    <?php require('about.html') ?>
+  </div>
+</div>
+
 <div class="panel panel-info">
   <div class="panel-heading">Service</div>
   <div class="panel-body">
 
-    <div id="server_info" style="display: none"></div>
-  
-    <?php require('licence.html') ?>
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="serverInfoHeading">
+      <div class="collapsed" role="button" data-toggle="collapse" href="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent">
+        <span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span> PONK server info: <span id="server_short_info" style="display: none"></span>
+      </div>
+    </div>
+    <div id="serverInfoContent" class="panel-collapse collapse" role="tabpanel" aria-labelledby="serverInfoHeading">
+
+      <div id="server_info" style="display: none"></div>
     
-    <p>Please note that due to time limitations on our proxy server, the maximum length for input text is approximately 5 thousand words.</p>
+      <?php require('licence.html') ?>
+      
+      <p>Please note that due to time limitations on our proxy server, the maximum length for input text is approximately 5 thousand words.</p>
 
-    <div id="error" class="alert alert-danger" style="display: none"></div>
-
+      <div id="error" class="alert alert-danger" style="display: none"></div>
+    </div>
+  </div>
 
     <!-- ================= OPTIONS ================ -->
 
