@@ -313,30 +313,18 @@
         <label class="col-sm-2 control-label">Input:</label>
         <div class="col-sm-10">
           <label title="Plain text input" class="radio-inline" id="option_input_plaintext_label"><input name="option_input" id="option_input_plaintext" type="radio" value="txt" checked/>Plain text</label>
-          <!--label title="Tokenize a pre-segmented input using a tokenizer" class="radio-inline" id="option_input_presegmented"><input name="option_input" type="radio" value="presegmented"/>Pre-segmented (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_input" target="_blank">sentence per line</a>)</label-->
           <label title="Markdown text" class="radio-inline" id="option_input_markdown_label"><input name="option_input" id="option_input_markdown" type="radio" value="md"/>Markdown text</label>
           <label title="MS Word .docx file" class="radio-inline" id="option_input_docx_label"><input name="option_input" id="option_input_docx" type="radio" value="docx" onchange="handleInputFormatChange();"/>MS Word .docx file</label>
         </div>
       </div>
       <div class="form-group row">
         <label class="col-sm-2 control-label">Output:</label>
-	<div class="col-sm-10">
-          <!--label title="TXT with original texts marked with special characters" class="radio-inline">
-            <input name="option_output" type="radio" value="txt" id="option_output_txt" onchange="handleOutputFormatChange();"/>TXT
-            (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_maskit_output" target="_blank">marked with special characters</a>)
-          </label-->
+        <div class="col-sm-10">
           <label title="HTML with colour-encoded analysis of the text" class="radio-inline">
             <input name="option_output" type="radio" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();"/>HTML<!-- (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">colour-marked</a>)-->
           </label>
         </div>
       </div>
-      <!--div class="form-group row">
-        <label class="col-sm-2 control-label">Options:</label>
-        <div class="col-sm-10">
-          <label title="Tokenize input using a tokenizer" class="checkbox-inline" id="option_randomize_label"><input id="option_randomize" name="option_randomize" type="checkbox" checked/>Randomize replacements</label>
-        </div>
-      </div>
-    </div-->
 
     <!-- ================= INPUT FIELDS ================ -->
 
