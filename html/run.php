@@ -280,13 +280,14 @@
   </div>
   <div id="aboutContent" class="panel-collapse collapse" role="tabpanel" aria-labelledby="aboutHeading">
 
-    <?php require('about.html') ?>
+    <div style="margin: 5px"><?php require('about.html') ?></div>
+
   </div>
 </div>
 
-<div class="panel panel-info">
-  <div class="panel-heading">Service</div>
-  <div class="panel-body">
+<!--div class="panel panel-info"-->
+  <!--div class="panel-heading">Service</div-->
+  <!--div class="panel-body"-->
 
   <div class="panel panel-default">
     <div class="panel-heading" role="tab" id="serverInfoHeading">
@@ -296,43 +297,43 @@
     </div>
     <div id="serverInfoContent" class="panel-collapse collapse" role="tabpanel" aria-labelledby="serverInfoHeading">
 
-      <div id="server_info" style="display: none"></div>
-    
-      <?php require('licence.html') ?>
-      
-      <p>Please note that due to time limitations on our proxy server, the maximum length for input text is approximately 5 thousand words.</p>
+      <div style="margin: 5px">
+ 
+        <div id="server_info" style="display: none"></div>
+        <?php require('licence.html') ?>      
+        <p>Please note that due to time limitations on our proxy server, the maximum length for input text is approximately 5 thousand words.</p>
+        <div id="error" class="alert alert-danger" style="display: none"></div>
 
-      <div id="error" class="alert alert-danger" style="display: none"></div>
-    </div>
+     </div>
   </div>
 
-    <!-- ================= OPTIONS ================ -->
+  <!-- ================= OPTIONS ================ -->
 
-    <div class="form-horizontal">
-      <div class="form-group row">
-        <label class="col-sm-2 control-label">Input:</label>
-        <div class="col-sm-10">
-          <label title="Plain text input" class="radio-inline" id="option_input_plaintext_label"><input name="option_input" id="option_input_plaintext" type="radio" value="txt" checked/>Plain text</label>
-          <label title="Markdown text" class="radio-inline" id="option_input_markdown_label"><input name="option_input" id="option_input_markdown" type="radio" value="md"/>Markdown text</label>
-          <label title="MS Word .docx file" class="radio-inline" id="option_input_docx_label"><input name="option_input" id="option_input_docx" type="radio" value="docx" onchange="handleInputFormatChange();"/>MS Word .docx file</label>
-        </div>
+  <div class="form-horizontal">
+    <div class="form-group row" style="margin-top: 10px; margin-bottom: 0px">
+      <label class="col-sm-2 control-label">Input:</label>
+      <div class="col-sm-10">
+        <label title="Plain text input" class="radio-inline" id="option_input_plaintext_label"><input name="option_input" id="option_input_plaintext" type="radio" value="txt" checked/>Plain text</label>
+        <label title="Markdown text" class="radio-inline" id="option_input_markdown_label"><input name="option_input" id="option_input_markdown" type="radio" value="md"/>Markdown text</label>
+        <label title="MS Word .docx file" class="radio-inline" id="option_input_docx_label"><input name="option_input" id="option_input_docx" type="radio" value="docx" onchange="handleInputFormatChange();"/>MS Word .docx file</label>
       </div>
-      <div class="form-group row">
-        <label class="col-sm-2 control-label">Output:</label>
-        <div class="col-sm-10">
-          <label title="HTML with colour-encoded analysis of the text" class="radio-inline">
-            <input name="option_output" type="radio" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();"/>HTML<!-- (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">colour-marked</a>)-->
-          </label>
-        </div>
+    </div>
+    <div class="form-group row" style="margin-top: 0px">
+      <label class="col-sm-2 control-label">Output:</label>
+      <div class="col-sm-10">
+        <label title="HTML with colour-encoded analysis of the text" class="radio-inline">
+          <input name="option_output" type="radio" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();"/>HTML<!-- (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">colour-marked</a>)-->
+        </label>
       </div>
+    </div>
 
     <!-- ================= INPUT FIELDS ================ -->
 
     <ul class="nav nav-tabs nav-justified nav-tabs-green">
-     <li id="input_text_header" class="active" style="position:relative" onclick="handleInputTextHeaderClicked();"><a href="#input_text" data-toggle="tab"><span class="fa fa-font"></span> Input Text</a>
+      <li id="input_text_header" class="active" style="position:relative" onclick="handleInputTextHeaderClicked();"><a href="#input_text" data-toggle="tab"><span class="fa fa-font"></span> Input Text</a>
           <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="var t=document.getElementById('input'); t.value=''; t.focus();">Delete input text</button>
-     </li>
-     <li id="input_file_header"><a href="#input_file" data-toggle="tab"><span class="fa fa-file-text-o"></span> Input File</a></li>
+      </li>
+      <li id="input_file_header"><a href="#input_file" data-toggle="tab"><span class="fa fa-file-text-o"></span> Input File</a></li>
     </ul>
     <div class="tab-content" id="input_tabs" style="border-right: 1px solid #ddd; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; padding: 15px">
      <div class="tab-pane active" id="input_text">
@@ -354,18 +355,6 @@
     <ul class="nav nav-tabs nav-justified nav-tabs-green">
      <li class="active" style="position:relative">
 	  <a href="#output_formatted" data-toggle="tab"><span class="fa fa-font"></span> Output</a>
-          <!--div style="position:absolute; top: 6px; left: 10px; padding: 0 0em; border: none;">
-            <div style="display: flex; flex-direction: row;">
-              <div style="display: flex; flex-direction: column; align-items: center; margin-right: 8px;">
-                <input type="checkbox" checked id="origsCheckbox" onchange="displayFormattedOutput();">
-                <span style="font-size: 60%; font-weight: normal; margin-top: 2px;">origs</span>
-              </div>
-              <div style="display: flex; flex-direction: column; align-items: center;">
-                <input type="checkbox" checked id="highlightingCheckbox" onchange="displayFormattedOutput();">
-                <span style="font-size: 60%; font-weight: normal; margin-top: 2px;">colours</span>
-              </div>
-            </div>
-          </div-->
           <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="saveOutput();"><span class="fa fa-download"></span> Save</button>
      </li>
      <li style="position:relative"><a href="#output_stats" data-toggle="tab"><span class="fa fa-table"></span> Statistics</a>
@@ -374,27 +363,27 @@
     </ul>
 
     <div class="tab-content" id="output_tabs" style="border-right: 1px solid #ddd; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; padding: 15px">
-     <div class="tab-pane active" id="output_formatted">
-     </div>
-     <div class="tab-pane" id="output_stats">
-     </div>
+      <div class="tab-pane active" id="output_formatted"></div>
+      <div class="tab-pane" id="output_stats"></div>
     </div>
 
-    <h3 id="acknowledgements_title" style="margin-top: 30px">Acknowledgements</h3>
-    <p id="acknowledgements_text">The development of PONK was financed by the TAČR SIGMA project TQ01000526: PONK - Asistent přístupné úřední komunikace.</p>
-    <p>PONK uses external services for its work:
-    <ul>
-      <li>
-        UDPipe (<a href="https://lindat.mff.cuni.cz/services/udpipe/" target="_blank">https://lindat.mff.cuni.cz/services/udpipe/</a>)
-      </li>
-      <li>
-        NameTag (<a href="http://lindat.mff.cuni.cz/services/nametag/" target="_blank">http://lindat.mff.cuni.cz/services/nametag/</a>)
-      </li>
-    </ul>
-    <p> 
-      This work has been using language resources developed, stored or distributed by the LINDAT/CLARIAH-CZ project of the Ministry of Education of the Czech Republic (project <i>LM2023062</i>).
-    </p>
+    <div style="margin: 5px">
+      <h3 id="acknowledgements_title" style="margin-top: 30px">Acknowledgements</h3>
+      <p id="acknowledgements_text">The development of PONK was financed by the TAČR SIGMA project TQ01000526: PONK - Asistent přístupné úřední komunikace.</p>
+      <p>PONK uses external services for its work:
+      <ul>
+        <li>
+          UDPipe (<a href="https://lindat.mff.cuni.cz/services/udpipe/" target="_blank">https://lindat.mff.cuni.cz/services/udpipe/</a>)
+        </li>
+        <li>
+          NameTag (<a href="http://lindat.mff.cuni.cz/services/nametag/" target="_blank">http://lindat.mff.cuni.cz/services/nametag/</a>)
+        </li>
+      </ul>
+      <p> 
+        This work has been using language resources developed, stored or distributed by the LINDAT/CLARIAH-CZ project of the Ministry of Education of the Czech Republic (project <i>LM2023062</i>).
+      </p>
+    </div>
   </div>
-</div>
+<!--/div-->
 
 <?php require('footer.php') ?>
