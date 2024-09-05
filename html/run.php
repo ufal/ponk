@@ -109,7 +109,7 @@
       try {
         if ("version" in json) {
 		version = json.version;
-		version += ', <span style="font-style: normal">status:</span> <font color="green">online</font>';
+		version += ', <span style="font-style: normal"><?php echo $lang[$currentLang]['run_server_info_status']; ?>:</span> <font color="green">online</font>';
 		//console.log("json.version: ", version);
         }
         if ("features" in json) {
@@ -123,10 +123,10 @@
       console.log("An error occurred" + ("responseText" in jqXHR ? ": " + jqXHR.responseText : "!"));
     }, complete: function() {
       //console.log("Complete.");
-      var info = "<h4>PONK server info</h4>\n<ul><li>version: <i>" + version + "</i>\n<li>supported features: <i>" + features + "</i>\n</ul>\n";
+      var info = "<h4><?php echo $lang[$currentLang]['run_server_info_label']; ?></h4>\n<ul><li><?php echo $lang[$currentLang]['run_server_info_version']; ?>: <i>" + version + "</i>\n<li><?php echo $lang[$currentLang]['run_server_info_features']; ?>: <i>" + features + "</i>\n</ul>\n";
       jQuery('#server_info').html(info).show();
       //console.log("Info: ", info);
-      var short_info = "&nbsp; version: <i>" + version + "</i>";
+      var short_info = "&nbsp; <?php echo $lang[$currentLang]['run_server_info_version']; ?>: <i>" + version + "</i>";
       jQuery('#server_short_info').html(short_info).show();
       //console.log("Info: ", info);
       
@@ -275,12 +275,23 @@
 <div class="panel panel-default">
   <div class="panel-heading" role="tab" id="aboutHeading">
     <div class="collapsed" role="button" data-toggle="collapse" href="#aboutContent" aria-expanded="false" aria-controls="aboutContent">
-      <span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span> PONK is an on-line tool and REST API service for analyzing readability of Czech legal texts.
+      <span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span> <?php echo $lang[$currentLang]['run_about_line']; ?>
     </div>
   </div>
   <div id="aboutContent" class="panel-collapse collapse" role="tabpanel" aria-labelledby="aboutHeading">
 
-    <div style="margin: 5px"><?php require('about.html') ?></div>
+          <?php
+            if ($currentLang == 'cs') {
+          ?>
+    <div style="margin: 5px"><?php require('about_cs.html') ?></div>
+          <?php
+            } else {
+          ?>
+    <div style="margin: 5px"><?php require('about_en.html') ?></div>
+          <?php
+            }
+          ?>
+
 
   </div>
 </div>
@@ -292,16 +303,28 @@
   <div class="panel panel-default">
     <div class="panel-heading" role="tab" id="serverInfoHeading">
       <div class="collapsed" role="button" data-toggle="collapse" href="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent">
-        <span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span> PONK server info: <span id="server_short_info" style="display: none"></span>
+        <span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" style="display: none"></span>
       </div>
     </div>
     <div id="serverInfoContent" class="panel-collapse collapse" role="tabpanel" aria-labelledby="serverInfoHeading">
 
       <div style="margin: 5px">
  
-        <div id="server_info" style="display: none"></div>
-        <?php require('licence.html') ?>      
-        <p>Please note that due to time limitations on our proxy server, the maximum length for input text is approximately 5 thousand words.</p>
+	<div id="server_info" style="display: none"></div>
+
+          <?php
+            if ($currentLang == 'cs') {
+          ?>
+    <div><?php require('licence_cs.html') ?></div>
+          <?php
+            } else {
+          ?>
+    <div><?php require('licence_en.html') ?></div>
+          <?php
+            }
+          ?>
+
+        <p><?php echo $lang[$currentLang]['run_server_info_word_limit']; ?></p>
         <div id="error" class="alert alert-danger" style="display: none"></div>
 
      </div>
@@ -311,18 +334,18 @@
 
   <div class="form-horizontal">
     <div class="form-group row" style="margin-top: 10px; margin-bottom: 0px">
-      <label class="col-sm-2 control-label">Input:</label>
+      <label class="col-sm-2 control-label"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
       <div class="col-sm-10">
-        <label title="Plain text input" class="radio-inline" id="option_input_plaintext_label"><input name="option_input" id="option_input_plaintext" type="radio" value="txt" checked/>Plain text</label>
-        <label title="Markdown text" class="radio-inline" id="option_input_markdown_label"><input name="option_input" id="option_input_markdown" type="radio" value="md"/>Markdown text</label>
-        <label title="MS Word .docx file" class="radio-inline" id="option_input_docx_label"><input name="option_input" id="option_input_docx" type="radio" value="docx" onchange="handleInputFormatChange();"/>MS Word .docx file</label>
+        <label title="<?php echo $lang[$currentLang]['run_options_input_plain_popup']; ?>" class="radio-inline" id="option_input_plaintext_label"><input name="option_input" id="option_input_plaintext" type="radio" value="txt" checked/><?php echo $lang[$currentLang]['run_options_input_plain']; ?></label>
+        <label title="<?php echo $lang[$currentLang]['run_options_input_md_popup']; ?>" class="radio-inline" id="option_input_markdown_label"><input name="option_input" id="option_input_markdown" type="radio" value="md"/><?php echo $lang[$currentLang]['run_options_input_md']; ?></label>
+        <label title="<?php echo $lang[$currentLang]['run_options_input_msworddocx_popup']; ?>" class="radio-inline" id="option_input_docx_label"><input name="option_input" id="option_input_docx" type="radio" value="docx" onchange="handleInputFormatChange();"/><?php echo $lang[$currentLang]['run_options_input_msworddocx_popup']; ?></label>
       </div>
     </div>
     <div class="form-group row" style="margin-top: 0px">
-      <label class="col-sm-2 control-label">Output:</label>
+      <label class="col-sm-2 control-label"><?php echo $lang[$currentLang]['run_options_output_label']; ?>:</label>
       <div class="col-sm-10">
-        <label title="HTML with colour-encoded analysis of the text" class="radio-inline">
-          <input name="option_output" type="radio" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();"/>HTML<!-- (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">colour-marked</a>)-->
+        <label title="<?php echo $lang[$currentLang]['run_options_output_html_popup']; ?>" class="radio-inline">
+          <input name="option_output" type="radio" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();"/><?php echo $lang[$currentLang]['run_options_output_html']; ?><!-- (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">colour-marked</a>)-->
         </label>
       </div>
     </div>

@@ -16,7 +16,7 @@ if (!isset($_SESSION['lang'])) {
 }
 
 // Načtení jazykového souboru
-include 'lang.php';
+require 'lang.php';
 
 // Uložení aktuálního jazyka do proměnné pro snadnější použití
 $currentLang = $_SESSION['lang'];
