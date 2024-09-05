@@ -152,7 +152,7 @@
 	  } else {
 	    input_file_content = reader.result;
 	  }
-          jQuery('#input_file_name').text(file.name + ' (' + (input_file_content.length/1024).toFixed(1) + 'kb loaded)');
+          jQuery('#input_file_name').text(file.name + ' (<?php echo $lang[$currentLang]['run_input_file_kb_loaded_prefix']; ?>' + (input_file_content.length/1024).toFixed(1) + '<?php echo $lang[$currentLang]['run_input_file_kb_loaded_suffix']; ?>)');
         }
         reader.onerror = function() {
           jQuery('#input_file_name').text(file.name + ' (load error)').wrapInner('<span class="text-danger"></span>');
@@ -338,7 +338,7 @@
       <div class="col-sm-10">
         <label title="<?php echo $lang[$currentLang]['run_options_input_plain_popup']; ?>" class="radio-inline" id="option_input_plaintext_label"><input name="option_input" id="option_input_plaintext" type="radio" value="txt" checked/><?php echo $lang[$currentLang]['run_options_input_plain']; ?></label>
         <label title="<?php echo $lang[$currentLang]['run_options_input_md_popup']; ?>" class="radio-inline" id="option_input_markdown_label"><input name="option_input" id="option_input_markdown" type="radio" value="md"/><?php echo $lang[$currentLang]['run_options_input_md']; ?></label>
-        <label title="<?php echo $lang[$currentLang]['run_options_input_msworddocx_popup']; ?>" class="radio-inline" id="option_input_docx_label"><input name="option_input" id="option_input_docx" type="radio" value="docx" onchange="handleInputFormatChange();"/><?php echo $lang[$currentLang]['run_options_input_msworddocx_popup']; ?></label>
+        <label title="<?php echo $lang[$currentLang]['run_options_input_msworddocx_popup']; ?>" class="radio-inline" id="option_input_docx_label"><input name="option_input" id="option_input_docx" type="radio" value="docx" onchange="handleInputFormatChange();"/><?php echo $lang[$currentLang]['run_options_input_msworddocx']; ?></label>
       </div>
     </div>
     <div class="form-group row" style="margin-top: 0px">
@@ -353,10 +353,10 @@
     <!-- ================= INPUT FIELDS ================ -->
 
     <ul class="nav nav-tabs nav-justified nav-tabs-green">
-      <li id="input_text_header" class="active" style="position:relative" onclick="handleInputTextHeaderClicked();"><a href="#input_text" data-toggle="tab"><span class="fa fa-font"></span> Input Text</a>
-          <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="var t=document.getElementById('input'); t.value=''; t.focus();">Delete input text</button>
+      <li id="input_text_header" class="active" style="position:relative" onclick="handleInputTextHeaderClicked();"><a href="#input_text" data-toggle="tab"><span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_input_text']; ?></a>
+          <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="var t=document.getElementById('input'); t.value=''; t.focus();"><?php echo $lang[$currentLang]['run_input_text_button_delete']; ?></button>
       </li>
-      <li id="input_file_header"><a href="#input_file" data-toggle="tab"><span class="fa fa-file-text-o"></span> Input File</a></li>
+      <li id="input_file_header"><a href="#input_file" data-toggle="tab"><span class="fa fa-file-text-o"></span> <?php echo $lang[$currentLang]['run_input_file']; ?></a></li>
     </ul>
     <div class="tab-content" id="input_tabs" style="border-right: 1px solid #ddd; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; padding: 15px">
      <div class="tab-pane active" id="input_text">
@@ -365,23 +365,23 @@
      <div class="tab-pane" id="input_file">
       <div class="input-group">
        <div class="form-control" id="input_file_name"></div>
-       <span class="input-group-btn"><span class="btn btn-success btn-file">Load File ... <input type="file" id="input_file_field"></span></span>
+       <span class="input-group-btn"><span class="btn btn-success btn-file"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ... <input type="file" id="input_file_field"></span></span>
       </div>
      </div>
 
     </div>
 
-    <button id="submit" class="btn btn-primary form-control" type="submit" style="margin-top: 15px; margin-bottom: 15px" onclick="doSubmit()"><span class="fa fa-arrow-down"></span> Process Input <span class="fa fa-arrow-down"></span></button>
+    <button id="submit" class="btn btn-primary form-control" type="submit" style="margin-top: 15px; margin-bottom: 15px" onclick="doSubmit()"><span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span></button>
 
     <!-- ================= OUTPUT FIELDS ================ -->
 
     <ul class="nav nav-tabs nav-justified nav-tabs-green">
      <li class="active" style="position:relative">
-	  <a href="#output_formatted" data-toggle="tab"><span class="fa fa-font"></span> Output</a>
-          <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="saveOutput();"><span class="fa fa-download"></span> Save</button>
+	  <a href="#output_formatted" data-toggle="tab"><span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_output_text']; ?></a>
+          <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="saveOutput();"><span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_text_button_save']; ?></button>
      </li>
-     <li style="position:relative"><a href="#output_stats" data-toggle="tab"><span class="fa fa-table"></span> Statistics</a>
-          <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="saveStats();"><span class="fa fa-download"></span> Save</button>
+     <li style="position:relative"><a href="#output_stats" data-toggle="tab"><span class="fa fa-table"></span> <?php echo $lang[$currentLang]['run_output_statistics']; ?></a>
+          <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="saveStats();"><span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_statistics_button_save']; ?></button>
      </li>
     </ul>
 
@@ -391,20 +391,20 @@
     </div>
 
     <div style="margin: 5px">
-      <h3 id="acknowledgements_title" style="margin-top: 30px">Acknowledgements</h3>
-      <p id="acknowledgements_text">The development of PONK was financed by the TAČR SIGMA project TQ01000526: PONK - Asistent přístupné úřední komunikace.</p>
-      <p>PONK uses external services for its work:
-      <ul>
-        <li>
-          UDPipe (<a href="https://lindat.mff.cuni.cz/services/udpipe/" target="_blank">https://lindat.mff.cuni.cz/services/udpipe/</a>)
-        </li>
-        <li>
-          NameTag (<a href="http://lindat.mff.cuni.cz/services/nametag/" target="_blank">http://lindat.mff.cuni.cz/services/nametag/</a>)
-        </li>
-      </ul>
-      <p> 
-        This work has been using language resources developed, stored or distributed by the LINDAT/CLARIAH-CZ project of the Ministry of Education of the Czech Republic (project <i>LM2023062</i>).
-      </p>
+
+          <?php
+            if ($currentLang == 'cs') {
+          ?>
+    <div><?php include('acknowledgements_cs.html') ?></div>
+          <?php
+            } else {
+          ?>
+    <div><?php include('acknowledgements_en.html') ?></div>
+          <?php
+            }
+          ?>
+
+
     </div>
   </div>
 <!--/div-->

@@ -63,11 +63,11 @@ $currentLang = $_SESSION['lang'];
           <?php
             if ($currentLang == 'cs') {
           ?>
-              <li style="right: 10px; position: absolute; margin-left: 10px;"><a href="?lang=en"><img src="img/flag_en.png" alt="English" style="height: 15px;"></a></li>
+              <li style="right: 10px; position: absolute; margin-left: 10px;"><a href="?lang=en"><img src="img/flag_en.png" alt="English" style="height: 18px;"></a></li>
           <?php
             } else { 
           ?>
-              <li style="right: 10px; position: absolute; margin-left: 10px;"><a href="?lang=cs"><img src="img/flag_cs.png" alt="čeština" style="height: 15px;"></a></li>
+              <li style="right: 10px; position: absolute; margin-left: 10px;"><a href="?lang=cs"><img src="img/flag_cs.png" alt="čeština" style="height: 18px;"></a></li>
           <?php
 	    }
           ?>

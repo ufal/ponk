@@ -19,7 +19,18 @@ $lang = array(
 	'run_options_input_msworddocx_popup' => 'Vstup: soubor MS Word .docx',
 	'run_options_output_label' => 'Výstup',
 	'run_options_output_html' => 'HTML',
-	'run_options_output_html_popup' => 'HTML s barevným zvýrazněním analýzy textu'
+	'run_options_output_html_popup' => 'HTML s barevným zvýrazněním analýzy textu',
+	'run_input_text' => 'Vstupní text',
+	'run_input_text_button_delete' => 'Smazat vstupní text',
+	'run_input_file' => 'Vstupní soubor',
+	'run_input_file_button_load' => 'Nahrát soubor',
+	'run_input_file_kb_loaded_prefix' => 'nahráno ',
+	'run_input_file_kb_loaded_suffix' => ' kb',
+	'run_process_input' => 'Zpracovat vstup',
+	'run_output_text' => 'Výstup',
+	'run_output_text_button_save' => 'Uložit',
+	'run_output_statistics' => 'Další informace',
+	'run_output_statistics_button_save' => 'Uložit'
     ),
     'en' => array(
         'menu_about' => 'About',
@@ -40,7 +51,18 @@ $lang = array(
 	'run_options_input_msworddocx_popup' => 'MS Word .docx file input',
 	'run_options_output_label' => 'Output',
 	'run_options_output_html' => 'HTML',
-	'run_options_output_html_popup' => 'HTML with colour-encoded analysis of the text'
+	'run_options_output_html_popup' => 'HTML with colour-encoded analysis of the text',
+	'run_input_text' => 'Input Text',
+	'run_input_text_button_delete' => 'Delete input text',
+	'run_input_file' => 'Input File',
+	'run_input_file_button_load' => 'Load File',
+	'run_input_file_kb_loaded_prefix' => '',
+	'run_input_file_kb_loaded_suffix' => 'kb loaded',
+	'run_process_input' => 'Process Input',
+	'run_output_text' => 'Output',
+	'run_output_text_button_save' => 'Save',
+	'run_output_statistics' => 'Further info',
+	'run_output_statistics_button_save' => 'Save'
     )
 );
 ?>
