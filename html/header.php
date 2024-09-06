@@ -4,9 +4,15 @@
 session_start();
 
 // Změna jazyka přes GET parametr
-if (isset($_GET['lang'])) {
+if (isset($_GET['lang']) && $_GET['lang'] !== $_SESSION['lang']) {
     $_SESSION['lang'] = $_GET['lang'];
-    header("Location: /ponk");
+    
+    // Získání aktuální URL bez lang parametru
+    $baseUrl = '/ponk';
+    $currentUrlWithoutLang = preg_replace('/(\?|&)lang=[^&]*/', '', $_SERVER['REQUEST_URI']);
+    
+    // Přesměrování na URL bez lang parametru
+    header("Location: " . $baseUrl . $currentUrlWithoutLang);
     exit();
 }
 
