@@ -99,8 +99,8 @@
         form_data.append(key, options[key]);
     }
 
-    var version = 'unknown (<font color="red">the PONK server seems to be off-line!</font>)';
-    var features = 'unknown';
+    var version = '<?php echo $lang[$currentLang]['run_server_info_version_unknown']; ?> (<font color="red"><?php echo $lang[$currentLang]['run_server_info_status_error']; ?>!</font>)';
+    var features = '<?php echo $lang[$currentLang]['run_server_info_features_unknown']; ?>';
     //console.log("Calling api/info");
     jQuery.ajax('//quest.ms.mff.cuni.cz/ponk/api/info',
            {data: form_data ? form_data : options, processData: form_data ? false : true,
