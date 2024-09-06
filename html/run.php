@@ -120,7 +120,7 @@
         // no need to do anything
       }
     }, error: function(jqXHR, textStatus) {
-      console.log("An error occurred" + ("responseText" in jqXHR ? ": " + jqXHR.responseText : "!"));
+      console.log("An error occurred " + ("responseText" in jqXHR ? ": " + jqXHR.responseText : "!"));
     }, complete: function() {
       //console.log("Complete.");
       var info = "<h4><?php echo $lang[$currentLang]['run_server_info_label']; ?></h4>\n<ul><li><?php echo $lang[$currentLang]['run_server_info_version']; ?>: <i>" + version + "</i>\n<li><?php echo $lang[$currentLang]['run_server_info_features']; ?>: <i>" + features + "</i>\n</ul>\n";

@@ -33,7 +33,17 @@ $lang = array(
 	'run_output_text' => 'Výstup',
 	'run_output_text_button_save' => 'Uložit',
 	'run_output_statistics' => 'Další informace',
-	'run_output_statistics_button_save' => 'Uložit'
+	'run_output_statistics_button_save' => 'Uložit',
+	'info_basic_label' => 'Základní informace',
+	'info_basic_authors' => 'Autoři',
+	'info_basic_authors_subapplication' => 'podaplikace',
+	'info_basic_homepage' => 'Domovská stránka',
+	'info_basic_repository' => 'Vývojový repozitář',
+	'info_basic_development_status' => 'Stav vývoje',
+	'info_basic_development_status_development' => 'vývojová verze',
+	'info_basic_OS' => 'OS',
+	'info_basic_licence' => 'Licence',
+	'info_basic_contact' => 'Kontakt'
     ),
     'en' => array(
         'menu_about' => 'About',
@@ -68,7 +78,17 @@ $lang = array(
 	'run_output_text' => 'Output',
 	'run_output_text_button_save' => 'Save',
 	'run_output_statistics' => 'Further info',
-	'run_output_statistics_button_save' => 'Save'
+	'run_output_statistics_button_save' => 'Save',
+	'info_basic_label' => 'Basic info',
+	'info_basic_authors' => 'Authors',
+	'info_basic_authors_subapplication' => 'subapplication',
+	'info_basic_homepage' => 'Homepage',
+	'info_basic_repository' => 'Development repository',
+	'info_basic_development_status' => 'Development status',
+	'info_basic_development_status_development' => 'development',
+	'info_basic_OS' => 'OS',
+	'info_basic_licence' => 'Licence',
+	'info_basic_contact' => 'Contact'
     )
 );
 ?>
