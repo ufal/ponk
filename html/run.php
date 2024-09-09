@@ -87,7 +87,7 @@
   }
 
   
-  function getInfo() { // call the server and get the MasKIT version and a list of supported features
+  function getInfo() { // call the server and get the PONK version and a list of supported features
 
     var options = {info: null};
     //console.log("getInfo: options: ", options);

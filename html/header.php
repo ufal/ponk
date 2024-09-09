@@ -75,7 +75,7 @@ $currentLang = $_SESSION['lang'];
           ?>
               <li style="right: 10px; position: absolute; margin-left: 10px;"><a href="?lang=cs"><img src="img/flag_cs.png" alt="čeština" style="height: 18px;"></a></li>
           <?php
-	    }
+            }
           ?>
         </ul>
       </div>
