@@ -43,7 +43,8 @@ $lang = array(
 	'info_basic_development_status_development' => 'vývojová verze',
 	'info_basic_OS' => 'OS',
 	'info_basic_licence' => 'Licence',
-	'info_basic_contact' => 'Kontakt'
+	'info_basic_contact' => 'Kontakt',
+	'api_service_url' => 'Rozhraní REST API k webové službě PONK je k dispozici na'
     ),
     'en' => array(
         'menu_about' => 'About',
@@ -88,7 +89,8 @@ $lang = array(
 	'info_basic_development_status_development' => 'development',
 	'info_basic_OS' => 'OS',
 	'info_basic_licence' => 'Licence',
-	'info_basic_contact' => 'Contact'
+	'info_basic_contact' => 'Contact',
+	'api_service_url' => 'PONK REST API web service is available on'
     )
 );
 ?>

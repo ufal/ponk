@@ -10,7 +10,7 @@
   </ul>
 </div>
 
-<p>PONK REST API web service is available on
+<p><?php echo $lang[$currentLang]['api_service_url']; ?>
 <code>http(s)://quest.ms.mff.cuni.cz/ponk/api/</code>.</p>
 
           <?php
@@ -25,97 +25,17 @@
             }
           ?>
 
-<h2 id="api_reference">API Reference</h2>
+          <?php
+            if ($currentLang == 'cs') {
+          ?>
+    <div><?php require('api-reference_cs.html') ?></div>
+          <?php
+            } else {
+          ?>
+    <div><?php require('api-reference_en.html') ?></div>
+          <?php
+            }
+          ?>
 
-<p>The PONK REST API can be accessed <a href="run.php">directly</a> or via web
-programming tools that support standard HTTP request methods and JSON for output
-handling.</p>
-
-<table class='table table-striped table-bordered'>
-<tr>
-    <th>Service Request</th>
-    <th>Description</th>
-    <th>HTTP Method</th>
-</tr>
-<tr>
-    <td><a href="#process">process</a></td>
-    <td><a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk" target="_blank">process the text and highlight low-readability parts</a></td>
-    <td>GET/POST</td>
-</tr>
-<tr>
-    <td><a href="#info">info</a></td>
-    <td><!--a href="http://ufal.mff.cuni.cz/ponk/users-manual#info" target="_blank"-->get the server version and a list of supported features</a></td>
-    <td>GET/POST</td>
-</tr>
-</table>
-
-
-<h3>Method <a id='process'>process</a></h3>
-
-<p>Process the given data as described in <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk" target="_blank">the User's Manual</a>.</p>
-
-<table class='table table-striped table-bordered'>
-<tr><th>Parameter</th><th>Mandatory</th><th>Data type</th><th>Description</th></tr>
-<tr><td>text</td><td>yes</td><td>string</td><td>Input text in <b>UTF-8</b>.</td></tr>
-<tr><td>input</td><td>no</td><td>string</td><td>Input format; possible values: <code>txt</code> (default), <code>md</code> (MarkDown), <code>docx</code> (MS Word),  see <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_input" target="_blank">input format</a> for details.</td></tr>
-<tr><td>output</td><td>no</td><td>string</td><td>Output format; possible values: <code>txt</code>, <code>html</code> (default), <code>md</code> (MarkDown), see <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">output format</a> for details.</td></tr>
-</table>
-
-<p>
-The response is in <a href="http://en.wikipedia.org/wiki/JSON" target="_blank">JSON</a> format of the
-following structure:</p>
-
-<pre class="prettyprint lang-json">
-{
- "message": "overview_message"
- "result": "processed_output"
- "stats": "statistics"
-}
-</pre>
-
-The <code>overview_message</code> is a short comprehensible message of what has been called;
-<br/>the <code>processed_output</code> is the output of PONK in the requested output format;
-<br/>and <code>statistics</code> is an HTML overview giving the PONK version, length of the text, processing time and information on the readability of the text as a whole.
-
-
-<h3>Method <a id='info'>info</a></h3>
-
-<p>Returns the info about the server - the PONK version and a list of supported features. The method does not have parameters.</p>
-
-<p>
-The response is in <a href="http://en.wikipedia.org/wiki/JSON" target="_blank">JSON</a> format of the
-following structure:</p>
-
-<pre class="prettyprint lang-json">
-{
- "version": "PONK_version"
- "features": "supported_features"
-}
-</pre>
-
-The <code>PONK_version</code> is the version of the server consisting of the version number and the creation date; in case of an anonymized server (without text logging), these are followed by the string "(no text logging)",
-<br/>and <code>supported_features</code> is a list of the analysis features, separated by '•'.
-
-
-<h2 style="margin-top: 20px">Browser Example</h2>
-<table style='width: 100%'>
- <tr><td style='vertical-align: middle'><pre style='margin-bottom: 0; white-space: pre-wrap' class="prettyprint lang-html">http://quest.ms.mff.cuni.cz/ponk/api/process?input=txt&amp;output=txt&amp;text=Paní Marie Nováková z Myslíkovy ulice č. 25 dostala dopis od firmy Škoda.</pre></td>
-     <td style='vertical-align: middle; width: 6em'><button style='width: 100%' type="button" class="btn btn-success btn-xs" onclick="window.open('http://quest.ms.mff.cuni.cz/ponk/api/process?input=txt&amp;output=txt&amp;text=Paní Marie Nováková z Myslíkovy ulice č. 25 dostala dopis od firmy Škoda.')">try&nbsp;this</button></td></tr>
-</table>
-
-<hr />
-
-<h2 id="using_curl">Accessing API using Curl</h2>
-
-The described API can be comfortably used by <code>curl</code>. Several examples follow:
-
-<h3>Passing Input on Command Line (if UTF-8 locale is being used)</h3>
-<pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data 'input=txt&amp;output=txt&amp;text=Paní Marie Nováková z Myslíkovy ulice č. 25 dostala dopis od firmy Škoda.' http://quest.ms.mff.cuni.cz/ponk/api/process</pre>
-
-<h3>Using Files as Input (files must be in UTF-8 encoding)</h3>
-<pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data-urlencode 'input=txt' --data-urlencode 'output=html' --data-urlencode 'text@input_file.txt' http://quest.ms.mff.cuni.cz/ponk/api/process</pre>
-
-<h3>Converting JSON Result to Plain Text</h3>
-<pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data 'input=txt&amp;output=txt&amp;text=Paní Marie Nováková z Myslíkovy ulice č. 25 dostala dopis od firmy Škoda.' http://quest.ms.mff.cuni.cz/ponk/api/process | PYTHONIOENCODING=utf-8 python3 -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['result'])"</pre>
 
 <?php require('footer.php') ?>
