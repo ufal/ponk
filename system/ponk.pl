@@ -54,18 +54,14 @@ my $udpipe_service_url = 'http://lindat.mff.cuni.cz/services/udpipe/api';
 my $nametag_service_url = 'http://lindat.mff.cuni.cz/services/nametag/api'; 
 my $ponk_app1_service_url = 'http://quest.ms.mff.cuni.cz/ponk-app1';
 
-=item testing the hostname no longer needed, anonymous logging level is default
-
 my $hostname = hostname;
 if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe and nametag that do not log texts
   $udpipe_service_url = 'http://udpipe:11001';
   $nametag_service_url = 'http://udpipe:11002';
   $ponk_app1_service_url = 'http://ponk-app1:8000'; # for now, in practice no difference from the original URL
   $VER .= ' (no text logging)';
-  $logging_level = 2; # anonymous
+  $logging_level = 2; # anonymous logging level is default but to be sure...
 }
-
-=cut
 
 #############################
 # Colours for html
