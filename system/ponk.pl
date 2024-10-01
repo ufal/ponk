@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.16 20240822'; # version of the program
+my $VER = '0.17 20241001'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -670,7 +670,6 @@ my ($app1_conllu, $app1_metrics) = call_ponk_app1($conll_for_ponk_app1);
 %start_offset2node = %$ref_ha_start_offset2node;
 
 
-
 #####################################################
 # The whole text has been processed, let us finish up
 #####################################################
@@ -681,10 +680,12 @@ my ($app1_conllu, $app1_metrics) = call_ponk_app1($conll_for_ponk_app1);
 my $end_time = [gettimeofday];
 $processing_time = tv_interval($start_time, $end_time);
 
-# calculate and format statistics if needed
+# calculate and format statistics and list of app1 features if needed
 my $stats;
+my $app1_features;
 if ($store_statistics or $output_statistics) { # we need to calculate statistics
-  $stats = get_stats();
+  $stats = get_stats_html();
+  $app1_features = get_app1_features_html();
 }
 
 # print the input text with marked sources in the selected output format to STDOUT
@@ -693,10 +694,15 @@ my $output = get_output($output_format);
 if (!$output_statistics) { # statistics should not be a part of output
   print $output;
 }
-else { # statistics should be a part of output, i.e. output will be JSON with two items: data (in output-format) and stats (in html)
+else { # statistics should be a part of output, i.e. output will be JSON with several items: 
+ # 'data' (in output-format)
+ # 'stats' (in html)
+ # 'app1_features' (in html)
+ 
   my $json_data = {
        data  => $output,
        stats => $stats,
+       app1_features => $app1_features,
      };
   # Encode the Perl data structure into a JSON string
   my $json_string = encode_json($json_data);
@@ -1373,12 +1379,37 @@ sub get_app1_miscs {
   return undef if !$misc;
   my @miscs = split(/\|/, $misc);
   # mylog(0, "get_app1_miscs: found " . scalar(@miscs) . " misc values.\n");
-  my @app1_miscs = grep {/^(rule_|PonkApp1)/} @miscs;
+  my @app1_miscs = grep {/^PonkApp1/} @miscs;
   # mylog(0, "get_app1_miscs: found " . scalar(@app1_miscs) . " ponk-app1 misc values.\n");
   return @app1_miscs;
 }
 
 
+=item get_app1_list_of_features
+
+Given an array of trees, collect a list (an array of stings) of PonkApp1 features occurring there in attribute misc (i.e., a list of features from PonkApp1 that triggered in the given text).
+
+=cut
+
+sub get_app1_list_of_features {
+  my (@trees) = @_;
+  my %features = ();
+  
+  foreach my $root (@trees) {
+    foreach my $node (descendants($root)) {
+      my $misc = attr($node, 'misc') // '';
+      my @app1_entries = get_app1_miscs($misc);
+      foreach my $entry (@app1_entries) {
+        if ($entry =~ /^PonkApp1:([^:]+):/) { # a feature found
+          my $feature = $1;
+          $features{$feature} = 1;
+        }
+      }
+    }
+  }
+  mylog(0, "get_app1_list_of_features: " . join(', ', keys(%features)) . "\n");
+  return keys(%features);
+}
 
 =item surface_text
 
@@ -1402,7 +1433,7 @@ sub surface_text {
 }
 
 
-=item get_stats
+=item get_stats_html
 
 Produces an html document with statistics about the anonymization, using info from these variables:
 my $sentences_count;
@@ -1411,7 +1442,7 @@ my $processing_time;
 
 =cut
 
-sub get_stats {
+sub get_stats_html {
   my $stats = "<html>\n";
   $stats .= <<END_HEAD;
 <head>
@@ -1458,6 +1489,58 @@ END_HEAD
   $stats .= "</html>\n";
 
   return $stats;
+}
+
+
+=item get_app1_features_html
+
+Produces an html document with a list of features from PonkApp1 used in the document.
+It searches for the features in the global list @trees.
+
+=cut
+
+sub get_app1_features_html {
+  my @app1_list_of_features = get_app1_list_of_features(@trees);
+
+  my $features = "<html>\n";
+  $features .= <<END_HEAD;
+<head>
+  <style>
+    h3 {
+      margin-top: 5px;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    th, td {
+      text-align: left;
+      padding-left: 2mm;
+      padding-right: 2mm;
+    }
+    td:last-child {
+      text-align: right;
+      padding-right: 20px;
+    }
+  </style>
+</head>
+END_HEAD
+
+  $features .= "<body>\n";
+  $features .= "<h3>PONK APP1 list of features</h3>\n";
+  
+  $features .= "<ul>\n";
+  foreach my $feature (@app1_list_of_features) {
+    $features .= "  <li>$feature</li>\n";
+  }
+  $features .= "</ul>\n";
+
+  $features .= "</body>\n";
+  $features .= "</html>\n";
+
+  return $features;
 }
 
 

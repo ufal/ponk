@@ -54,7 +54,7 @@ any '/api/info' => sub {
     # Decode the output as a JSON object
     my $json_data = decode_json($result_json);
 
-    # Access the 'data' and 'stats' items in the JSON object
+    # Access the 'data', 'stats' and other items in the JSON object
     my $version  = $json_data->{'version'};
     my $features = $json_data->{'features'};
     my $version_utf8 = decode_utf8($version);
@@ -96,16 +96,23 @@ any '/api/process' => sub {
     # Decode the output as a JSON object
     my $json_data = decode_json($result_json);
 
-    # Access the 'data' and 'stats' items in the JSON object
+    # Access the 'data', 'stats' and other items in the JSON object
     my $result  = $json_data->{'data'};
     my $stats = $json_data->{'stats'};
+    my $app1_features = $json_data->{'app1_features'};
+    
+    # Read them as UTF-8
     my $result_utf8 = decode_utf8($result);
     my $stats_utf8 = decode_utf8($stats);
+    my $app1_features_utf8 = decode_utf8($app1_features);
 
-    # Vytvoření odpovědi
+    # Compile the answer
     $c->res->headers->content_type('application/json; charset=UTF-8');
     my $data = {message => "This is the process function of the PONK service called via $method; input format=$input_format_orig, output format=$output_format.",
-                result => "$result_utf8", stats => "$stats_utf8" };
+                result => "$result_utf8",
+                stats => "$stats_utf8",
+                app1_features = "$app1_features_utf8"
+               };
     # print STDERR Dumper($data);
     return $c->render(json => $data);
 
