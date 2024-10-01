@@ -111,7 +111,7 @@ any '/api/process' => sub {
     my $data = {message => "This is the process function of the PONK service called via $method; input format=$input_format_orig, output format=$output_format.",
                 result => "$result_utf8",
                 stats => "$stats_utf8",
-                app1_features = "$app1_features_utf8"
+                app1_features => "$app1_features_utf8"
                };
     # print STDERR Dumper($data);
     return $c->render(json => $data);
