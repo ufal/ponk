@@ -56,4 +56,17 @@ ul.nav-tabs-green > li > a:hover {
     display: block;
 }
 
-    
+  .btn-link {
+    color: black;
+    text-decoration: none;
+  }
+  
+  .btn-link:hover {
+    color: black;  /* Zachová černou barvu i při najetí myší */
+    text-decoration: none;
+  }
+  
+  .btn-link:focus, .btn-link.focus {
+    text-decoration: none;
+    box-shadow: none;
+  }
