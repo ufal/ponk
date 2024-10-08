@@ -1,4 +1,4 @@
-<?php $main_page=basename(__FILE__); require('header.php') ?>
+<?php $main_page=basename(__FILE__); require('header_test.php') ?>
 
 <script type="text/javascript"><!--
   var input_file_content = null;
@@ -124,49 +124,61 @@
     }, complete: function() {
       //console.log("Complete.");
       var info = "<h4><?php echo $lang[$currentLang]['run_server_info_label']; ?></h4>\n<ul><li><?php echo $lang[$currentLang]['run_server_info_version']; ?>: <i>" + version + "</i>\n<li><?php echo $lang[$currentLang]['run_server_info_features']; ?>: <i>" + features + "</i>\n</ul>\n";
-      jQuery('#server_info').html(info).show();
       //console.log("Info: ", info);
+      document.getElementById('server_info').innerHTML = info;
+      document.getElementById('server_info').classList.remove('d-none');
+
       var short_info = "&nbsp; <?php echo $lang[$currentLang]['run_server_info_version']; ?>: <i>" + version + "</i>";
-      jQuery('#server_short_info').html(short_info).show();
-      //console.log("Info: ", info);
+      //console.log("Short info: ", short_info);
+      document.getElementById('server_short_info').innerHTML = short_info;
+      document.getElementById('server_short_info').classList.remove('d-none');
       
     }});
   }
   
-  
-  jQuery(document).on('change', '#input_file_field', function() {
-    jQuery('#input_file_name').text();
-    input_file_content = null;
-    if (this.files.length > 0) {
-      var file = this.files[0];
-      jQuery('#input_file_name').text(file.name + ' (loading...)');
+  function handleFileChange(input) {
+    const inputName = document.getElementById('input_file_name');
+    inputName.textContent = ''; // Clear previous content
+    let input_file_content = null;
+
+    if (input.files.length > 0) {
+      const file = input.files[0];
+      console.log("handleFileChange: input file name: ", `${file.name}`);
+      inputName.textContent = `${file.name} (loading...)`;
+
       if (!window.FileReader) {
-        jQuery('#input_file_name').text(file.name + ' (load error - file loading API not supported, please use newer browser)').wrapInner('<span class="text-danger"></span>');
+        inputName.textContent = `${file.name} (load error - file loading API not supported, please use newer browser)`;
+        console.log("handleFileChange: load error - file loading API not supported");
+        inputName.innerHTML = `<span class="text-danger">${inputName.textContent}</span>`;
       } else {
-        var reader = new FileReader();
-	reader.onload = function() {
-          var input_format = jQuery('input[name=option_input]:checked').val();
+        const reader = new FileReader();
+        console.log("handleFileChange: loading the file...");	      
+        reader.onload = function(event) {
+          const input_format = document.querySelector('input[name="option_input"]:checked').value;
           if (input_format === "docx") {
-	    //input_file_content = encodeBinaryToBase64(target.result);
-	    input_file_content = encodeBinaryToBase64(reader.result);
+            input_file_content = encodeBinaryToBase64(event.target.result);
 	  } else {
-	    input_file_content = reader.result;
-	  }
-          jQuery('#input_file_name').text(file.name + ' (<?php echo $lang[$currentLang]['run_input_file_kb_loaded_prefix']; ?>' + (input_file_content.length/1024).toFixed(1) + '<?php echo $lang[$currentLang]['run_input_file_kb_loaded_suffix']; ?>)');
-        }
+	    console.log("handleFileChange: the file is either TXT or MD");
+            input_file_content = event.target.result;
+          }
+	  inputName.textContent = `${file.name} (${(input_file_content.length / 1024).toFixed(1)} KB)`;
+	  console.log("handleFileChange: printing this: ", `${file.name} (${(input_file_content.length / 1024).toFixed(1)} KB)`);
+        };
+
         reader.onerror = function() {
-          jQuery('#input_file_name').text(file.name + ' (load error)').wrapInner('<span class="text-danger"></span>');
-	}
-	var input_format = jQuery('input[name=option_input]:checked').val();
-	if (input_format === "docx") {
+          inputName.textContent = `${file.name} (load error)`;
+          inputName.innerHTML = `<span class="text-danger">${inputName.textContent}</span>`;
+        };
+
+        const input_format = document.querySelector('input[name="option_input"]:checked').value;
+        if (input_format === "docx") {
           reader.readAsArrayBuffer(file);
         } else {
           reader.readAsText(file);
         }
       }
     }
-  });
-
+  }
 
   function saveAs(blob, file_name) {
     const url = window.URL.createObjectURL(blob);
@@ -280,15 +292,15 @@
       <i class="fa-solid fa-caret-down"></i> <?php echo $lang[$currentLang]['run_about_line']; ?>
     </button>
   </div>
-  <div id="aboutContent" class="collapse" role="tabpanel" aria-labelledby="aboutHeading">
+  <div id="aboutContent" class="collapse m-1" role="tabpanel" aria-labelledby="aboutHeading">
           <?php
             if ($currentLang == 'cs') {
           ?>
-    <div style="margin: 5px"><?php require('about_cs.html') ?></div>
+    <div><?php require('about_cs.html') ?></div>
           <?php
             } else {
           ?>
-    <div style="margin: 5px"><?php require('about_en.html') ?></div>
+    <div><?php require('about_en.html') ?></div>
           <?php
             }
           ?>
@@ -299,14 +311,11 @@
 
 <div class="card">
   <div class="card-header" role="tab" id="serverInfoHeading">
-    <h2 class="mb-0">
-      <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent">
-        <i class="fa-solid fa-caret-down" aria-hidden="true"></i> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" class="d-none"></span>
-      </button>
-    </h2>
+    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent">
+      <i class="fa-solid fa-caret-down" aria-hidden="true"></i> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" class="d-none"></span>
+    </button>
   </div>
-  <div id="serverInfoContent" class="collapse" role="tabpanel" aria-labelledby="serverInfoHeading">
-    <div class="card-body m-2">
+  <div id="serverInfoContent" class="collapse m-1" role="tabpanel" aria-labelledby="serverInfoHeading">
       <div id="server_info" class="d-none"></div>
 
       <?php
@@ -323,7 +332,6 @@
 
       <p><?php echo $lang[$currentLang]['run_server_info_word_limit']; ?></p>
       <div id="error" class="alert alert-danger d-none"></div>
-    </div>
   </div>
 </div>
 
@@ -366,12 +374,17 @@
 
 <!-- ================= INPUT FIELDS ================ -->
 
+<!-- ================ záložky panelů =============== -->
 <ul class="nav nav-tabs nav-fill nav-tabs-green">
   <li class="nav-item" id="input_text_header">
-    <a class="nav-link active" href="#input_text" data-bs-toggle="tab" onclick="handleInputTextHeaderClicked();">
-      <span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_input_text']; ?>
-    </a>
-    <button type="button" class="btn btn-primary btn-sm position-absolute" style="top: 11px; right: 10px; padding: 0 2em" onclick="var t=document.getElementById('input'); t.value=''; t.focus();"><?php echo $lang[$currentLang]['run_input_text_button_delete']; ?></button>
+    <div class="nav-link active d-flex justify-content-between align-items-center">
+      <a href="#input_text" data-bs-toggle="tab" onclick="handleInputTextHeaderClicked();" class="mx-auto">
+        <span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_input_text']; ?>
+      </a>
+      <button type="button" class="btn btn-primary btn-sm" onclick="var t=document.getElementById('input'); t.value=''; t.focus();">
+        <?php echo $lang[$currentLang]['run_input_text_button_delete']; ?>
+      </button>
+    </div>
   </li>
   <li class="nav-item" id="input_file_header">
     <a class="nav-link" href="#input_file" data-bs-toggle="tab">
@@ -380,6 +393,7 @@
   </li>
 </ul>
 
+<!-- ================ panely =============== -->
 <div class="tab-content" id="input_tabs" style="border: 1px solid #ddd; border-radius: 0 0 .25rem .25rem; padding: 15px;">
   <div class="tab-pane show active" id="input_text">
     <textarea id="input" class="form-control" rows="10" cols="80"></textarea>
@@ -389,10 +403,17 @@
     <div class="input-group">
       <input type="text" class="form-control" id="input_file_name" readonly>
       <label class="input-group-text btn btn-success btn-file" for="input_file_field"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ...</label>
-      <input type="file" id="input_file_field" class="d-none">
+      <input type="file" id="input_file_field" class="visually-hidden" onchange="handleFileChange(this)">
     </div>
+    <!--div class="input-group">
+      <input type="text" class="form-control" id="input_file_name" readonly>
+      <label class="input-group-text btn btn-success btn-file" for="input_file_field"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ...</label>
+      <input type="file" id="input_file_field" class="d-none">
+    </div-->
   </div>
 </div>
+
+<!-- ================= THE PROCESS BUTTON ================ -->
 
 <button id="submit" class="btn btn-primary form-control mt-3" type="submit" onclick="doSubmit()">
   <span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span>
@@ -400,29 +421,39 @@
 
 <!-- ================= OUTPUT FIELDS ================ -->
 
+<!-- ================ záložky panelů =============== -->
 <ul class="nav nav-tabs nav-fill nav-tabs-green">
+
   <li class="nav-item">
-    <a class="nav-link active" href="#output_formatted" data-bs-toggle="tab">
-      <span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_output_text']; ?>
-    </a>
-    <button type="button" class="btn btn-primary btn-sm position-absolute" style="top: 11px; right: 10px; padding: 0 2em" onclick="saveOutput();">
-      <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_text_button_save']; ?>
-    </button>
+    <div class="nav-link active d-flex justify-content-between align-items-center">
+      <a href="#output_formatted" data-bs-toggle="tab" class="mx-auto">
+        <span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_output_text']; ?>
+      </a>
+      <button type="button" class="btn btn-primary btn-sm" onclick="saveOutput();">
+        <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_text_button_save']; ?> 
+      </button>
+    </div>
   </li>
   <li class="nav-item">
-    <a class="nav-link" href="#output_stats" data-bs-toggle="tab">
-      <span class="fa fa-table"></span> <?php echo $lang[$currentLang]['run_output_statistics']; ?>
-    </a>
-    <button type="button" class="btn btn-primary btn-sm position-absolute" style="top: 11px; right: 10px; padding: 0 2em" onclick="saveStats();">
-      <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_statistics_button_save']; ?>
-    </button>
+    <div class="nav-link d-flex justify-content-between align-items-center">
+      <a href="#output_stats" data-bs-toggle="tab" class="mx-auto">
+        <span class="fa fa-table"></span> <?php echo $lang[$currentLang]['run_output_statistics']; ?>
+      </a>
+      <button type="button" class="btn btn-primary btn-sm" onclick="saveStats();">
+        <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_statistics_button_save']; ?> 
+      </button>
+    </div>
   </li>
 </ul>
 
+<!-- ================ panely =============== -->
 <div class="tab-content" id="output_tabs" style="border: 1px solid #ddd; border-radius: 0 0 .25rem .25rem; padding: 15px;">
   <div class="tab-pane fade show active" id="output_formatted"></div>
   <div class="tab-pane fade" id="output_stats"></div>
 </div>
+
+
+<!-- ================= ACKNOWLEDGEMENTS ================ -->
 
 <div class="mt-3 mb-3">
   <?php
