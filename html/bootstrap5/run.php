@@ -302,23 +302,36 @@
   //    }
   //}
 
-  function handleInputFormatChange() {
-      //console.log("handleInputFormatChange - entering the function");
-      const radioInputDocx = document.getElementById('option_input_docx');
-      const headerInputText = document.getElementById('input_text_header');
-      const headerInputFile = document.getElementById('input_file_header');
-      const tabInputText = document.getElementById('input_text');
-      const tabInputFile = document.getElementById('input_file');
 
-      if (radioInputDocx.checked) {
-        headerInputText.classList.remove('active');
-        tabInputText.classList.remove('active');
-        //tabInputText.setAttribute('aria-selected', false);
-        headerInputFile.classList.add('active');
-        tabInputFile.classList.add('active');
-        //tabInputFile.setAttribute('aria-selected', true);
-      } 
+  function handleInputFormatChange() {
+    //console.log("handleInputFormatChange - entering the function");
+    const radioInputDocx = document.getElementById('option_input_docx');
+    const headerInputText = document.getElementById('input_text_header');
+    const headerInputFile = document.getElementById('input_file_header');
+    const tabInputText = document.getElementById('input_text');
+    const tabInputFile = document.getElementById('input_file');
+    const linkInputText = headerInputText.querySelector('a.nav-link');
+    const linkInputFile = headerInputFile.querySelector('a.nav-link');
+
+    if (radioInputDocx.checked) {
+        // Nastavení tříd pro tab panely
+        tabInputText.classList.remove('active', 'show');
+        tabInputFile.classList.add('active', 'show');
+
+        // Nastavení tříd pro přepínací záložky
+        linkInputText.classList.remove('active');
+        linkInputFile.classList.add('active');
+
+        // Nastavení aria-selected atributů
+        linkInputText.setAttribute('aria-selected', 'false');
+        linkInputFile.setAttribute('aria-selected', 'true');
+
+        // Trigger tab show for correct rendering in Bootstrap
+        const tab = new bootstrap.Tab(linkInputFile);
+        tab.show();
+    }
   }
+
 
   function handleInputTextHeaderClicked() {
     //console.log("handleInputTextHeaderClicked - entering the function");
@@ -328,6 +341,9 @@
       radioInputDocx.checked = false;
       radioInputTXT.checked = true;
     }
+    const t=document.getElementById('input');
+    //t.value='';
+    t.focus();
   }
 
 
@@ -386,9 +402,9 @@
 
   <!-- ================= OPTIONS ================ -->
 
-<div class="row gx-3 gy-1 mt-lg-1">
+<div class="row gx-2 gy-0 mt-lg-3 mb-lg-3">
   <div class="col-12 col-md-2 text-end">
-    <label class="form-label"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
+    <label class="form-label fw-bold me-5"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
   </div>
   <div class="col-12 col-md-10">
     <div class="form-check form-check-inline">
@@ -412,7 +428,7 @@
   </div>
 
   <div class="col-12 col-md-2 text-end mt-0">
-    <label class="form-label"><?php echo $lang[$currentLang]['run_options_output_label']; ?>:</label>
+    <label class="form-label fw-bold me-5"><?php echo $lang[$currentLang]['run_options_output_label']; ?>:</label>
   </div>
   <div class="col-12 col-md-10 mt-0">
     <div class="form-check form-check-inline">
@@ -436,7 +452,7 @@
       <?php echo $lang[$currentLang]['run_input_text']; ?>
     </a>
     <!-- Tlačítko umístěné těsně u pravého okraje záložky -->
-    <button class="btn btn-sm btn-primary position-absolute" style="top: 10px; right: 10px; z-index: 1; padding: 2px 6px; font-size: 14px;" onclick="var t=document.getElementById('input'); t.value=''; t.focus();">
+    <button class="btn btn-sm btn-primary btn-ponk-colors btn-ponk-small position-absolute" style="top: 10px; right: 10px; z-index: 1;" onclick="var t=document.getElementById('input'); t.value=''; t.focus();">
       <span class="fas fa-trash"></span> <?php echo $lang[$currentLang]['run_input_text_button_delete']; ?>
     </button>
   </li>
@@ -465,7 +481,7 @@
 
 <!-- ================= THE MAIN PROCESS BUTTON ================ -->
 
-<button id="submit" class="btn btn-primary form-control mt-3" type="submit" onclick="doSubmit()">
+<button id="submit" class="btn btn-primary btn-ponk-colors form-control mt-3" type="submit" onclick="doSubmit()">
   <span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span>
 </button>
 
@@ -478,7 +494,7 @@
     <a class="nav-link active" href="#output_formatted" data-bs-toggle="tab">
       <span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_output_text']; ?>
     </a>
-    <button class="btn btn-primary btn-sm position-absolute" style="top: 10px; right: 10px; z-index: 1; padding: 2px 6px; font-size: 14px;" onclick="saveOutput();">
+    <button class="btn btn-primary btn-sm btn-ponk-colors btn-ponk-small position-absolute" style="top: 10px; right: 10px; z-index: 1;" onclick="saveOutput();">
       <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_text_button_save']; ?> 
     </button>
   </li>
@@ -487,7 +503,7 @@
     <a class="nav-link" href="#output_stats" data-bs-toggle="tab">
       <span class="fa fa-table"></span> <?php echo $lang[$currentLang]['run_output_statistics']; ?>
     </a>
-    <button class="btn btn-primary btn-sm position-absolute" style="top: 10px; right: 10px; z-index: 1; padding: 2px 6px; font-size: 14px;" onclick="saveStats();">
+    <button class="btn btn-primary btn-sm btn-ponk-colors btn-ponk-small position-absolute" style="top: 10px; right: 10px; z-index: 1;" onclick="saveStats();">
       <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_statistics_button_save']; ?> 
     </button>
   </li>

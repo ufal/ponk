@@ -35,7 +35,6 @@ $currentLang = $_SESSION['lang'];
   <meta charset="utf-8">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"> <!-- Aktualizovaná verze Font Awesome -->
-  
   <link rel="stylesheet" href="css/lindat.css" type="text/css" />
   <link rel="stylesheet" href="css/ponk.css" type="text/css" />
 
@@ -51,7 +50,7 @@ $currentLang = $_SESSION['lang'];
     <div class="container">
 
       <!-- Service title -->
-      <h1 class="text-center">PONK</h1>
+      <h1 class="text-center pt-lg-3">PONK</h1>
 
       <!-- menu -->
       <div class="menu-container position-relative"> <!-- Bootstrap 5 používá position-relative místo style -->
