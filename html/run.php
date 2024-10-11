@@ -12,12 +12,19 @@
   });
 
   function doSubmit() {
+    //console.log("doSubmit: Entering the function.");
     var input_text;
-    var input_tab = jQuery('#input_tabs>.tab-pane.active');
-    if (input_tab.length > 0 && input_tab.attr('id') == 'input_file') {
-      if (!input_file_content) { alert('Please load a file first.'); return; }
+    let activePanelId = getActivePanelID('#input_tabs');
+    if (activePanelId) {
+      console.log('Aktivní panel ID:', activePanelId);
+    }
+    if (activePanelId && activePanelId == 'input_file') { // input from a file
+      if (!input_file_content) {
+        alert('Please load a file first.'); return;
+      }
       input_text = input_file_content;
-    } else {
+      // console.log("doSubmit: Input text from a file: ", input_text);
+    } else { // input as a directly entered text
       input_text = jQuery('#input').val();
     }
 
@@ -79,6 +86,39 @@
       //console.log("All completed");
     }});
   }
+  
+
+  // funkce pro získání id aktivního panelu v dané sadě panelů
+  // volat např. takto:
+  // let activePanelId = getActivePanel('#input_tabs');
+  // if (activePanelId) {
+  //   console.log('Aktivní panel ID:', activePanelId);
+  // }
+  function getActivePanelID(containerSelector) {
+      // Najdeme kontejner s panely
+      let container = document.querySelector(containerSelector);
+      if (!container) {
+          console.error('Kontejner s panely nebyl nalezen: ', containerSelector);
+          return null;
+      }
+
+      // Vybereme všechny tab-pane v rámci tohoto kontejneru
+      let tabPanes = container.querySelectorAll('.tab-pane');
+
+      // Najdeme ten, který má třídy 'show' a 'active'
+      let activePane = Array.from(tabPanes).find(pane =>
+          pane.classList.contains('show') && pane.classList.contains('active')
+      );
+
+      if (activePane) {
+          // Získáme ID aktivního panelu
+          // console.log('Aktivní panel je:', activePane.id);
+          return activePane.id;
+      } else {
+          // console.log('Žádný panel není aktivní nebo kontejner neobsahuje aktivní panely.');
+          return null;
+      }
+  }
 
 
   // Funkce pro kódování binárních dat do Base64
@@ -124,49 +164,70 @@
     }, complete: function() {
       //console.log("Complete.");
       var info = "<h4><?php echo $lang[$currentLang]['run_server_info_label']; ?></h4>\n<ul><li><?php echo $lang[$currentLang]['run_server_info_version']; ?>: <i>" + version + "</i>\n<li><?php echo $lang[$currentLang]['run_server_info_features']; ?>: <i>" + features + "</i>\n</ul>\n";
-      jQuery('#server_info').html(info).show();
       //console.log("Info: ", info);
+      document.getElementById('server_info').innerHTML = info;
+      document.getElementById('server_info').classList.remove('d-none');
+
       var short_info = "&nbsp; <?php echo $lang[$currentLang]['run_server_info_version']; ?>: <i>" + version + "</i>";
-      jQuery('#server_short_info').html(short_info).show();
-      //console.log("Info: ", info);
+      //console.log("Short info: ", short_info);
+      document.getElementById('server_short_info').innerHTML = short_info;
+      document.getElementById('server_short_info').classList.remove('d-none');
       
     }});
   }
-  
-  
-  jQuery(document).on('change', '#input_file_field', function() {
-    jQuery('#input_file_name').text();
+
+
+  // Reads an input file after it is selected by the user
+  // The content is put in global variable input_file_content  
+  function handleFileChange(input) {
+    const inputName = document.getElementById('input_file_name');
+    inputName.textContent = ''; // Clear previous content
     input_file_content = null;
-    if (this.files.length > 0) {
-      var file = this.files[0];
-      jQuery('#input_file_name').text(file.name + ' (loading...)');
+
+    if (input.files.length > 0) {
+      const file = input.files[0];
+      console.log("handleFileChange: input file name: ", `${file.name}`);
+      inputName.textContent = `${file.name} (loading...)`;
+
       if (!window.FileReader) {
-        jQuery('#input_file_name').text(file.name + ' (load error - file loading API not supported, please use newer browser)').wrapInner('<span class="text-danger"></span>');
+        inputName.value = `${file.name} (load error - file loading API not supported, please use newer browser)`;
+        console.log("handleFileChange: load error - file loading API not supported");
+        inputName.innerHTML = `<span class="text-danger">${inputName.value}</span>`;
       } else {
-        var reader = new FileReader();
-	reader.onload = function() {
-          var input_format = jQuery('input[name=option_input]:checked').val();
+        const input_format = document.querySelector('input[name="option_input"]:checked').value;
+        const reader = new FileReader();
+        console.log("handleFileChange: loading the file...");	      
+        reader.onload = function(event) {
+          console.log("handleFileChange: the set file format: ", input_format);
           if (input_format === "docx") {
-	    //input_file_content = encodeBinaryToBase64(target.result);
-	    input_file_content = encodeBinaryToBase64(reader.result);
+	    console.log("handleFileChange: the file format is DOCX");
+            //input_file_content = encodeBinaryToBase64(event.target.result);
+            input_file_content = encodeBinaryToBase64(reader.result);
 	  } else {
+	    console.log("handleFileChange: the file format is either TXT or MD");
+            //input_file_content = event.target.result;
 	    input_file_content = reader.result;
-	  }
-          jQuery('#input_file_name').text(file.name + ' (<?php echo $lang[$currentLang]['run_input_file_kb_loaded_prefix']; ?>' + (input_file_content.length/1024).toFixed(1) + '<?php echo $lang[$currentLang]['run_input_file_kb_loaded_suffix']; ?>)');
-        }
+	    //console.log("handleFileChange: input_file_content: ", input_file_content);
+          }
+	  inputName.value = `${file.name} (${(input_file_content.length / 1024).toFixed(1)} KB)`;
+	  //console.log("handleFileChange: printing this: ", `${file.name} (${(input_file_content.length / 1024).toFixed(1)} KB)`);
+        };
+
         reader.onerror = function() {
-          jQuery('#input_file_name').text(file.name + ' (load error)').wrapInner('<span class="text-danger"></span>');
-	}
-	var input_format = jQuery('input[name=option_input]:checked').val();
+          inputName.value = `${file.name} (load error)`;
+          inputName.innerHTML = `<span class="text-danger">${inputName.value}</span>`;
+        };
+
 	if (input_format === "docx") {
+          console.log("handleFileChange: reader: reading file as array buffer (docx)");
           reader.readAsArrayBuffer(file);
         } else {
+          console.log("handleFileChange: reader: reading file as text (txt or md)");
           reader.readAsText(file);
         }
       }
     }
-  });
-
+  }
 
   function saveAs(blob, file_name) {
     const url = window.URL.createObjectURL(blob);
@@ -241,23 +302,36 @@
   //    }
   //}
 
-  function handleInputFormatChange() {
-      //console.log("handleInputFormatChange - entering the function");
-      const radioInputDocx = document.getElementById('option_input_docx');
-      const headerInputText = document.getElementById('input_text_header');
-      const headerInputFile = document.getElementById('input_file_header');
-      const tabInputText = document.getElementById('input_text');
-      const tabInputFile = document.getElementById('input_file');
 
-      if (radioInputDocx.checked) {
-        headerInputText.classList.remove('active');
-        tabInputText.classList.remove('active');
-        //tabInputText.setAttribute('aria-selected', false);
-        headerInputFile.classList.add('active');
-        tabInputFile.classList.add('active');
-        //tabInputFile.setAttribute('aria-selected', true);
-      } 
+  function handleInputFormatChange() {
+    //console.log("handleInputFormatChange - entering the function");
+    const radioInputDocx = document.getElementById('option_input_docx');
+    const headerInputText = document.getElementById('input_text_header');
+    const headerInputFile = document.getElementById('input_file_header');
+    const tabInputText = document.getElementById('input_text');
+    const tabInputFile = document.getElementById('input_file');
+    const linkInputText = headerInputText.querySelector('a.nav-link');
+    const linkInputFile = headerInputFile.querySelector('a.nav-link');
+
+    if (radioInputDocx.checked) {
+        // Nastavení tříd pro tab panely
+        tabInputText.classList.remove('active', 'show');
+        tabInputFile.classList.add('active', 'show');
+
+        // Nastavení tříd pro přepínací záložky
+        linkInputText.classList.remove('active');
+        linkInputFile.classList.add('active');
+
+        // Nastavení aria-selected atributů
+        linkInputText.setAttribute('aria-selected', 'false');
+        linkInputFile.setAttribute('aria-selected', 'true');
+
+        // Trigger tab show for correct rendering in Bootstrap
+        const tab = new bootstrap.Tab(linkInputFile);
+        tab.show();
+    }
   }
+
 
   function handleInputTextHeaderClicked() {
     //console.log("handleInputTextHeaderClicked - entering the function");
@@ -267,146 +341,196 @@
       radioInputDocx.checked = false;
       radioInputTXT.checked = true;
     }
+    const t=document.getElementById('input');
+    //t.value='';
+    t.focus();
   }
 
 
 --></script>
 
-<div class="panel panel-default">
-  <div class="panel-heading" role="tab" id="aboutHeading">
-    <div class="collapsed" role="button" data-toggle="collapse" href="#aboutContent" aria-expanded="false" aria-controls="aboutContent">
-      <span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span> <?php echo $lang[$currentLang]['run_about_line']; ?>
-    </div>
-  </div>
-  <div id="aboutContent" class="panel-collapse collapse" role="tabpanel" aria-labelledby="aboutHeading">
+  <!-- ================= ABOUT ================ -->
 
+<div class="card">
+  <div class="card-header" role="tab" id="aboutHeading">
+    <button class="btn btn-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#aboutContent" aria-expanded="false" aria-controls="aboutContent">
+      <i class="fa-solid fa-caret-down"></i> <?php echo $lang[$currentLang]['run_about_line']; ?>
+    </button>
+  </div>
+  <div id="aboutContent" class="collapse m-1" role="tabpanel" aria-labelledby="aboutHeading">
           <?php
             if ($currentLang == 'cs') {
           ?>
-    <div style="margin: 5px"><?php require('about_cs.html') ?></div>
+    <div><?php require('about_cs.html') ?></div>
           <?php
             } else {
           ?>
-    <div style="margin: 5px"><?php require('about_en.html') ?></div>
+    <div><?php require('about_en.html') ?></div>
           <?php
             }
           ?>
-
-
   </div>
 </div>
 
-<!--div class="panel panel-info"-->
-  <!--div class="panel-heading">Service</div-->
-  <!--div class="panel-body"-->
+  <!-- ================= SERVER INFO ================ -->
 
-  <div class="panel panel-default">
-    <div class="panel-heading" role="tab" id="serverInfoHeading">
-      <div class="collapsed" role="button" data-toggle="collapse" href="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent">
-        <span class="glyphicon glyphicon-triangle-bottom" aria-hidden="true"></span> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" style="display: none"></span>
-      </div>
-    </div>
-    <div id="serverInfoContent" class="panel-collapse collapse" role="tabpanel" aria-labelledby="serverInfoHeading">
-
-      <div style="margin: 5px">
- 
-	<div id="server_info" style="display: none"></div>
-
-          <?php
-            if ($currentLang == 'cs') {
-          ?>
-    <div><?php require('licence_cs.html') ?></div>
-          <?php
-            } else {
-          ?>
-    <div><?php require('licence_en.html') ?></div>
-          <?php
-            }
-          ?>
-
-        <p><?php echo $lang[$currentLang]['run_server_info_word_limit']; ?></p>
-        <div id="error" class="alert alert-danger" style="display: none"></div>
-
-     </div>
+<div class="card">
+  <div class="card-header" role="tab" id="serverInfoHeading">
+    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent">
+      <i class="fa-solid fa-caret-down" aria-hidden="true"></i> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" class="d-none"></span>
+    </button>
   </div>
+  <div id="serverInfoContent" class="collapse m-1" role="tabpanel" aria-labelledby="serverInfoHeading">
+      <div id="server_info" class="d-none"></div>
+
+      <?php
+      if ($currentLang == 'cs') {
+      ?>
+          <div><?php require('licence_cs.html'); ?></div>
+      <?php
+      } else {
+      ?>
+          <div><?php require('licence_en.html'); ?></div>
+      <?php
+      }
+      ?>
+
+      <p><?php echo $lang[$currentLang]['run_server_info_word_limit']; ?></p>
+      <div id="error" class="alert alert-danger d-none"></div>
+  </div>
+</div>
 
   <!-- ================= OPTIONS ================ -->
 
-  <div class="form-horizontal">
-    <div class="form-group row" style="margin-top: 10px; margin-bottom: 0px">
-      <label class="col-sm-2 control-label"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
-      <div class="col-sm-10">
-        <label title="<?php echo $lang[$currentLang]['run_options_input_plain_popup']; ?>" class="radio-inline" id="option_input_plaintext_label"><input name="option_input" id="option_input_plaintext" type="radio" value="txt" checked/><?php echo $lang[$currentLang]['run_options_input_plain']; ?></label>
-        <label title="<?php echo $lang[$currentLang]['run_options_input_md_popup']; ?>" class="radio-inline" id="option_input_markdown_label"><input name="option_input" id="option_input_markdown" type="radio" value="md"/><?php echo $lang[$currentLang]['run_options_input_md']; ?></label>
-        <label title="<?php echo $lang[$currentLang]['run_options_input_msworddocx_popup']; ?>" class="radio-inline" id="option_input_docx_label"><input name="option_input" id="option_input_docx" type="radio" value="docx" onchange="handleInputFormatChange();"/><?php echo $lang[$currentLang]['run_options_input_msworddocx']; ?></label>
-      </div>
+<div class="row gx-2 gy-0 mt-lg-3 mb-lg-3">
+  <div class="col-12 col-md-2 text-end">
+    <label class="form-label fw-bold me-5"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
+  </div>
+  <div class="col-12 col-md-10">
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="option_input" id="option_input_plaintext" value="txt" checked>
+      <label class="form-check-label" for="option_input_plaintext" title="<?php echo $lang[$currentLang]['run_options_input_plain_popup']; ?>">
+        <?php echo $lang[$currentLang]['run_options_input_plain']; ?>
+      </label>
     </div>
-    <div class="form-group row" style="margin-top: 0px">
-      <label class="col-sm-2 control-label"><?php echo $lang[$currentLang]['run_options_output_label']; ?>:</label>
-      <div class="col-sm-10">
-        <label title="<?php echo $lang[$currentLang]['run_options_output_html_popup']; ?>" class="radio-inline">
-          <input name="option_output" type="radio" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();"/><?php echo $lang[$currentLang]['run_options_output_html']; ?><!-- (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">colour-marked</a>)-->
-        </label>
-      </div>
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="option_input" id="option_input_markdown" value="md">
+      <label class="form-check-label" for="option_input_markdown" title="<?php echo $lang[$currentLang]['run_options_input_md_popup']; ?>">
+        <?php echo $lang[$currentLang]['run_options_input_md']; ?>
+      </label>
     </div>
-
-    <!-- ================= INPUT FIELDS ================ -->
-
-    <ul class="nav nav-tabs nav-justified nav-tabs-green">
-      <li id="input_text_header" class="active" style="position:relative" onclick="handleInputTextHeaderClicked();"><a href="#input_text" data-toggle="tab"><span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_input_text']; ?></a>
-          <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="var t=document.getElementById('input'); t.value=''; t.focus();"><?php echo $lang[$currentLang]['run_input_text_button_delete']; ?></button>
-      </li>
-      <li id="input_file_header"><a href="#input_file" data-toggle="tab"><span class="fa fa-file-text-o"></span> <?php echo $lang[$currentLang]['run_input_file']; ?></a></li>
-    </ul>
-    <div class="tab-content" id="input_tabs" style="border-right: 1px solid #ddd; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; padding: 15px">
-     <div class="tab-pane active" id="input_text">
-      <textarea id="input" class="form-control" rows="10" cols="80"></textarea>
-     </div>
-     <div class="tab-pane" id="input_file">
-      <div class="input-group">
-       <div class="form-control" id="input_file_name"></div>
-       <span class="input-group-btn"><span class="btn btn-success btn-file"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ... <input type="file" id="input_file_field"></span></span>
-      </div>
-     </div>
-
-    </div>
-
-    <button id="submit" class="btn btn-primary form-control" type="submit" style="margin-top: 15px; margin-bottom: 15px" onclick="doSubmit()"><span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span></button>
-
-    <!-- ================= OUTPUT FIELDS ================ -->
-
-    <ul class="nav nav-tabs nav-justified nav-tabs-green">
-     <li class="active" style="position:relative">
-	  <a href="#output_formatted" data-toggle="tab"><span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_output_text']; ?></a>
-          <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="saveOutput();"><span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_text_button_save']; ?></button>
-     </li>
-     <li style="position:relative"><a href="#output_stats" data-toggle="tab"><span class="fa fa-table"></span> <?php echo $lang[$currentLang]['run_output_statistics']; ?></a>
-          <button type="button" class="btn btn-primary btn-xs" style="position:absolute; top: 11px; right: 10px; padding: 0 2em" onclick="saveStats();"><span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_statistics_button_save']; ?></button>
-     </li>
-    </ul>
-
-    <div class="tab-content" id="output_tabs" style="border-right: 1px solid #ddd; border-left: 1px solid #ddd; border-bottom: 1px solid #ddd; border-bottom-right-radius: 5px; border-bottom-left-radius: 5px; padding: 15px">
-      <div class="tab-pane active" id="output_formatted"></div>
-      <div class="tab-pane" id="output_stats"></div>
-    </div>
-
-    <div style="margin: 5px">
-
-          <?php
-            if ($currentLang == 'cs') {
-          ?>
-    <div><?php include('acknowledgements_cs.html') ?></div>
-          <?php
-            } else {
-          ?>
-    <div><?php include('acknowledgements_en.html') ?></div>
-          <?php
-            }
-          ?>
-
-
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="option_input" id="option_input_docx" value="docx" onchange="handleInputFormatChange();">
+      <label class="form-check-label" for="option_input_docx" title="<?php echo $lang[$currentLang]['run_options_input_msworddocx_popup']; ?>">
+        <?php echo $lang[$currentLang]['run_options_input_msworddocx']; ?>
+      </label>
     </div>
   </div>
-<!--/div-->
+
+  <div class="col-12 col-md-2 text-end mt-0">
+    <label class="form-label fw-bold me-5"><?php echo $lang[$currentLang]['run_options_output_label']; ?>:</label>
+  </div>
+  <div class="col-12 col-md-10 mt-0">
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="radio" name="option_output" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();">
+      <label class="form-check-label" for="option_output_html" title="<?php echo $lang[$currentLang]['run_options_output_html_popup']; ?>">
+        <?php echo $lang[$currentLang]['run_options_output_html']; ?>
+        <!-- (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">colour-marked</a>) -->
+      </label>
+    </div>
+  </div>
+</div>
+
+
+<!-- ================= INPUT FIELDS ================ -->
+
+<!-- ================ záložky input panelů =============== -->
+<ul class="nav nav-tabs nav-fill nav-tabs-green">
+  <li class="nav-item position-relative" id="input_text_header">
+    <a class="nav-link active" href="#input_text" data-bs-toggle="tab" onclick="handleInputTextHeaderClicked();">
+      <span class="fa fa-font"></span> 
+      <?php echo $lang[$currentLang]['run_input_text']; ?>
+    </a>
+    <!-- Tlačítko umístěné těsně u pravého okraje záložky -->
+    <button class="btn btn-sm btn-primary btn-ponk-colors btn-ponk-small position-absolute" style="top: 10px; right: 10px; z-index: 1;" onclick="var t=document.getElementById('input'); t.value=''; t.focus();">
+      <span class="fas fa-trash"></span> <?php echo $lang[$currentLang]['run_input_text_button_delete']; ?>
+    </button>
+  </li>
+  <li class="nav-item" id="input_file_header">
+    <a class="nav-link" href="#input_file" data-bs-toggle="tab">
+      <span class="far fa-file-alt"></span> 
+      <?php echo $lang[$currentLang]['run_input_file']; ?>
+    </a>
+  </li>
+</ul>
+
+<!-- ================ input panely =============== -->
+<div class="tab-content" id="input_tabs" style="border: 1px solid #ddd; border-radius: 0 0 .25rem .25rem; padding: 15px;">
+  <div class="tab-pane show active" id="input_text">
+    <textarea id="input" class="form-control" rows="10" cols="80"></textarea>
+  </div>
+
+  <div class="tab-pane" id="input_file">
+    <div class="input-group">
+      <input type="text" class="form-control" id="input_file_name" readonly>
+      <label class="input-group-text btn btn-success btn-file" for="input_file_field"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ...</label>
+      <input type="file" id="input_file_field" class="visually-hidden" onchange="handleFileChange(this)">
+    </div>
+  </div>
+</div>
+
+<!-- ================= THE MAIN PROCESS BUTTON ================ -->
+
+<button id="submit" class="btn btn-primary btn-ponk-colors form-control mt-3" type="submit" onclick="doSubmit()">
+  <span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span>
+</button>
+
+<!-- ================= OUTPUT FIELDS ================ -->
+
+<!-- ================ záložky output panelů =============== -->
+<ul class="nav nav-tabs nav-fill nav-tabs-green">
+
+  <li class="nav-item position-relative">
+    <a class="nav-link active" href="#output_formatted" data-bs-toggle="tab">
+      <span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_output_text']; ?>
+    </a>
+    <button class="btn btn-primary btn-sm btn-ponk-colors btn-ponk-small position-absolute" style="top: 10px; right: 10px; z-index: 1;" onclick="saveOutput();">
+      <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_text_button_save']; ?> 
+    </button>
+  </li>
+
+  <li class="nav-item position-relative">
+    <a class="nav-link" href="#output_stats" data-bs-toggle="tab">
+      <span class="fa fa-table"></span> <?php echo $lang[$currentLang]['run_output_statistics']; ?>
+    </a>
+    <button class="btn btn-primary btn-sm btn-ponk-colors btn-ponk-small position-absolute" style="top: 10px; right: 10px; z-index: 1;" onclick="saveStats();">
+      <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_statistics_button_save']; ?> 
+    </button>
+  </li>
+
+</ul>
+
+<!-- ================ output panely =============== -->
+<div class="tab-content" id="output_tabs" style="border: 1px solid #ddd; border-radius: 0 0 .25rem .25rem; padding: 15px;">
+  <div class="tab-pane fade show active" id="output_formatted"></div>
+  <div class="tab-pane fade" id="output_stats"></div>
+</div>
+
+
+<!-- ================= ACKNOWLEDGEMENTS ================ -->
+
+<div class="mt-3 mb-3">
+  <?php
+    if ($currentLang == 'cs') {
+  ?>
+    <div><?php include('acknowledgements_cs.html'); ?></div>
+  <?php
+    } else {
+  ?>
+    <div><?php include('acknowledgements_en.html'); ?></div>
+  <?php
+    }
+  ?>
+</div>
 
 <?php require('footer.php') ?>
