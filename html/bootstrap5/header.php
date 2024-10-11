@@ -34,7 +34,7 @@ $currentLang = $_SESSION['lang'];
   <title>PONK</title>
   <meta charset="utf-8">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"> <!-- Aktualizovaná verze Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"> <!-- Aktualizovaná verze Font Awesome -->
   
   <link rel="stylesheet" href="css/lindat.css" type="text/css" />
   <link rel="stylesheet" href="css/ponk.css" type="text/css" />
@@ -42,7 +42,6 @@ $currentLang = $_SESSION['lang'];
   <script src="https://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript"></script>
   <!-- Bootstrap 5 JavaScript, nyní bez jQuery -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- run_prettify.js není součástí Bootstrapu, takže jej ponechte, pokud ho stále potřebujete -->
   <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js" type="text/javascript"></script>
 </head>
 
@@ -56,7 +55,7 @@ $currentLang = $_SESSION['lang'];
 
       <!-- menu -->
       <div class="menu-container position-relative"> <!-- Bootstrap 5 používá position-relative místo style -->
-        <ul class="nav nav-tabs justify-content-center mb-3"> <!-- text-center je nahrazeno justify-content-center, margin-bottom: 10px je mb-3 -->
+        <ul class="nav nav-tabs nav-tabs-gray justify-content-center mb-3"> <!-- text-center je nahrazeno justify-content-center, margin-bottom: 10px je mb-3 -->
           <li class="nav-item">
             <a class="nav-link <?php if ($main_page == 'info.php') echo 'active'; ?>" href="info.php">
               <span class="fa fa-info-circle"></span> <?php echo $lang[$currentLang]['menu_about']; ?>

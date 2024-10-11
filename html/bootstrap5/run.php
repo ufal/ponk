@@ -386,9 +386,11 @@
 
   <!-- ================= OPTIONS ================ -->
 
-<div class="row g-3 align-items-center">
-  <div class="col-12 mb-3">
+<div class="row gx-3 gy-1 mt-lg-1">
+  <div class="col-12 col-md-2 text-end">
     <label class="form-label"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
+  </div>
+  <div class="col-12 col-md-10">
     <div class="form-check form-check-inline">
       <input class="form-check-input" type="radio" name="option_input" id="option_input_plaintext" value="txt" checked>
       <label class="form-check-label" for="option_input_plaintext" title="<?php echo $lang[$currentLang]['run_options_input_plain_popup']; ?>">
@@ -409,8 +411,10 @@
     </div>
   </div>
 
-  <div class="col-12">
+  <div class="col-12 col-md-2 text-end mt-0">
     <label class="form-label"><?php echo $lang[$currentLang]['run_options_output_label']; ?>:</label>
+  </div>
+  <div class="col-12 col-md-10 mt-0">
     <div class="form-check form-check-inline">
       <input class="form-check-input" type="radio" name="option_output" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();">
       <label class="form-check-label" for="option_output_html" title="<?php echo $lang[$currentLang]['run_options_output_html_popup']; ?>">
@@ -421,23 +425,25 @@
   </div>
 </div>
 
+
 <!-- ================= INPUT FIELDS ================ -->
 
 <!-- ================ záložky input panelů =============== -->
 <ul class="nav nav-tabs nav-fill nav-tabs-green">
-  <li class="nav-item" id="input_text_header">
-    <div class="nav-link active d-flex justify-content-between align-items-center">
-      <a href="#input_text" data-bs-toggle="tab" onclick="handleInputTextHeaderClicked();" class="mx-auto">
-        <span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_input_text']; ?>
-      </a>
-      <button type="button" class="btn btn-primary btn-sm" onclick="var t=document.getElementById('input'); t.value=''; t.focus();">
-        <?php echo $lang[$currentLang]['run_input_text_button_delete']; ?>
-      </button>
-    </div>
+  <li class="nav-item position-relative" id="input_text_header">
+    <a class="nav-link active" href="#input_text" data-bs-toggle="tab" onclick="handleInputTextHeaderClicked();">
+      <span class="fa fa-font"></span> 
+      <?php echo $lang[$currentLang]['run_input_text']; ?>
+    </a>
+    <!-- Tlačítko umístěné těsně u pravého okraje záložky -->
+    <button class="btn btn-sm btn-primary position-absolute" style="top: 10px; right: 10px; z-index: 1; padding: 2px 6px; font-size: 14px;" onclick="var t=document.getElementById('input'); t.value=''; t.focus();">
+      <span class="fas fa-trash"></span> <?php echo $lang[$currentLang]['run_input_text_button_delete']; ?>
+    </button>
   </li>
   <li class="nav-item" id="input_file_header">
     <a class="nav-link" href="#input_file" data-bs-toggle="tab">
-      <span class="fa fa-file-text-o"></span> <?php echo $lang[$currentLang]['run_input_file']; ?>
+      <span class="far fa-file-alt"></span> 
+      <?php echo $lang[$currentLang]['run_input_file']; ?>
     </a>
   </li>
 </ul>
@@ -447,18 +453,13 @@
   <div class="tab-pane show active" id="input_text">
     <textarea id="input" class="form-control" rows="10" cols="80"></textarea>
   </div>
-  
+
   <div class="tab-pane" id="input_file">
     <div class="input-group">
       <input type="text" class="form-control" id="input_file_name" readonly>
       <label class="input-group-text btn btn-success btn-file" for="input_file_field"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ...</label>
       <input type="file" id="input_file_field" class="visually-hidden" onchange="handleFileChange(this)">
     </div>
-    <!--div class="input-group">
-      <input type="text" class="form-control" id="input_file_name" readonly>
-      <label class="input-group-text btn btn-success btn-file" for="input_file_field"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ...</label>
-      <input type="file" id="input_file_field" class="d-none">
-    </div-->
   </div>
 </div>
 
@@ -473,26 +474,24 @@
 <!-- ================ záložky output panelů =============== -->
 <ul class="nav nav-tabs nav-fill nav-tabs-green">
 
-  <li class="nav-item">
-    <div class="nav-link active d-flex justify-content-between align-items-center">
-      <a href="#output_formatted" data-bs-toggle="tab" class="mx-auto">
-        <span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_output_text']; ?>
-      </a>
-      <button type="button" class="btn btn-primary btn-sm" onclick="saveOutput();">
-        <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_text_button_save']; ?> 
-      </button>
-    </div>
+  <li class="nav-item position-relative">
+    <a class="nav-link active" href="#output_formatted" data-bs-toggle="tab">
+      <span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_output_text']; ?>
+    </a>
+    <button class="btn btn-primary btn-sm position-absolute" style="top: 10px; right: 10px; z-index: 1; padding: 2px 6px; font-size: 14px;" onclick="saveOutput();">
+      <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_text_button_save']; ?> 
+    </button>
   </li>
-  <li class="nav-item">
-    <div class="nav-link d-flex justify-content-between align-items-center">
-      <a href="#output_stats" data-bs-toggle="tab" class="mx-auto">
-        <span class="fa fa-table"></span> <?php echo $lang[$currentLang]['run_output_statistics']; ?>
-      </a>
-      <button type="button" class="btn btn-primary btn-sm" onclick="saveStats();">
-        <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_statistics_button_save']; ?> 
-      </button>
-    </div>
+
+  <li class="nav-item position-relative">
+    <a class="nav-link" href="#output_stats" data-bs-toggle="tab">
+      <span class="fa fa-table"></span> <?php echo $lang[$currentLang]['run_output_statistics']; ?>
+    </a>
+    <button class="btn btn-primary btn-sm position-absolute" style="top: 10px; right: 10px; z-index: 1; padding: 2px 6px; font-size: 14px;" onclick="saveStats();">
+      <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_statistics_button_save']; ?> 
+    </button>
   </li>
+
 </ul>
 
 <!-- ================ output panely =============== -->
