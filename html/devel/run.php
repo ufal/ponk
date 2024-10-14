@@ -11,6 +11,22 @@
       //console.log("DOM byl kompletně načten!");
   });
 
+  document.addEventListener("DOMContentLoaded", function() {
+      const textarea = document.getElementById('input');
+      let originalValue = textarea.value;
+
+      textarea.addEventListener('focus', function() {
+          if (this.value === originalValue) {
+              this.value = '';
+              this.style.color = '#333333'; // Změní barvu na tmavou při psaní
+          }
+      });
+
+      // Nastavení barvy pro předvyplněný text při načtení
+      textarea.style.color = '#bbbbbb';
+  });
+
+
   function doSubmit() {
     //console.log("doSubmit: Entering the function.");
     var input_text;
@@ -466,10 +482,12 @@
 
 <!-- ================ input panely =============== -->
 <div class="tab-content" id="input_tabs" style="border: 1px solid #ddd; border-radius: 0 0 .25rem .25rem; padding: 15px;">
-  <div class="tab-pane show active" id="input_text">
+  <!--div class="tab-pane show active" id="input_text">
     <textarea id="input" class="form-control" rows="10" cols="80"></textarea>
-  </div>
-
+  </div-->
+<div class="tab-pane show active" id="input_text">
+    <textarea id="input" class="form-control" rows="10" cols="80"><?php echo $lang['cs']['run_input_text_default_text']; ?></textarea>
+</div>
   <div class="tab-pane" id="input_file">
     <div class="input-group">
       <input type="text" class="form-control" id="input_file_name" readonly>
