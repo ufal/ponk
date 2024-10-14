@@ -26,6 +26,17 @@
       textarea.style.color = '#bbbbbb';
   });
 
+  function toggleApp1Features() {
+    console.log("toggleApp1Features: Entering the function.");  
+    const featuresPanel = document.getElementById('features_app1');
+      if (featuresPanel.style.display === 'block' || featuresPanel.style.display === '') {
+        featuresPanel.style.display = 'none';
+      } else {
+        featuresPanel.style.display = 'block';
+    }
+  }
+
+
 
   function doSubmit() {
     //console.log("doSubmit: Entering the function.");
@@ -71,6 +82,7 @@
     output_file_content = null;
     jQuery('#output_formatted').empty();
     jQuery('#output_stats').empty();
+    jQuery('#features_app1').empty();
     jQuery('#submit').html('<span class="fa fa-cog"></span> Waiting for Results <span class="fa fa-cog"></span>');
     jQuery('#submit').prop('disabled', true);
     jQuery.ajax('//quest.ms.mff.cuni.cz/ponk/api/process',
@@ -82,6 +94,11 @@
               output_file_content = json.result;
               //console.log("Found 'result' in return message:", output_file_content);
               displayFormattedOutput();
+	  }
+	  if ("app1_features" in json) {
+              let output_app1_features = json.app1_features;
+              //console.log("Found 'app1_features' in return message:", output_app1_features);
+              jQuery('#features_app1').html(output_app1_features);
 	  }
 	  if ("stats" in json) {
               output_file_stats = json.stats;
@@ -509,7 +526,7 @@
 <ul class="nav nav-tabs nav-fill nav-tabs-green">
 
   <li class="nav-item position-relative">
-    <a class="nav-link active" href="#output_formatted" data-bs-toggle="tab">
+    <a class="nav-link active" href="#output_panel" data-bs-toggle="tab">
       <span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_output_text']; ?>
     </a>
     <button class="btn btn-primary btn-sm btn-ponk-colors btn-ponk-small position-absolute" style="top: 10px; right: 10px; z-index: 1;" onclick="saveOutput();">
@@ -530,8 +547,21 @@
 
 <!-- ================ output panely =============== -->
 <div class="tab-content" id="output_tabs" style="border: 1px solid #ddd; border-radius: 0 0 .25rem .25rem; padding: 15px;">
-  <div class="tab-pane fade show active" id="output_formatted"></div>
+    <!-- ============ output panel se statistikami =========== -->
   <div class="tab-pane fade" id="output_stats"></div>
+    <!-- ============ output panel s formátovaným textem =========== -->
+
+  <div class="tab-pane fade show active" id="output_panel" style="overflow: visible;">
+    <div class="d-flex align-items-stretch" style="height: 100%;">
+      <div id="output_all" class="position-relative output-wrapper border border-muted rounded p-3" style="flex: 1; margin-right: 10px;">
+        <div id="output_formatted" class="full-height"></div>
+        <div id="features_app1" class="side-panel full-height border border-muted rounded-end p-3 bg-light ms-3" style="display: none; position: absolute; right: 0; top: 0; height: 100%; width: 30%; background-color: white; z-index: 10; overflow-y: auto;">Features APP1 content</div>
+      </div>
+      <div class="vertical-tab" onClick="toggleApp1Features();" style="width: 30px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <span class="rotate-text">APP1 Features</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 

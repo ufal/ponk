@@ -121,3 +121,20 @@ ul.nav-tabs-gray > li > a:focus {
     background: #265a88;
 }
 
+.rotate-text {
+  writing-mode: vertical-rl;
+  text-align: left;
+  white-space: nowrap;
+  padding: 10px 5px;
+  cursor: pointer; /* Aby ukazatel myši vypadal jako ruka */
+}
+
+.full-height {
+  height: 100%;
+}
+
+.output-wrapper {
+  position: relative;
+}
+
+
