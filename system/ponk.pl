@@ -1529,13 +1529,13 @@ sub get_app1_features_html {
 END_HEAD
 
   $features .= "<body>\n";
-  $features .= "<h3>PONK APP1 list of features</h3>\n";
   
-  $features .= "<ul>\n";
   foreach my $feature (@app1_list_of_features) {
-    $features .= "  <li>$feature</li>\n";
+    $features .= "<label class=\"toggle-container\">\n";
+    $features .= "  <input checked type=\"checkbox\" id=\"check_app1_feature_" . $feature . "\" onchange=\"toggleFunction(this.id)\">\n";
+    $features .= "  <span class=\"checkmark\">$feature</span>\n";
+    $features .= "</label>\n";
   }
-  $features .= "</ul>\n";
 
   $features .= "</body>\n";
   $features .= "</html>\n";
