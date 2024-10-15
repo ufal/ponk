@@ -137,4 +137,22 @@ ul.nav-tabs-gray > li > a:focus {
   position: relative;
 }
 
+.vertical-tab-right {
+  padding-left: 10px;
+  padding-right: 10px;
+  border-top-right-radius: 0.25rem !important; /* odpovídá Bootstrap 5's .rounded-end pro horní pravý roh */
+  border-bottom-right-radius: 0.25rem !important; /* odpovídá Bootstrap 5's .rounded-end pro dolní pravý roh */
+}
+
+.vertical-tab-green {
+  background-color: white;
+  color: #3c763d;
+  transition: background-color 0.3s ease; /* pro jemnější přechod */
+}
+
+.vertical-tab-green:hover {
+  color: #3c763d;
+  background-color: #dff0d8 !important;
+  text-decoration: none;
+}
 
