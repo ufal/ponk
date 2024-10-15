@@ -156,3 +156,24 @@ ul.nav-tabs-gray > li > a:focus {
   text-decoration: none;
 }
 
+.vertical-tab-green.active {
+  background-color: #dff0d8 !important; /* Zelené pozadí, když je features_app1 viditelný */
+}
+
+#features_app1 {
+  transition: all 0.3s ease-in-out;
+  width: 0;
+  padding: 0; /* Zajišťuje, že padding neovlivňuje skrytí */
+  border: none; /* Odstraní border, pokud by přispíval k viditelnosti */
+  overflow: hidden; /* Skryje obsah, který by mohl překračovat */
+  display: block !important;
+  box-sizing: border-box; /* Zajišťuje, že padding a border jsou zahrnuty ve width */
+  opacity: 0; /* Skryje obsah */
+}
+
+#features_app1.show {
+  width: 30%;
+  padding: 3px;
+  opacity: 1;
+}
+

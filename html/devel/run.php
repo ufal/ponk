@@ -27,16 +27,17 @@
   });
 
   function toggleApp1Features() {
-    console.log("toggleApp1Features: Entering the function.");  
+    //console.log("toggleApp1Features: Entering the function.");
     const featuresPanel = document.getElementById('features_app1');
-      if (featuresPanel.style.display === 'block' || featuresPanel.style.display === '') {
-        featuresPanel.style.display = 'none';
-      } else {
-        featuresPanel.style.display = 'block';
+    //const verticalTab = document.querySelector('.vertical-tab'); // Přidáno pro výběr vertikálního tabu
+    const verticalTab = document.getElementById('features_app1_tab'); // Přidáno pro výběr vertikálního tabu
+  
+    if (featuresPanel.classList.toggle('show')) {
+      verticalTab.classList.add('active');
+    } else {
+      verticalTab.classList.remove('active');
     }
   }
-
-
 
   function doSubmit() {
     //console.log("doSubmit: Entering the function.");
@@ -556,9 +557,11 @@
     <div class="d-flex align-items-stretch" style="height: 100%;">
       <div id="output_all" class="position-relative output-wrapper border border-muted rounded-start p-3 pe-0" style="flex: 1">
         <div id="output_formatted" class="full-height"></div>
-        <div id="features_app1" class="side-panel full-height border border-muted rounded-end p-3 bg-light ms-3" style="display: none; position: absolute; right: 0; top: 0; height: 100%; width: 30%; background-color: white; z-index: 10; overflow-y: auto;">Features APP1 content</div>
+	<!--div id="features_app1" class="side-panel full-height border border-muted rounded-end p-3 bg-light ms-3" style="display: none; position: absolute; right: 0; top: 0; height: 100%; width: 30%; background-color: white; z-index: 10; overflow-y: auto;">Features APP1 content</div-->
+        <div id="features_app1" class="side-panel full-height border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; height: 100%; background-color: white; z-index: 10; overflow-y: auto;">Features APP1 content</div>
       </div>
-      <div class="vertical-tab vertical-tab-green vertical-tab-right" onClick="toggleApp1Features();" style="width: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+      <!-- ============ záložka na pravé straně pro zobrazení/skrytí features_app1 =========== -->
+      <div id="features_app1_tab" class="vertical-tab vertical-tab-green vertical-tab-right" onClick="toggleApp1Features();" style="width: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
         <span class="rotate-text">APP1 Features</span>
       </div>
     </div>
