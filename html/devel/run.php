@@ -86,11 +86,15 @@
     jQuery('#features_app1').empty();
     jQuery('#submit').html('<span class="fa fa-cog"></span> Waiting for Results <span class="fa fa-cog"></span>');
     jQuery('#submit').prop('disabled', true);
-    jQuery.ajax('//quest.ms.mff.cuni.cz/ponk/api/process',
-           {data: form_data ? form_data : options, processData: form_data ? false : true,
-            contentType: form_data ? false : 'application/x-www-form-urlencoded; charset=UTF-8',
-            dataType: "json", type: "POST", success: function(json) {
-      try {
+
+    jQuery.ajax('//quest.ms.mff.cuni.cz/ponk/api/process', {
+      data: form_data ? form_data : options,
+      processData: form_data ? false : true,
+      contentType: form_data ? false : 'application/x-www-form-urlencoded; charset=UTF-8',
+      dataType: "json",
+      type: "POST",
+      success: function(json) {
+        try {
 	  if ("result" in json) {
               output_file_content = json.result;
               //console.log("Found 'result' in return message:", output_file_content);
@@ -101,6 +105,44 @@
               //console.log("Found 'app1_features' in return message:", output_app1_features);
               jQuery('#features_app1').html(output_app1_features);
 	  }
+	  if ("app1_rule_info" in json) {
+            // console.log("app1_rule_info found in JSON: ", json.app1_rule_info);
+            let ruleInfo = json.app1_rule_info;
+            // Kontrola, zda ruleInfo není string, pokud ano, pokus o parsování; bez toho to prostě nefungovalo.
+            if (typeof ruleInfo === 'string') {
+              try {
+                ruleInfo = JSON.parse(ruleInfo);
+              } catch (e) {
+                console.error("Failed to parse app1_rule_info as JSON:", e);
+              }
+            }
+            // console.log("app1_rule_info:", ruleInfo);
+            // Iterace přes klíče
+            if (typeof ruleInfo === 'object' && ruleInfo !== null) {
+              for (let key in ruleInfo) {
+                if (ruleInfo.hasOwnProperty(key)) {
+			console.log(`Key: ${key}, Value:`, ruleInfo[key]);
+			               let rule = ruleInfo[key];
+                  if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
+                    let {red, green, blue} = rule.foreground_color;
+		    console.log(`Key: ${key}, RGB Color: rgb(${red}, ${green}, ${blue})`);
+		    let class_name = `app1_class_${key}`;
+		    const colorStyle = 'rgb(' + Math.round(red) + ', ' + Math.round(green) + ', ' + Math.round(blue) + ') !important';
+		    console.log('Red:', red, 'Green:', green, 'Blue:', blue);
+		    console.log('Color Style:', colorStyle);
+		    let class_style = { 'color': colorStyle };
+		    createOrReplaceCSSClass(class_name, class_style);
+                    console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
+                  } else {
+                    console.log(`Key: ${key}, Foreground color not available or not an object.`);
+                  }
+                }
+              }
+            } else {
+              console.log("app1_rule_info is not an object or is null");
+            }
+	  }
+
 	  if ("stats" in json) {
               output_file_stats = json.stats;
               //console.log("Found 'stats' in return message:", output_file_stats);
@@ -120,7 +162,52 @@
       //console.log("All completed");
     }});
   }
-  
+
+
+  // Dynamicky vloží definici css třídy do inline stylesheetu (pokud inline stylesheet neexistuje, je vytvořen).
+  // Pokud daná css třída již je definována, její definice je nahrazena novou.
+  // Example usage:
+  /*createOrReplaceCSSClass('RuleLiteraryStyle', {
+    'color': 'rgb(40, 200, 200)',
+    'background-color': '#f0f0f0',
+    'font-size': '16px'
+  });*/
+
+  function createOrReplaceCSSClass(className, properties) {
+    // Try to find the existing stylesheet
+    let styleSheet;
+    for (let sheet of document.styleSheets) {
+        if (!sheet.href) {  // Check for an inline stylesheet
+            styleSheet = sheet;
+            break;
+        }
+    }
+
+    // If no inline stylesheet exists, create one
+    if (!styleSheet) {
+        const style = document.createElement('style');
+        document.head.appendChild(style);
+        styleSheet = style.sheet;
+    }
+
+    // Convert properties object to CSS string
+    const cssText = Object.entries(properties).map(([prop, value]) => 
+        `${prop}:${value};`).join('');
+
+    // Remove the rule if it already exists
+    if (styleSheet.cssRules) {
+        for (let i = 0; i < styleSheet.cssRules.length; i++) {
+            if (styleSheet.cssRules[i].selectorText === `.${className}`) {
+                styleSheet.deleteRule(i);
+                break;
+            }
+        }
+    }
+
+    // Add the new or updated rule
+    styleSheet.insertRule(`.${className} { ${cssText} }`, styleSheet.cssRules.length);
+  }
+
 
   // funkce pro získání id aktivního panelu v dané sadě panelů
   // volat např. takto:
@@ -552,13 +639,14 @@
   <!-- ============ output panel se statistikami =========== -->
   <div class="tab-pane fade" id="output_stats"></div>
 
-  <!-- ============ output panel s formátovaným textem =========== -->
+  <!-- ============ output panel s formátovaným textem, volbami po pravé straně a záložkou pro zobrazení těchto voleb =========== -->
   <div class="tab-pane fade show active" id="output_panel" style="overflow: visible;">
     <div class="d-flex align-items-stretch" style="height: 100%;">
       <div id="output_all" class="position-relative output-wrapper border border-muted rounded-start p-3 pe-0" style="flex: 1">
+        <!-- ============ output panel s formátovaným textem =========== -->
         <div id="output_formatted" class="full-height"></div>
-	<!--div id="features_app1" class="side-panel full-height border border-muted rounded-end p-3 bg-light ms-3" style="display: none; position: absolute; right: 0; top: 0; height: 100%; width: 30%; background-color: white; z-index: 10; overflow-y: auto;">Features APP1 content</div-->
-        <div id="features_app1" class="side-panel full-height border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; height: 100%; background-color: white; z-index: 10; overflow-y: auto;">Features APP1 content</div>
+        <!-- ============ volby APP1 =========== -->
+        <div id="features_app1" class="side-panel full-height border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; height: 100%; background-color: white; z-index: 10; overflow-y: auto;"></div>
       </div>
       <!-- ============ záložka na pravé straně pro zobrazení/skrytí features_app1 =========== -->
       <div id="features_app1_tab" class="vertical-tab vertical-tab-green vertical-tab-right" onClick="toggleApp1Features();" style="width: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
@@ -566,7 +654,7 @@
       </div>
     </div>
   </div>
-
+ <div class="btn" onClick="createOrReplaceCSSClass('highlighted-text-app1', { 'color': 'red !important', 'font-size': '20px' });">POKUS</div>
 </div>
 
 <!-- ================= ACKNOWLEDGEMENTS ================ -->
