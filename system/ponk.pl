@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.17 20241001'; # version of the program
+my $VER = '0.18 20241016'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -648,7 +648,7 @@ if ($input_format eq 'md') {
 #################################################
 
 my $conll_for_ponk_app1 = get_output('conllu');
-my ($app1_conllu, $app1_metrics) = call_ponk_app1($conll_for_ponk_app1);
+my ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = call_ponk_app1($conll_for_ponk_app1);
 
 # Export the modified trees to a file (for debugging, not needed for further processing)
 # open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
@@ -683,9 +683,11 @@ $processing_time = tv_interval($start_time, $end_time);
 # calculate and format statistics and list of app1 features if needed
 my $stats;
 my $app1_features;
+my $app1_rule_info;
 if ($store_statistics or $output_statistics) { # we need to calculate statistics
   $stats = get_stats_html();
   $app1_features = get_app1_features_html();
+  $app1_rule_info = get_app1_rule_info_json();
 }
 
 # print the input text with marked sources in the selected output format to STDOUT
@@ -703,6 +705,7 @@ else { # statistics should be a part of output, i.e. output will be JSON with se
        data  => $output,
        stats => $stats,
        app1_features => $app1_features,
+       app1_rule_info => $app1_rule_info,
      };
   # Encode the Perl data structure into a JSON string
   my $json_string = encode_json($json_data);
@@ -1435,7 +1438,7 @@ sub surface_text {
 
 =item get_stats_html
 
-Produces an html document with statistics about the anonymization, using info from these variables:
+Produces an html document with statistics about the process, using info from these variables:
 my $sentences_count;
 my $tokens_count;
 my $processing_time;
@@ -1533,7 +1536,7 @@ END_HEAD
   foreach my $feature (@app1_list_of_features) {
     $features .= "<label class=\"toggle-container\">\n";
     $features .= "  <input checked type=\"checkbox\" id=\"check_app1_feature_" . $feature . "\" onchange=\"toggleFunction(this.id)\">\n";
-    $features .= "  <span class=\"checkmark\">$feature</span>\n";
+    $features .= "  <span class=\"checkmark app1_class_" . $feature . "\">$feature</span>\n";
     $features .= "</label>\n";
   }
 
@@ -1541,6 +1544,58 @@ END_HEAD
   $features .= "</html>\n";
 
   return $features;
+}
+
+
+=item get_app1_rule_info_json
+
+
+=cut
+
+sub get_app1_rule_info_json {
+  # Vytvoření JSON objektu
+  my $json = JSON->new;
+
+  # Konverze Perlového hashe na JSON string
+  my $app1_rule_info_json = $json->encode($app1_rule_info_orig);
+
+
+=item
+
+  my %ha_app1_rule_info = %$app1_rule_info_orig;
+  my $app1_rule_info_json = '{';
+  my $first_rule = 1;
+  foreach my $rule (keys(%ha_app1_rule_info)) {
+    if ($first_rule) {
+      $first_rule = 0;
+    }
+    else {
+      $app1_rule_info_json .= ', ';
+    }
+    # get info from the hash of one rule
+    my $haref_one_rule = $ha_app1_rule_info{$rule};
+    my %ha_one_rule = %$haref_one_rule;
+    my $one_rule_info = '{';
+    my $first_info = 1;
+    foreach my $info (keys(%ha_one_rule)) {
+      if ($first_info) {
+        $first_info = 0;
+      }
+      else {
+        $one_rule_info .= ', ';
+      }
+      $one_rule_info .= '"' . $info . '": "' . $ha_one_rule{$info} . '"';
+    }
+
+    $one_rule_info .= '}';
+
+    $app1_rule_info_json .= '"' . $rule . '": "' . $one_rule_info . '"';
+  }
+  $app1_rule_info_json .= '}';
+
+=cut
+
+  return $app1_rule_info_json;
 }
 
 
@@ -1830,10 +1885,11 @@ sub call_nametag_part {
 =item call_ponk_app1
 
 Calling PONK-APP1 REST API; the text to be processed is passed in the argument in UD CONLL format
-Returns an array of two members:
+Returns an array of three members:
  - the text in UD CONLL format with additional info in misc
- - JSON of measured metrics
-If an error occurs, the function just returns the input conll text unchanged and a simple JSON with an error message.
+ - hashref of decoded JSON of measured metrics
+ - hashref of decoded JSON with info how to display APP1 rules
+If an error occurs, the function just returns the input conll text unchanged and twice a simple JSON with an error message.
 
 =cut
 
@@ -1870,13 +1926,14 @@ sub call_ponk_app1 {
         # Zpracování odpovědi
         my $modified_conllu = $json_response->{'modified_conllu'};
         my $metrics_json = $json_response->{'metrics'};
+        my $rules_info_json = $json_response->{'rule_info'};
         # mylog(0, "PONK-APP1 modified_conllu:\n$modified_conllu\nPONK-APP1 metrics JSON:\n" . Dumper($metrics_json) . "\n");
         mylog(2, "Call PONK-APP1: Success.\n");
-        return ($modified_conllu, $metrics_json);
+        return ($modified_conllu, $metrics_json, $rules_info_json);
     } else {
         mylog(2, "call_ponk_app1: URL: $url\n");
         mylog(2, "call_ponk_app1: Error: " . $res->status_line . "\n");
-        return ($conllu, [{"APP1 Error" => $res->status_line}]); 
+        return ($conllu, [{"APP1 Error" => $res->status_line}], [{"APP1 Error" => $res->status_line}]); 
     }
 
 }
