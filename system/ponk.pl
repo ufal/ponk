@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.18 20241016'; # version of the program
+my $VER = '0.19 20241018'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -1246,6 +1246,10 @@ END_OUTPUT_HEAD
         my @app1_miscs = get_app1_miscs(attr($node, 'misc')); # array of misc values from ponk-app1
         if (@app1_miscs) {
           my $span_class = 'highlighted-text-app1';
+          my @rule_names = unify_array_keep_order( map {get_app1_rule_name($_)} @app1_miscs);
+          foreach my $name (@rule_names) {
+            $span_class .= " app1_class_$name";
+          }
           my $tooltip = join(', ', @app1_miscs);
           $span_start = "<span class=\"$span_class\" title=\"$tooltip\">";
           $span_end = '</span>';
@@ -1385,6 +1389,36 @@ sub get_app1_miscs {
   my @app1_miscs = grep {/^PonkApp1/} @miscs;
   # mylog(0, "get_app1_miscs: found " . scalar(@app1_miscs) . " ponk-app1 misc values.\n");
   return @app1_miscs;
+}
+
+=item get_app1_rule_name
+
+Given one ponk-app1 value from misc, get the rule name.
+
+=cut
+
+sub get_app1_rule_name {
+  my ($one_app1_misc_value) = @_;
+  if ($one_app1_misc_value =~ /^PonkApp1:([^:])+:/) {
+    my $rule_name = $1;
+    return $1;
+  }
+  return undef;
+}
+
+
+sub unify_array_keep_order {
+    my %seen;
+    my @vysledek;
+    
+    for my $item (@_) {
+        unless ($seen{$item}) {
+            push @vysledek, $item;
+            $seen{$item} = 1;
+        }
+    }
+    
+    return @vysledek;
 }
 
 
