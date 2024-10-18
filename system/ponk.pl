@@ -1399,9 +1399,11 @@ Given one ponk-app1 value from misc, get the rule name.
 
 sub get_app1_rule_name {
   my ($one_app1_misc_value) = @_;
-  if ($one_app1_misc_value =~ /^PonkApp1:([^:])+:/) {
+  # mylog(0, "get_app1_rule_name: one app1 mist value: '$one_app1_misc_value'\n");
+  if ($one_app1_misc_value =~ /^PonkApp1:([^:]+):/) {
     my $rule_name = $1;
-    return $1;
+    # mylog(0, "get_app1_rule_name:   rule name: '$rule_name'\n");
+    return $rule_name;
   }
   return undef;
 }
