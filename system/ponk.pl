@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.19 20241018'; # version of the program
+my $VER = '0.20 20241101'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -1245,7 +1245,8 @@ END_OUTPUT_HEAD
         #mylog(0, "Going to get app1 miscs for word '$form'\n");
         my @app1_miscs = get_app1_miscs(attr($node, 'misc')); # array of misc values from ponk-app1
         if (@app1_miscs) {
-          my $span_class = 'highlighted-text-app1';
+          #my $span_class = 'highlighted-text-app1';
+          my $span_class = '';
           my @rule_names = unify_array_keep_order( map {get_app1_rule_name($_)} @app1_miscs);
           foreach my $name (@rule_names) {
             $span_class .= " app1_class_$name";
@@ -1426,7 +1427,7 @@ sub unify_array_keep_order {
 
 =item get_app1_list_of_features
 
-Given an array of trees, collect a list (an array of stings) of PonkApp1 features occurring there in attribute misc (i.e., a list of features from PonkApp1 that triggered in the given text).
+Given an array of trees, collect a list (an array of strings) of PonkApp1 features occurring there in attribute misc (i.e., a list of features from PonkApp1 that triggered in the given text).
 
 =cut
 
@@ -1571,7 +1572,7 @@ END_HEAD
   
   foreach my $feature (@app1_list_of_features) {
     $features .= "<label class=\"toggle-container\">\n";
-    $features .= "  <input checked type=\"checkbox\" id=\"check_app1_feature_" . $feature . "\" onchange=\"toggleFunction(this.id)\">\n";
+    $features .= "  <input checked type=\"checkbox\" id=\"check_app1_feature_" . $feature . "\" onchange=\"app1RuleCheckboxToggled(this.id)\">\n";
     $features .= "  <span class=\"checkmark app1_class_" . $feature . "\">$feature</span>\n";
     $features .= "</label>\n";
   }
