@@ -6,6 +6,7 @@
   var output_file_stats = null;
   var output_format = null;
   var app1_rule_info = null; // json converted to object with info about app1 rules
+  var app1_stylesheet = null; // inline stylesheet for app1
 
   document.addEventListener("DOMContentLoaded", function() {
       getInfo();
@@ -152,29 +153,23 @@
     if (checkbox.checked) {
       console.log("Checkbox je zaškrtnutý, class='" + rule_class + "'");
 
-        if (app1_rule_info.hasOwnProperty(rule_name)) {
-          console.log(`Key: ${rule_name}, Value:`, app1_rule_info[rule_name]);
-          let rule = app1_rule_info[rule_name];
-          if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
-            let {red, green, blue} = rule.foreground_color;
-            //console.log(`Key: ${rule_name}, RGB Color: rgb(${red}, ${green}, ${blue})`);
-            let class_name = `app1_class_${rule_name}`;
-            const colorStyle = 'rgb(' + Math.round(red) + ', ' + Math.round(green) + ', ' + Math.round(blue) + ') !important';
-            //console.log('Red:', red, 'Green:', green, 'Blue:', blue);
-            //console.log('Color Style:', colorStyle);
-            let class_style = { 'color': colorStyle };
-            createOrReplaceCSSClass(class_name, class_style);
-            console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
-          } else {
-            console.log(`Key: ${rule_name}, Foreground color not available or not an object.`);
-          }
+      if (app1_rule_info.hasOwnProperty(rule_name)) {
+        console.log(`Key: ${rule_name}, Value:`, app1_rule_info[rule_name]);
+        let rule = app1_rule_info[rule_name];
+        if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
+          let {red, green, blue} = rule.foreground_color;
+          //console.log(`Key: ${rule_name}, RGB Color: rgb(${red}, ${green}, ${blue})`);
+          let class_name = `app1_class_${rule_name}`;
+          const colorStyle = 'rgb(' + Math.round(red) + ', ' + Math.round(green) + ', ' + Math.round(blue) + ') !important';
+          //console.log('Red:', red, 'Green:', green, 'Blue:', blue);
+          //console.log('Color Style:', colorStyle);
+          let class_style = { 'color': colorStyle };
+          createOrReplaceCSSClass(class_name, class_style);
+          console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
+        } else {
+          console.log(`Key: ${rule_name}, Foreground color not available or not an object.`);
         }
-
-
-
-
-
-      createOrReplaceCSSClass(rule_class, {});
+      }
     } else {
       //console.log("Checkbox není zaškrtnutý, class='" + rule_class + "'");
       removeCSSClass(rule_class);
@@ -222,20 +217,13 @@
 
   function createOrReplaceCSSClass(className, properties) {
     console.log("createOrReplaceCSSClass: className='" + className + "'");
-    // Try to find the existing stylesheet
-    let styleSheet;
-    for (let sheet of document.styleSheets) {
-        if (!sheet.href) {  // Check for an inline stylesheet
-            styleSheet = sheet;
-            break;
-        }
-    }
 
-    // If no inline stylesheet exists, create one
-    if (!styleSheet) {
-        const style = document.createElement('style');
-        document.head.appendChild(style);
-        styleSheet = style.sheet;
+    // If no inline stylesheet for app1 exists, create one
+    if (!app1_stylesheet) {
+      const styleElement = document.createElement('style');
+      styleElement.type = 'text/css';
+      document.head.appendChild(styleElement);	    
+      app1_stylesheet = styleElement.sheet; // set the global variable
     }
 
     // Convert properties object to CSS string
@@ -243,43 +231,37 @@
         `${prop}:${value};`).join('');
 
     // Remove the rule if it already exists
-    if (styleSheet.cssRules) {
-        for (let i = 0; i < styleSheet.cssRules.length; i++) {
-            if (styleSheet.cssRules[i].selectorText === `.${className}`) {
-                styleSheet.deleteRule(i);
+    if (app1_stylesheet.cssRules) {
+        for (let i = 0; i < app1_stylesheet.cssRules.length; i++) {
+            if (app1_stylesheet.cssRules[i].selectorText === `.${className}`) {
+                app1_stylesheet.deleteRule(i);
                 break;
             }
         }
     }
 
     // Add the new or updated rule
-    styleSheet.insertRule(`.${className} { ${cssText} }`, styleSheet.cssRules.length);
+    app1_stylesheet.insertRule(`.${className} { ${cssText} }`, app1_stylesheet.cssRules.length);
   }
 
 
-function removeCSSClass(className) {
+  function removeCSSClass(className) {
     console.log("removeCSSClass: className='" + className + "'");
-    // Iterate over all stylesheets
-    for (let styleSheet of document.styleSheets) {
-        let rules;
-        try {
-            rules = styleSheet.cssRules || styleSheet.rules;
-        } catch (e) {
-            // Some stylesheets don't allow access to their rules due to CORS
-            continue;
-        }
-        // Iterate over all rules in the current stylesheet
-        for (let i = 0; i < rules.length; i++) {
-            if (rules[i].selectorText === `.${className}`) {
-                // Remove the rule if it matches the className
-                styleSheet.deleteRule(i);
-                console.log(`Removed CSS class: .${className}`);
-                return; // Exit the function once the class is removed
-            }
-        }
+    if (!app1_stylesheet) {
+      return;
+    }
+    let rules = app1_stylesheet.cssRules || app1_stylesheet.rules;
+    // Iterate over all rules in the current stylesheet
+    for (let i = 0; i < rules.length; i++) {
+      if (rules[i].selectorText === `.${className}`) {
+        // Remove the rule if it matches the className
+        app1_stylesheet.deleteRule(i);
+        console.log(`Removed CSS class: .${className}`);
+        return; // Exit the function once the class is removed
+      }
     }
     console.log(`CSS class .${className} not found or was already removed.`);
-}
+  }
 
 
 
