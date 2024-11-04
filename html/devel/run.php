@@ -263,7 +263,30 @@
     console.log(`CSS class .${className} not found or was already removed.`);
   }
 
+  // given a rule name (e.g., RuleLiteraryStyle), it adds bold font to its class in the inline stylesheet
+  function app1RuleHoverStart(app1_rule) {
+    //console.log("app1RuleHoveStart with rule name", app1_rule);
+    let ruleIndex = Array.from(app1_stylesheet.cssRules).findIndex(rule => rule.selectorText === '.app1_class_' + app1_rule);
+    if (ruleIndex !== -1) {
+        let rule = app1_stylesheet.cssRules[ruleIndex];
+        rule.style.fontWeight = 'bold';
+    } else {
+      console.log("No class definition for", app1_rule);
+    }
+  }
 
+
+  // given a rule name (e.g., RuleLiteraryStyle), it sets normal font to its class in the inline stylesheet
+  function app1RuleHoverEnd(app1_rule) {
+    //console.log("app1RuleHoveEnd with rule name", app1_rule);
+    let ruleIndex = Array.from(app1_stylesheet.cssRules).findIndex(rule => rule.selectorText === '.app1_class_' + app1_rule);
+    if (ruleIndex !== -1) {
+        let rule = app1_stylesheet.cssRules[ruleIndex];
+        rule.style.fontWeight = 'normal';
+    } else {
+      console.log("No class definition for", app1_rule);
+    }
+  }
 
   // funkce pro získání id aktivního panelu v dané sadě panelů
   // volat např. takto:
