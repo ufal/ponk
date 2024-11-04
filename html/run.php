@@ -5,6 +5,8 @@
   var output_file_content = null;
   var output_file_stats = null;
   var output_format = null;
+  var app1_rule_info = null; // json converted to object with info about app1 rules
+  var app1_stylesheet = null; // inline stylesheet for app1
 
   document.addEventListener("DOMContentLoaded", function() {
       getInfo();
@@ -26,6 +28,18 @@
       textarea.style.color = '#bbbbbb';
   });
 
+  function toggleApp1Features() {
+    //console.log("toggleApp1Features: Entering the function.");
+    const featuresPanel = document.getElementById('features_app1');
+    //const verticalTab = document.querySelector('.vertical-tab'); // Přidáno pro výběr vertikálního tabu
+    const verticalTab = document.getElementById('features_app1_tab'); // Přidáno pro výběr vertikálního tabu
+  
+    if (featuresPanel.classList.toggle('show')) {
+      verticalTab.classList.add('active');
+    } else {
+      verticalTab.classList.remove('active');
+    }
+  }
 
   function doSubmit() {
     //console.log("doSubmit: Entering the function.");
@@ -71,18 +85,43 @@
     output_file_content = null;
     jQuery('#output_formatted').empty();
     jQuery('#output_stats').empty();
+    jQuery('#features_app1').empty();
     jQuery('#submit').html('<span class="fa fa-cog"></span> Waiting for Results <span class="fa fa-cog"></span>');
     jQuery('#submit').prop('disabled', true);
-    jQuery.ajax('//quest.ms.mff.cuni.cz/ponk/api/process',
-           {data: form_data ? form_data : options, processData: form_data ? false : true,
-            contentType: form_data ? false : 'application/x-www-form-urlencoded; charset=UTF-8',
-            dataType: "json", type: "POST", success: function(json) {
-      try {
+
+    jQuery.ajax('//quest.ms.mff.cuni.cz/ponk/api/process', {
+      data: form_data ? form_data : options,
+      processData: form_data ? false : true,
+      contentType: form_data ? false : 'application/x-www-form-urlencoded; charset=UTF-8',
+      dataType: "json",
+      type: "POST",
+      success: function(json) {
+        try {
 	  if ("result" in json) {
               output_file_content = json.result;
               //console.log("Found 'result' in return message:", output_file_content);
               displayFormattedOutput();
 	  }
+	  if ("app1_features" in json) {
+              let output_app1_features = json.app1_features;
+              //console.log("Found 'app1_features' in return message:", output_app1_features);
+              jQuery('#features_app1').html(output_app1_features);
+	  }
+	  if ("app1_rule_info" in json) {
+            // console.log("app1_rule_info found in JSON: ", json.app1_rule_info);
+            let ruleInfo = json.app1_rule_info;
+            // Kontrola, zda ruleInfo není string, pokud ano, pokus o parsování; bez toho to prostě nefungovalo.
+            if (typeof ruleInfo === 'string') {
+              try {
+                ruleInfo = JSON.parse(ruleInfo);
+              } catch (e) {
+                console.error("Failed to parse app1_rule_info as JSON:", e);
+              }
+	    }
+	    app1_rule_info = ruleInfo; // store the info to the global variable
+	    applyApp1RuleInfoStyles(ruleInfo); // apply the styles to the web page
+	  }
+
 	  if ("stats" in json) {
               output_file_stats = json.stats;
               //console.log("Found 'stats' in return message:", output_file_stats);
@@ -102,7 +141,152 @@
       //console.log("All completed");
     }});
   }
-  
+
+
+  function app1RuleCheckboxToggled(checkbox_id) {
+    //console.log("app1RuleCheckboxToggled:", checkbox_id);
+    let rule_name = checkbox_id.replace(/^check_app1_feature_/, '');
+    //console.log("rule name: " + rule_name);
+    let rule_class = 'app1_class_' + rule_name;
+    let checkbox = document.getElementById(checkbox_id);
+    // Kontrola, zda je checkbox zaškrtnutý
+    if (checkbox.checked) {
+      console.log("Checkbox je zaškrtnutý, class='" + rule_class + "'");
+
+      if (app1_rule_info.hasOwnProperty(rule_name)) {
+        console.log(`Key: ${rule_name}, Value:`, app1_rule_info[rule_name]);
+        let rule = app1_rule_info[rule_name];
+        if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
+          let {red, green, blue} = rule.foreground_color;
+          //console.log(`Key: ${rule_name}, RGB Color: rgb(${red}, ${green}, ${blue})`);
+          let class_name = `app1_class_${rule_name}`;
+          const colorStyle = 'rgb(' + Math.round(red) + ', ' + Math.round(green) + ', ' + Math.round(blue) + ') !important';
+          //console.log('Red:', red, 'Green:', green, 'Blue:', blue);
+          //console.log('Color Style:', colorStyle);
+          let class_style = { 'color': colorStyle };
+          createOrReplaceCSSClass(class_name, class_style);
+          console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
+        } else {
+          console.log(`Key: ${rule_name}, Foreground color not available or not an object.`);
+        }
+      }
+    } else {
+      //console.log("Checkbox není zaškrtnutý, class='" + rule_class + "'");
+      removeCSSClass(rule_class);
+    }
+  }
+
+  // given the object with app1_rule_info, it applies the styles to the web page
+  function applyApp1RuleInfoStyles(ruleInfo) {
+    // console.log("app1_rule_info:", ruleInfo);
+    // Iterace přes klíče
+    if (typeof ruleInfo === 'object' && ruleInfo !== null) {
+      for (let key in ruleInfo) {
+        if (ruleInfo.hasOwnProperty(key)) {
+          console.log(`Key: ${key}, Value:`, ruleInfo[key]);
+          let rule = ruleInfo[key];
+          if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
+            let {red, green, blue} = rule.foreground_color;
+            //console.log(`Key: ${key}, RGB Color: rgb(${red}, ${green}, ${blue})`);
+            let class_name = `app1_class_${key}`;
+            const colorStyle = 'rgb(' + Math.round(red) + ', ' + Math.round(green) + ', ' + Math.round(blue) + ') !important';
+            //console.log('Red:', red, 'Green:', green, 'Blue:', blue);
+            //console.log('Color Style:', colorStyle);
+            let class_style = { 'color': colorStyle };
+            createOrReplaceCSSClass(class_name, class_style);
+            console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
+          } else {
+            console.log(`Key: ${key}, Foreground color not available or not an object.`);
+          }
+        }
+      }
+    } else {
+      console.log("app1_rule_info is not an object or is null");
+    }
+  }
+
+
+  // Dynamicky vloží definici css třídy do inline stylesheetu (pokud inline stylesheet neexistuje, je vytvořen).
+  // Pokud daná css třída již je definována, její definice je nahrazena novou.
+  // Example usage:
+  /*createOrReplaceCSSClass('RuleLiteraryStyle', {
+    'color': 'rgb(40, 200, 200)',
+    'background-color': '#f0f0f0',
+    'font-size': '16px'
+  });*/
+
+  function createOrReplaceCSSClass(className, properties) {
+    console.log("createOrReplaceCSSClass: className='" + className + "'");
+
+    // If no inline stylesheet for app1 exists, create one
+    if (!app1_stylesheet) {
+      const styleElement = document.createElement('style');
+      styleElement.type = 'text/css';
+      document.head.appendChild(styleElement);	    
+      app1_stylesheet = styleElement.sheet; // set the global variable
+    }
+
+    // Convert properties object to CSS string
+    const cssText = Object.entries(properties).map(([prop, value]) => 
+        `${prop}:${value};`).join('');
+
+    // Remove the rule if it already exists
+    if (app1_stylesheet.cssRules) {
+        for (let i = 0; i < app1_stylesheet.cssRules.length; i++) {
+            if (app1_stylesheet.cssRules[i].selectorText === `.${className}`) {
+                app1_stylesheet.deleteRule(i);
+                break;
+            }
+        }
+    }
+
+    // Add the new or updated rule
+    app1_stylesheet.insertRule(`.${className} { ${cssText} }`, app1_stylesheet.cssRules.length);
+  }
+
+
+  function removeCSSClass(className) {
+    console.log("removeCSSClass: className='" + className + "'");
+    if (!app1_stylesheet) {
+      return;
+    }
+    let rules = app1_stylesheet.cssRules || app1_stylesheet.rules;
+    // Iterate over all rules in the current stylesheet
+    for (let i = 0; i < rules.length; i++) {
+      if (rules[i].selectorText === `.${className}`) {
+        // Remove the rule if it matches the className
+        app1_stylesheet.deleteRule(i);
+        console.log(`Removed CSS class: .${className}`);
+        return; // Exit the function once the class is removed
+      }
+    }
+    console.log(`CSS class .${className} not found or was already removed.`);
+  }
+
+  // given a rule name (e.g., RuleLiteraryStyle), it adds bold font to its class in the inline stylesheet
+  function app1RuleHoverStart(app1_rule) {
+    //console.log("app1RuleHoveStart with rule name", app1_rule);
+    let ruleIndex = Array.from(app1_stylesheet.cssRules).findIndex(rule => rule.selectorText === '.app1_class_' + app1_rule);
+    if (ruleIndex !== -1) {
+        let rule = app1_stylesheet.cssRules[ruleIndex];
+        rule.style.fontWeight = 'bold';
+    } else {
+      console.log("No class definition for", app1_rule);
+    }
+  }
+
+
+  // given a rule name (e.g., RuleLiteraryStyle), it sets normal font to its class in the inline stylesheet
+  function app1RuleHoverEnd(app1_rule) {
+    //console.log("app1RuleHoveEnd with rule name", app1_rule);
+    let ruleIndex = Array.from(app1_stylesheet.cssRules).findIndex(rule => rule.selectorText === '.app1_class_' + app1_rule);
+    if (ruleIndex !== -1) {
+        let rule = app1_stylesheet.cssRules[ruleIndex];
+        rule.style.fontWeight = 'normal';
+    } else {
+      console.log("No class definition for", app1_rule);
+    }
+  }
 
   // funkce pro získání id aktivního panelu v dané sadě panelů
   // volat např. takto:
@@ -509,7 +693,7 @@
 <ul class="nav nav-tabs nav-fill nav-tabs-green">
 
   <li class="nav-item position-relative">
-    <a class="nav-link active" href="#output_formatted" data-bs-toggle="tab">
+    <a class="nav-link active" href="#output_panel" data-bs-toggle="tab">
       <span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_output_text']; ?>
     </a>
     <button class="btn btn-primary btn-sm btn-ponk-colors btn-ponk-small position-absolute" style="top: 10px; right: 10px; z-index: 1;" onclick="saveOutput();">
@@ -530,10 +714,27 @@
 
 <!-- ================ output panely =============== -->
 <div class="tab-content" id="output_tabs" style="border: 1px solid #ddd; border-radius: 0 0 .25rem .25rem; padding: 15px;">
-  <div class="tab-pane fade show active" id="output_formatted"></div>
-  <div class="tab-pane fade" id="output_stats"></div>
-</div>
 
+  <!-- ============ output panel se statistikami =========== -->
+  <div class="tab-pane fade" id="output_stats"></div>
+
+  <!-- ============ output panel s formátovaným textem, volbami po pravé straně a záložkou pro zobrazení těchto voleb =========== -->
+  <div class="tab-pane fade show active" id="output_panel" style="overflow: visible;">
+    <div class="d-flex align-items-stretch" style="height: 100%;">
+      <div id="output_all" class="position-relative output-wrapper border border-muted rounded-start p-3 pe-0" style="flex: 1">
+        <!-- ============ output panel s formátovaným textem =========== -->
+        <div id="output_formatted" class="full-height"></div>
+        <!-- ============ volby APP1 =========== -->
+        <div id="features_app1" class="side-panel full-height border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; height: 100%; background-color: white; z-index: 10; overflow-y: auto;"></div>
+      </div>
+      <!-- ============ záložka na pravé straně pro zobrazení/skrytí features_app1 =========== -->
+      <div id="features_app1_tab" class="vertical-tab vertical-tab-green vertical-tab-right" onClick="toggleApp1Features();" style="width: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <span class="rotate-text">APP1 Features</span>
+      </div>
+    </div>
+  </div>
+ <!--div class="btn" onClick="createOrReplaceCSSClass('highlighted-text-app1', { 'color': 'red !important', 'font-size': '20px' });">POKUS</div-->
+</div>
 
 <!-- ================= ACKNOWLEDGEMENTS ================ -->
 
