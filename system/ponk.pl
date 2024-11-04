@@ -1571,7 +1571,7 @@ END_HEAD
   $features .= "<body>\n";
   
   foreach my $feature (@app1_list_of_features) {
-    $features .= "<label class=\"toggle-container\" onmouseover=\"app1RuleHoverStart($feature)\" onmouseout=\"app1RuleHoverEnd($feature)\">\n";
+    $features .= "<label class=\"toggle-container\" onmouseover=\"app1RuleHoverStart(\'$feature\')\" onmouseout=\"app1RuleHoverEnd(\'$feature\')\">\n";
     $features .= "  <input checked type=\"checkbox\" id=\"check_app1_feature_" . $feature . "\" onchange=\"app1RuleCheckboxToggled(this.id)\">\n";
     $features .= "  <span class=\"checkmark app1_class_" . $feature . "\">$feature</span>\n";
     $features .= "</label>\n";
