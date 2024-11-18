@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.21 20241104'; # version of the program
+my $VER = '0.22 20241118'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -1246,7 +1246,7 @@ END_OUTPUT_HEAD
         my @app1_miscs = get_app1_miscs(attr($node, 'misc')); # array of misc values from ponk-app1
         if (@app1_miscs) {
           #my $span_class = 'highlighted-text-app1';
-          my $span_class = '';
+	  my $span_class = '';
           my @rule_names = unify_array_keep_order( map {get_app1_rule_name($_)} @app1_miscs);
           foreach my $name (@rule_names) {
             $span_class .= " app1_class_$name";
