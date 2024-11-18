@@ -682,11 +682,13 @@ $processing_time = tv_interval($start_time, $end_time);
 
 # calculate and format statistics and list of app1 features if needed
 my $stats;
-my $app1_features;
+my $app1_features_cz;
+my $app1_features_en;
 my $app1_rule_info;
 if ($store_statistics or $output_statistics) { # we need to calculate statistics
   $stats = get_stats_html();
-  $app1_features = get_app1_features_html();
+  $app1_features_cz = get_app1_features_html('cz');
+  $app1_features_en = get_app1_features_html('en');
   $app1_rule_info = get_app1_rule_info_json();
 }
 
@@ -704,7 +706,8 @@ else { # statistics should be a part of output, i.e. output will be JSON with se
   my $json_data = {
        data  => $output,
        stats => $stats,
-       app1_features => $app1_features,
+       app1_features_cz => $app1_features_cz,
+       app1_features_en => $app1_features_en,
        app1_rule_info => $app1_rule_info,
      };
   # Encode the Perl data structure into a JSON string
@@ -1534,14 +1537,22 @@ END_HEAD
 
 =item get_app1_features_html
 
-Produces an html document with a list of features from PonkApp1 used in the document.
-It searches for the features in the global list @trees.
+In a given language ('cz' or 'en'), it produces an html document with a list of features from PonkApp1 used in the document.
+It searches for the features that are actually found in the text in the global list @trees.
+Information about the features is taken from global variable $app1_rule_info_orig, which contains a decoded JSON.
 
 =cut
 
 sub get_app1_features_html {
+  my $lang = shift;
+  if (!$lang or $lang !~ /^(cz|en)$/) {
+    $lang = 'cz';
+  }
+
+  # get only rules actually found in the given text:
   my @app1_list_of_features = get_app1_list_of_features(@trees);
 
+  # compile the html response
   my $features = "<html>\n";
   $features .= <<END_HEAD;
 <head>
@@ -1571,10 +1582,12 @@ END_HEAD
   $features .= "<body>\n";
   
   foreach my $feature (@app1_list_of_features) {
-    $features .= "<label class=\"toggle-container\" onmouseover=\"app1RuleHoverStart(\'$feature\')\" onmouseout=\"app1RuleHoverEnd(\'$feature\')\">\n";
+    my $name = $app1_rule_info_orig->{$feature}->{$lang . '_name'} // $feature;
+    my $doc = $app1_rule_info_orig->{$feature}->{$lang . '_doc'} // '';
+    $features .= "<div><label class=\"toggle-container\" title=\"$doc\" onmouseover=\"app1RuleHoverStart(\'$feature\')\" onmouseout=\"app1RuleHoverEnd(\'$feature\')\">\n";
     $features .= "  <input checked type=\"checkbox\" id=\"check_app1_feature_" . $feature . "\" onchange=\"app1RuleCheckboxToggled(this.id)\">\n";
-    $features .= "  <span class=\"checkmark app1_class_" . $feature . "\">$feature</span>\n";
-    $features .= "</label>\n";
+    $features .= "  <span class=\"checkmark app1_class_" . $feature . "\">$name</span>\n";
+    $features .= "</label></div>\n";
   }
 
   $features .= "</body>\n";
