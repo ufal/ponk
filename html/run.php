@@ -163,7 +163,7 @@
           const colorStyle = 'rgb(' + Math.round(red) + ', ' + Math.round(green) + ', ' + Math.round(blue) + ') !important';
           //console.log('Red:', red, 'Green:', green, 'Blue:', blue);
           //console.log('Color Style:', colorStyle);
-          let class_style = { 'color': colorStyle };
+          let class_style = { 'color': colorStyle, 'font-weight': 'bold' };
           createOrReplaceCSSClass(class_name, class_style);
           console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
         } else {
@@ -192,7 +192,7 @@
             const colorStyle = 'rgb(' + Math.round(red) + ', ' + Math.round(green) + ', ' + Math.round(blue) + ') !important';
             //console.log('Red:', red, 'Green:', green, 'Blue:', blue);
             //console.log('Color Style:', colorStyle);
-            let class_style = { 'color': colorStyle };
+            let class_style = { 'color': colorStyle, 'font-weight': 'bold' };
             createOrReplaceCSSClass(class_name, class_style);
             console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
           } else {
@@ -269,7 +269,18 @@
     let ruleIndex = Array.from(app1_stylesheet.cssRules).findIndex(rule => rule.selectorText === '.app1_class_' + app1_rule);
     if (ruleIndex !== -1) {
         let rule = app1_stylesheet.cssRules[ruleIndex];
-        rule.style.fontWeight = 'bold';
+	//rule.style.fontWeight = 'bold';
+	//rule.style.fontSize = '1.2em';
+	//rule.style.textDecoration = 'underline';
+	//rule.style.textDecorationStyle = 'wavy';
+	//rule.style.border = '1px solid black';
+	rule.style.borderTop = '2px solid black'; // Tlustší horní čára
+        rule.style.borderRight = '1px solid black'; // Tenčí boční čára
+        rule.style.borderBottom = '2px solid black'; // Tlustší dolní čára
+        rule.style.borderLeft = '1px solid black'; // Tenčí boční čára
+	rule.style.borderRadius = '2px'; // Hodnotu můžeš upravit podle toho, jak kulaté rohy chceš
+        rule.style.padding = '0'; // Padding můžeš upravit podle potřeby
+
     } else {
       console.log("No class definition for", app1_rule);
     }
@@ -282,7 +293,13 @@
     let ruleIndex = Array.from(app1_stylesheet.cssRules).findIndex(rule => rule.selectorText === '.app1_class_' + app1_rule);
     if (ruleIndex !== -1) {
         let rule = app1_stylesheet.cssRules[ruleIndex];
-        rule.style.fontWeight = 'normal';
+	//rule.style.fontWeight = 'normal';
+	//rule.style.fontSize = '1.0em';
+	//rule.style.textDecoration = 'none';
+	//rule.style.textDecorationStyle = 'solid';
+	rule.style.border = 'none';
+	rule.style.borderRadius = '0';
+        rule.style.padding = '0';
     } else {
       console.log("No class definition for", app1_rule);
     }
