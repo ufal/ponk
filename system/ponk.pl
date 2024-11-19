@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.22 20241118'; # version of the program
+my $VER = '0.23 20241119'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -1255,7 +1255,7 @@ END_OUTPUT_HEAD
             $span_class .= " app1_class_$name";
           }
           my $tooltip = join(', ', @app1_miscs);
-          $span_start = "<span class=\"$span_class\" title=\"$tooltip\">";
+          $span_start = "<span class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" title=\"$tooltip\">";
           $span_end = '</span>';
         }
       }
@@ -1397,17 +1397,18 @@ sub get_app1_miscs {
 
 =item get_app1_rule_name
 
-Given one ponk-app1 value from misc, get the rule name.
+Given one ponk-app1 value from misc, get the rule name and also the rule name toghether with a unique id of the occurrence (i.e., it returns two values).
 
 =cut
 
 sub get_app1_rule_name {
   my ($one_app1_misc_value) = @_;
   # mylog(0, "get_app1_rule_name: one app1 mist value: '$one_app1_misc_value'\n");
-  if ($one_app1_misc_value =~ /^PonkApp1:([^:]+):/) {
+  if ($one_app1_misc_value =~ /^PonkApp1:([^:]+):([^:]+)=/) { # rule name and unique id of the occurrence
     my $rule_name = $1;
+    my $id = $2;
     # mylog(0, "get_app1_rule_name:   rule name: '$rule_name'\n");
-    return $rule_name;
+    return ($rule_name, $rule_name . "_" . $id);
   }
   return undef;
 }
