@@ -8,6 +8,9 @@
   var app1_rule_info = null; // json converted to object with info about app1 rules
   var app1_stylesheet = null; // inline stylesheet for app1
 
+  var app1_rule_active = {}; // an object ("hash") to keep info if individual rules are active
+  var app1_ruleid_highlighted = []; // an array of actually highlighted classes rule_id (when hovering over a span in the results)
+
   document.addEventListener("DOMContentLoaded", function() {
       getInfo();
       //console.log("DOM byl kompletně načten!");
@@ -43,6 +46,7 @@
 
   function doSubmit() {
     //console.log("doSubmit: Entering the function.");
+    app1_rule_active = {}; // forget previous app1 rules activity statuses
     var input_text;
     let activePanelId = getActivePanelID('#input_tabs');
     if (activePanelId) {
@@ -173,7 +177,8 @@
 
       if (app1_rule_info.hasOwnProperty(rule_name)) {
         console.log(`Key: ${rule_name}, Value:`, app1_rule_info[rule_name]);
-        let rule = app1_rule_info[rule_name];
+	let rule = app1_rule_info[rule_name];
+	app1_rule_active[rule_name] = 1; // store the info on activity status of this rule
         if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
           let {red, green, blue} = rule.foreground_color;
           //console.log(`Key: ${rule_name}, RGB Color: rgb(${red}, ${green}, ${blue})`);
@@ -191,6 +196,7 @@
     } else {
       //console.log("Checkbox není zaškrtnutý, class='" + rule_class + "'");
       removeCSSClass(rule_class);
+      app1_rule_active[rule_name] = 0; // store the info on activity status of this rule
     }
   }
 
@@ -202,7 +208,9 @@
       for (let key in ruleInfo) {
         if (ruleInfo.hasOwnProperty(key)) {
           console.log(`Key: ${key}, Value:`, ruleInfo[key]);
-          let rule = ruleInfo[key];
+	  let rule = ruleInfo[key];
+	  app1_rule_active[key] = 1;
+	  console.log(`Setting key ${key} activity status to 1`);
           if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
             let {red, green, blue} = rule.foreground_color;
             //console.log(`Key: ${key}, RGB Color: rgb(${red}, ${green}, ${blue})`);
@@ -297,8 +305,9 @@
         rule.style.borderBottom = '2px solid black'; // Tlustší dolní čára
         rule.style.borderLeft = '1px solid black'; // Tenčí boční čára
 	rule.style.borderRadius = '2px'; // Hodnotu můžeš upravit podle toho, jak kulaté rohy chceš
-        rule.style.padding = '0'; // Padding můžeš upravit podle potřeby
-
+	rule.style.padding = '0'; // Padding můžeš upravit podle potřeby
+	rule.style.display = 'inline';
+        rule.style.marginLeft = '-1px';
     } else {
       console.log("No class definition for", app1_rule);
     }
@@ -321,6 +330,56 @@
     } else {
       console.log("No class definition for", app1_rule);
     }
+  }
+
+
+  // given a text piece in the result (a span element), it highlights the element and all other elements with the same active rule+id class
+  function app1SpanHoverStart(element) {
+    console.log("app1SpanHoveStart; classes: ");
+    app1_ruleid_highlighted = [];
+    var classes = element.classList;
+    for(var i = 0; i < classes.length; i++) {
+      var class_name = classes[i];
+      console.log(class_name);
+      let withoutPrefix = class_name.replace("app1_class_", "");
+      let parts = withoutPrefix.split('_');
+      if (parts.length > 1) {
+        let rule = parts[0]; // "RuleVerbalNouns"
+        let id = parts[1];   // "1e938644"
+
+        console.log(rule);  // Výstup: RuleVerbalNouns
+	console.log(id);    // Výstup: 1e938644
+	if (app1_rule_active[rule]) {
+          console.log(" - rule active!");
+	  createOrReplaceCSSClass(class_name, {
+	    //'box-shadow': '1px 2px 1px 2px black',
+            //'outline': '2px solid black',
+            //'outline-offset': '-1px',
+            //'padding': '0',
+            'display': 'inline',
+
+            'border-top': '2px solid black',
+            'border-bottom': '2px solid black',
+            'border-left': '1px solid black',
+            'border-right': '1px solid black',
+            'border-radius': '2px',
+	    'padding': '0',
+	    'margin-left': '-1px'
+	  })
+          app1_ruleid_highlighted.push(class_name);
+	}
+      }
+    }
+  }
+
+  function app1SpanHoverEnd(element) {
+    console.log("app1SpanHoverEnd; removing classes: ");
+    for(var i = 0; i < app1_ruleid_highlighted.length; i++) {
+      var ruleid = app1_ruleid_highlighted[i];
+      console.log(ruleid);
+      removeCSSClass(ruleid);
+    }
+    app1_ruleid_highlighted = [];
   }
 
   // funkce pro získání id aktivního panelu v dané sadě panelů
