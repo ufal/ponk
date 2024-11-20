@@ -289,6 +289,7 @@
     console.log(`CSS class .${className} not found or was already removed.`);
   }
 
+
   // given a rule name (e.g., RuleLiteraryStyle), it adds bold font to its class in the inline stylesheet
   function app1RuleHoverStart(app1_rule) {
     //console.log("app1RuleHoveStart with rule name", app1_rule);
@@ -301,18 +302,19 @@
 	//rule.style.textDecorationStyle = 'wavy';
 	//rule.style.border = '1px solid black';
 	rule.style.borderTop = '2px solid black'; // Tlustší horní čára
-        rule.style.borderRight = '1px solid black'; // Tenčí boční čára
+        //rule.style.borderRight = '1px solid black'; // Tenčí boční čára
         rule.style.borderBottom = '2px solid black'; // Tlustší dolní čára
-        rule.style.borderLeft = '1px solid black'; // Tenčí boční čára
+        //rule.style.borderLeft = '1px solid black'; // Tenčí boční čára
 	rule.style.borderRadius = '2px'; // Hodnotu můžeš upravit podle toho, jak kulaté rohy chceš
-	rule.style.padding = '0'; // Padding můžeš upravit podle potřeby
+	rule.style.padding = '0px'; // Padding můžeš upravit podle potřeby
+        //rule.style.marginLeft = '-1px';
 	rule.style.display = 'inline';
-        rule.style.marginLeft = '-1px';
+	rule.style.outline = '1px solid black';
+	rule.style.outlineOffset = '-1px';
     } else {
       console.log("No class definition for", app1_rule);
     }
   }
-
 
   // given a rule name (e.g., RuleLiteraryStyle), it sets normal font to its class in the inline stylesheet
   function app1RuleHoverEnd(app1_rule) {
@@ -327,6 +329,8 @@
 	rule.style.border = 'none';
 	rule.style.borderRadius = '0';
         rule.style.padding = '0';
+	//rule.style.marginLeft = '0';
+	rule.style.outline = 'none';
     } else {
       console.log("No class definition for", app1_rule);
     }
@@ -353,18 +357,15 @@
           console.log(" - rule active!");
 	  createOrReplaceCSSClass(class_name, {
 	    //'box-shadow': '1px 2px 1px 2px black',
-            //'outline': '2px solid black',
-            //'outline-offset': '-1px',
-            //'padding': '0',
+            'outline': '1px solid black',
+            'outline-offset': '-1px',
+            'padding': '0',
             'display': 'inline',
-
             'border-top': '2px solid black',
             'border-bottom': '2px solid black',
-            'border-left': '1px solid black',
-            'border-right': '1px solid black',
-            'border-radius': '2px',
-	    'padding': '0',
-	    'margin-left': '-1px'
+            //'border-left': '1px solid black',
+            //'border-right': '1px solid black',
+            'border-radius': '2px'
 	  })
           app1_ruleid_highlighted.push(class_name);
 	}
