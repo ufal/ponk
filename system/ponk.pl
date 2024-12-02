@@ -76,6 +76,8 @@ my $color_highlight_app1 = 'darkgreen'; # highlighting colour for ponk-app1
 my $OUTPUT_FORMAT_DEFAULT = 'txt';
 # default input format
 my $INPUT_FORMAT_DEFAULT = 'txt';
+# default UI language
+my $UI_LANGUAGE_DEFAULT = 'en';
 
 # variables for arguments
 my $input_file;
@@ -83,6 +85,7 @@ my $stdin;
 my $input_format;
 my $output_format;
 my $output_statistics;
+my $ui_language;
 my $store_format;
 my $store_statistics;
 my $logging_level_override;
@@ -97,6 +100,7 @@ GetOptions(
     'if|input-format=s'      => \$input_format, # input format, possible values: txt, md, docx (and for internal purposes of the API server, also docxBase64)
     'of|output-format=s'     => \$output_format, # output format, possible values: html, txt, md, conllu
     'os|output-statistics'   => \$output_statistics, # adds statistics to the output; if present, output is JSON with two items: data (in output-format) and stats (in HTML)
+    'uil|ui-language=s'      => \$ui_language, # localize the response whenever possible to the given language (en, cs)
     'sf|store-format=s'      => \$store_format, # log the result in the given format: txt, html, conllu
     'ss|store-statistics'    => \$store_statistics, # should statistics be logged as an HTML file?
     'll|logging-level=s'     => \$logging_level_override, # override the default (anonymous) logging level (0=full, 1=limited, 2=anonymous)
@@ -139,7 +143,8 @@ options:  -i|--input-file [input text file name]
          -if|--input-format [input format: txt (default), md, docx]
          -of|--output-format [output format: html (default), txt, md, conllu]
          -os|--output-statistics (add PONK statistics to output; if present, output is JSON with two items: data (in output-format) and stats (in HTML))
-         -sf|--store-format [format: log the output in the given format: txt, html, conllu]
+        -uil|--ui-language [language: localize the response whenever possible to the given language: en, cs]
+	 -sf|--store-format [format: log the output in the given format: txt, html, conllu]
          -ss|--store-statistics (log statistics to an HTML file)
          -ll|--logging-level (override the default (anonymous) logging level (0=full, 1=limited, 2=anonymous))
           -v|--version (prints the version of the program and ends)
@@ -195,6 +200,19 @@ else {
 
 if ($output_statistics) {
   mylog(0, " - add PONK statistics to the output; output will be JSON with two items: data (in $output_format) and stats (in HTML)\n");
+}
+
+$ui_language = lc($ui_language) if $ui_language;
+if (!defined $ui_language) {
+  mylog(0, " - UI language: not specified, set to default '$UI_LANGUAGE_DEFAULT'\n");
+  $ui_language = $UI_LANGUAGE_DEFAULT;
+}
+elsif ($ui_language !~ /^(en|cs)$/) {
+  mylog(0, " - UI langauge: unknown ($ui_language), set to default '$UI_LANGUAGE_DEFAULT'\n");
+  $ui_language = $UI_LANGUAGE_DEFAULT;
+}
+else {
+  mylog(0, " - UI language: $ui_language\n");
 }
 
 $store_format = lc($store_format) if $store_format;

@@ -78,6 +78,7 @@ any '/api/process' => sub {
     my $input_format_orig = $input_format;
     $input_format = 'docxBase64' if $input_format eq 'docx'; # the input is actually encoded in Base64, so we need to use this internal input format parameter
     my $output_format = $c->param('output'); # output format
+    my $uilang = $c->param('uilang') // ''; # UI language
     # my $randomize = defined $c->param('randomize') ? 1 : 0; # randomization
 
     # Spuštění skriptu ponk.pl s předáním parametrů a standardního vstupu
@@ -85,6 +86,7 @@ any '/api/process' => sub {
                '--stdin',
                '--input-format', $input_format, 
                '--output-format', $output_format,
+	       '--ui-language', $uilang,
                '--output-statistics');
     #if ($randomize) {
     #    push(@cmd, '--randomize');
