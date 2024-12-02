@@ -71,7 +71,20 @@
     // Zjistíme stav checkboxu s id "option-randomize"
     //var jeZaskrtnuto = $('#option_randomize').prop('checked');
     //console.log("doSubmit: Randomize: ", jeZaskrtnuto);
-    var options = {text: input_text, input: input_format, output: output_format};
+
+          <?php
+            if ($currentLang == 'cs') {
+          ?>
+            var ui_lang = 'cs'; 
+          <?php
+            } else {
+          ?>
+            var ui_lang = 'en'; 
+          <?php
+            }
+          ?>
+
+    var options = {text: input_text, input: input_format, output: output_format, uilang: ui_lang};
     //console.log("doSubmit: options: ", options);
     // Přidáme parametr "randomize", pokud je checkbox zaškrtnutý
     //if (jeZaskrtnuto) {
