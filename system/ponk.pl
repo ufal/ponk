@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.23 20241119'; # version of the program
+my $VER = '0.24 20241202'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -693,7 +693,7 @@ if ($store_statistics or $output_statistics) { # we need to calculate statistics
 }
 
 # print the input text with marked sources in the selected output format to STDOUT
-my $output = get_output($output_format);
+my $output = get_output($output_format, 'cz');
 
 if (!$output_statistics) { # statistics should not be a part of output
   print $output;
@@ -1106,6 +1106,11 @@ Returns the processed input text in the given format (one of: txt, html, conllu)
 
 sub get_output {
   my $format = shift;
+  my $lang = shift;
+  if (!$lang or $lang !~ /^(cz|en)$/) {
+    $lang = 'cz';
+  }
+
   my $output = '';
 
   # FILE HEADER
@@ -1254,7 +1259,18 @@ END_OUTPUT_HEAD
           foreach my $name (@rule_names) {
             $span_class .= " app1_class_$name";
           }
-          my $tooltip = join(', ', @app1_miscs);
+	  # get tooltip:
+          my $tooltip = "";
+	  foreach my $app1_misc (@app1_miscs) {
+            $tooltip .= "\n" if $tooltip;
+	    if ($app1_misc =~ /^PonkApp1:([^:]+):[^=]+=(.+)$/) {
+              my $rule_name = $1;
+              my $rule_name_lang = $app1_rule_info_orig->{$rule_name}->{$lang . '_name'} // $rule_name;
+	      my $role_name = $2;
+              my $role_name_lang = $app1_rule_info_orig->{$rule_name}->{$lang . '_participants'}->{$role_name} // $role_name;
+              $tooltip .= "$rule_name_lang: $role_name_lang";
+	    }
+	  }
           $span_start = "<span class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" title=\"$tooltip\">";
           $span_end = '</span>';
         }
