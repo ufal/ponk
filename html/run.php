@@ -820,7 +820,8 @@
         <!-- ============ output panel s formátovaným textem =========== -->
         <div id="output_formatted" class="full-height"></div>
         <!-- ============ volby APP1 =========== -->
-        <div id="features_app1" class="side-panel full-height border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; height: 100%; background-color: white; z-index: 10; overflow-y: auto;"></div>
+        <!--div id="features_app1" class="side-panel full-height border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; height: 100%; background-color: white; z-index: 10; overflow-y: auto"></div-->
+        <div id="features_app1" class="side-panel full-height border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; height: 100%; background-color: white; z-index: 10; overflow-y: auto"></div>
       </div>
       <!-- ============ záložka na pravé straně pro zobrazení/skrytí features_app1 =========== -->
       <div id="features_app1_tab" class="vertical-tab vertical-tab-green vertical-tab-right" onClick="toggleApp1Features();" style="width: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
