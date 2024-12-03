@@ -101,15 +101,13 @@ any '/api/process' => sub {
     # Access the 'data', 'stats' and other items in the JSON object
     my $result  = $json_data->{'data'};
     my $stats = $json_data->{'stats'};
-    my $app1_features_cz = $json_data->{'app1_features_cz'};
-    my $app1_features_en = $json_data->{'app1_features_en'};
+    my $app1_features = $json_data->{'app1_features'};
     my $app1_rule_info = $json_data->{'app1_rule_info'};
     
     # Read them as UTF-8
     my $result_utf8 = decode_utf8($result);
     my $stats_utf8 = decode_utf8($stats);
-    my $app1_features_cz_utf8 = decode_utf8($app1_features_cz);
-    my $app1_features_en_utf8 = decode_utf8($app1_features_en);
+    my $app1_features_utf8 = decode_utf8($app1_features);
     my $app1_rule_info_utf8 = decode_utf8($app1_rule_info);
 
     # Compile the answer
@@ -117,8 +115,7 @@ any '/api/process' => sub {
     my $data = {message => "This is the process function of the PONK service called via $method; input format=$input_format_orig, output format=$output_format.",
                 result => "$result_utf8",
                 stats => "$stats_utf8",
-                app1_features_cz => "$app1_features_cz_utf8",
-                app1_features_en => "$app1_features_en_utf8",
+                app1_features => "$app1_features_utf8",
 		app1_rule_info => "$app1_rule_info"
                };
     # print STDERR Dumper($data);

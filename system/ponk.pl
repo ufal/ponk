@@ -26,7 +26,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.24 20241202'; # version of the program
+my $VER = '0.25 20241203'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -665,7 +665,7 @@ if ($input_format eq 'md') {
 # Calling PONK-APP1
 #################################################
 
-my $conll_for_ponk_app1 = get_output('conllu');
+my $conll_for_ponk_app1 = get_output('conllu', $ui_language);
 my ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = call_ponk_app1($conll_for_ponk_app1);
 
 # Export the modified trees to a file (for debugging, not needed for further processing)
@@ -700,18 +700,16 @@ $processing_time = tv_interval($start_time, $end_time);
 
 # calculate and format statistics and list of app1 features if needed
 my $stats;
-my $app1_features_cz;
-my $app1_features_en;
+my $app1_features;
 my $app1_rule_info;
 if ($store_statistics or $output_statistics) { # we need to calculate statistics
   $stats = get_stats_html();
-  $app1_features_cz = get_app1_features_html('cz');
-  $app1_features_en = get_app1_features_html('en');
+  $app1_features = get_app1_features_html($ui_language);
   $app1_rule_info = get_app1_rule_info_json();
 }
 
 # print the input text with marked sources in the selected output format to STDOUT
-my $output = get_output($output_format, 'cz');
+my $output = get_output($output_format, $ui_language);
 
 if (!$output_statistics) { # statistics should not be a part of output
   print $output;
@@ -724,8 +722,7 @@ else { # statistics should be a part of output, i.e. output will be JSON with se
   my $json_data = {
        data  => $output,
        stats => $stats,
-       app1_features_cz => $app1_features_cz,
-       app1_features_en => $app1_features_en,
+       app1_features => $app1_features,
        app1_rule_info => $app1_rule_info,
      };
   # Encode the Perl data structure into a JSON string
@@ -735,7 +732,7 @@ else { # statistics should be a part of output, i.e. output will be JSON with se
 }
 
 if ($store_format) { # log the anonymized text in the given format in a file
-  $output = get_output($store_format) if $store_format ne $output_format;
+  $output = get_output($store_format, $ui_language) if $store_format ne $output_format;
   my $output_file = basename($input_file);
   open(OUT, '>:encoding(utf8)', "$script_dir/log/$output_file.$store_format") or die "Cannot open file '$script_dir/log/$output_file.$store_format' for writing: $!";
   print OUT $output;
