@@ -120,27 +120,12 @@
               displayFormattedOutput();
 	  }
 
-
-          <?php
-            if ($currentLang == 'cs') {
-          ?>
-            console.log("Looking for app1_features_cz");
-	    if ("app1_features_cz" in json) {
-              let output_app1_features = json.app1_features_cz;
-              console.log("Found 'app1_features_cz' in return message:", output_app1_features);
-              jQuery('#features_app1').html(output_app1_features);
-	    }
-          <?php
-            } else {
-          ?>
-	    if ("app1_features_en" in json) {
-              let output_app1_features = json.app1_features_en;
-              console.log("Found 'app1_features_en' in return message:", output_app1_features);
-              jQuery('#features_app1').html(output_app1_features);
-	    }
-          <?php
-            }
-          ?>
+          console.log("Looking for app1_features");
+	  if ("app1_features" in json) {
+            let output_app1_features = json.app1_features;
+            console.log("Found 'app1_features' in return message:", output_app1_features);
+            jQuery('#features_app1').html(output_app1_features);
+	  }
 
 	  if ("app1_rule_info" in json) {
             // console.log("app1_rule_info found in JSON: ", json.app1_rule_info);
