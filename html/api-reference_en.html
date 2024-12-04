@@ -31,7 +31,8 @@ handling.</p>
 <tr><th>Parameter</th><th>Mandatory</th><th>Data type</th><th>Description</th></tr>
 <tr><td>text</td><td>yes</td><td>string</td><td>Input text in <b>UTF-8</b>.</td></tr>
 <tr><td>input</td><td>no</td><td>string</td><td>Input format; possible values: <code>txt</code> (default), <code>md</code> (MarkDown), <code>docx</code> (MS Word),  see <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_input" target="_blank">input format</a> for details.</td></tr>
-<tr><td>output</td><td>no</td><td>string</td><td>Output format; possible values: <code>txt</code>, <code>html</code> (default), <code>md</code> (MarkDown), see <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">output format</a> for details.</td></tr>
+<tr><td>output</td><td>no</td><td>string</td><td>Output format; possible values: <code>html</code> (default), see <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">output format</a> for details.</td></tr>
+<tr><td>uilang</td><td>no</td><td>string</td><td>Language localization of the returned information; possible values: <code>en</code> (default), <code>cs</code>.</td></tr>
 </table>
 
 <p>
@@ -76,8 +77,8 @@ The <code>PONK_version</code> is the version of the server consisting of the ver
 
 <h2 style="margin-top: 20px">Browser Example</h2>
 <table style='width: 100%'>
- <tr><td style='vertical-align: middle'><pre style='margin-bottom: 0; white-space: pre-wrap' class="prettyprint lang-html">http://quest.ms.mff.cuni.cz/ponk/api/process?input=txt&amp;output=txt&amp;text=Paní Marie Nováková z Myslíkovy ulice č. 25 dostala dopis od firmy Škoda.</pre></td>
-     <td style='vertical-align: middle; width: 6em'><button style='width: 100%' type="button" class="btn btn-success btn-xs" onclick="window.open('http://quest.ms.mff.cuni.cz/ponk/api/process?input=txt&amp;output=txt&amp;text=Paní Marie Nováková z Myslíkovy ulice č. 25 dostala dopis od firmy Škoda.')">try&nbsp;this</button></td></tr>
+ <tr><td style='vertical-align: middle'><pre style='margin-bottom: 0; white-space: pre-wrap' class="prettyprint lang-html">http://quest.ms.mff.cuni.cz/ponk/api/process?input=txt&amp;text=Váš dlužník Vám na žádost do tří dnů vystaví potvrzení o čísle účtu, z něhož Vám vyplácí peníze. Pokud nás o to požádáte, zajistíme potvrzení sami.</pre></td>
+     <td style='vertical-align: middle; width: 6em'><button style='width: 100%' type="button" class="btn btn-success btn-xs" onclick="window.open('http://quest.ms.mff.cuni.cz/ponk/api/process?input=txt&amp;text=Váš dlužník Vám na žádost do tří dnů vystaví potvrzení o čísle účtu, z něhož Vám vyplácí peníze. Pokud nás o to požádáte, zajistíme potvrzení sami.')">try&nbsp;this</button></td></tr>
 </table>
 
 <hr />
@@ -87,10 +88,10 @@ The <code>PONK_version</code> is the version of the server consisting of the ver
 The described API can be comfortably used by <code>curl</code>. Several examples follow:
 
 <h3>Passing Input on Command Line (if UTF-8 locale is being used)</h3>
-<pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data 'input=txt&amp;output=txt&amp;text=Paní Marie Nováková z Myslíkovy ulice č. 25 dostala dopis od firmy Škoda.' http://quest.ms.mff.cuni.cz/ponk/api/process</pre>
+<pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data 'input=txt&amp;output=html&amp;text=Váš dlužník Vám na žádost do tří dnů vystaví potvrzení o čísle účtu, z něhož Vám vyplácí peníze. Pokud nás o to požádáte, zajistíme potvrzení sami.' http://quest.ms.mff.cuni.cz/ponk/api/process</pre>
 
 <h3>Using Files as Input (files must be in UTF-8 encoding)</h3>
 <pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data-urlencode 'input=txt' --data-urlencode 'output=html' --data-urlencode 'text@input_file.txt' http://quest.ms.mff.cuni.cz/ponk/api/process</pre>
 
 <h3>Converting JSON Result to Plain Text</h3>
-<pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data 'input=txt&amp;output=txt&amp;text=Paní Marie Nováková z Myslíkovy ulice č. 25 dostala dopis od firmy Škoda.' http://quest.ms.mff.cuni.cz/ponk/api/process | PYTHONIOENCODING=utf-8 python3 -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['result'])"</pre>
+<pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data 'input=txt&amp;output=html&amp;text=Váš dlužník Vám na žádost do tří dnů vystaví potvrzení o čísle účtu, z něhož Vám vyplácí peníze. Pokud nás o to požádáte, zajistíme potvrzení sami.' http://quest.ms.mff.cuni.cz/ponk/api/process | PYTHONIOENCODING=utf-8 python3 -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['result'])"</pre>
