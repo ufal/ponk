@@ -71,7 +71,20 @@
     // Zjistíme stav checkboxu s id "option-randomize"
     //var jeZaskrtnuto = $('#option_randomize').prop('checked');
     //console.log("doSubmit: Randomize: ", jeZaskrtnuto);
-    var options = {text: input_text, input: input_format, output: output_format};
+
+          <?php
+            if ($currentLang == 'cs') {
+          ?>
+            var ui_lang = 'cs'; 
+          <?php
+            } else {
+          ?>
+            var ui_lang = 'en'; 
+          <?php
+            }
+          ?>
+
+    var options = {text: input_text, input: input_format, output: output_format, uilang: ui_lang};
     //console.log("doSubmit: options: ", options);
     // Přidáme parametr "randomize", pokud je checkbox zaškrtnutý
     //if (jeZaskrtnuto) {
@@ -107,27 +120,12 @@
               displayFormattedOutput();
 	  }
 
-
-          <?php
-            if ($currentLang == 'cs') {
-          ?>
-            console.log("Looking for app1_features_cz");
-	    if ("app1_features_cz" in json) {
-              let output_app1_features = json.app1_features_cz;
-              console.log("Found 'app1_features_cz' in return message:", output_app1_features);
-              jQuery('#features_app1').html(output_app1_features);
-	    }
-          <?php
-            } else {
-          ?>
-	    if ("app1_features_en" in json) {
-              let output_app1_features = json.app1_features_en;
-              console.log("Found 'app1_features_en' in return message:", output_app1_features);
-              jQuery('#features_app1').html(output_app1_features);
-	    }
-          <?php
-            }
-          ?>
+          console.log("Looking for app1_features");
+	  if ("app1_features" in json) {
+            let output_app1_features = json.app1_features;
+            console.log("Found 'app1_features' in return message:", output_app1_features);
+            jQuery('#features_app1').html(output_app1_features);
+	  }
 
 	  if ("app1_rule_info" in json) {
             // console.log("app1_rule_info found in JSON: ", json.app1_rule_info);
@@ -820,7 +818,8 @@
         <!-- ============ output panel s formátovaným textem =========== -->
         <div id="output_formatted" class="full-height"></div>
         <!-- ============ volby APP1 =========== -->
-        <div id="features_app1" class="side-panel full-height border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; height: 100%; background-color: white; z-index: 10; overflow-y: auto;"></div>
+        <!--div id="features_app1" class="side-panel full-height border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; height: 100%; background-color: white; z-index: 10; overflow-y: auto"></div-->
+        <div id="features_app1" class="side-panel full-height border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; height: 100%; background-color: white; z-index: 10; overflow-y: auto"></div>
       </div>
       <!-- ============ záložka na pravé straně pro zobrazení/skrytí features_app1 =========== -->
       <div id="features_app1_tab" class="vertical-tab vertical-tab-green vertical-tab-right" onClick="toggleApp1Features();" style="width: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">

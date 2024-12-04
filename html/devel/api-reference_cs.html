@@ -31,7 +31,8 @@ pro zpracování výsledků.</p>
 <tr><th>Parametr</th><th>Povinný</th><th>Typ dat</th><th>Popis</th></tr>
 <tr><td>text</td><td>ano</td><td>řetězec</td><td>Vstupní text v kódování <b>UTF-8</b>.</td></tr>
 <tr><td>input</td><td>ne</td><td>řetězec</td><td>Vstupní formát; možné hodnoty: <code>txt</code> (defaultní), <code>md</code> (MarkDown), <code>docx</code> (MS Word),  viz. <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_input" target="_blank">vstupní formát</a>.</td></tr>
-<tr><td>output</td><td>ne</td><td>řetězec</td><td>Výstupní formát; možné hodonoty: <code>txt</code>, <code>html</code> (defaultní), <code>md</code> (MarkDown), viz. <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">výstupní formát</a>.</td></tr>
+<tr><td>output</td><td>ne</td><td>řetězec</td><td>Výstupní formát; možné hodnoty: <code>html</code> (defaultní), viz. <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">výstupní formát</a>.</td></tr>
+<tr><td>uilang</td><td>ne</td><td>řetězec</td><td>Jazyková lokalizace vrácených informací; možné hodnoty: <code>en</code> (defaultní), <code>cs</code>.</td></tr>
 </table>
 
 <p>
@@ -42,12 +43,16 @@ Odpověď serveru je ve formátu <a href="http://en.wikipedia.org/wiki/JSON" tar
  "message": "přehledová_zpráva"
  "result": "zpracovaný_výstup"
  "stats": "statistiky"
+ "app1_features": "seznam_uplatněných_pravidel_app1"
+ "app1_rule_info": "vlastnosti_uplatněných_pravidel_app1"
 }
 </pre>
 
 <code>přehledová_zpráva</code> je krátká přehledová zpráva o aktuálním volání REST API;
 <br/><code>zpracovaný_výstup</code> je výstup programu PONK v požadovaném výstupním formátu;
 <br/><code>statistiky</code> jsou přehled ve formátu HTML obsahující verzi služby PONK, délku textu, čas zpracování a informace o čitelnosti textu jakožto celku.
+<br/><code>seznam_uplatněných_pravidel_app1</code> je HTML seznam pravidel podaplikace 1, která byla uplatněna v daném textu.
+<br/><code>vlastnosti_uplatněných_pravidel_app1</code> je struktura JSON s informacemi o pravidlech podaplikace 1, která byla uplatněna v daném textu.
 
 
 <h3>Metoda <a id='info'>info</a></h3>
@@ -70,8 +75,8 @@ Odpověď je ve formátu <a href="http://en.wikipedia.org/wiki/JSON" target="_bl
 
 <h2 style="margin-top: 20px">Příklad pro webový prohlížeč</h2>
 <table style='width: 100%'>
- <tr><td style='vertical-align: middle'><pre style='margin-bottom: 0; white-space: pre-wrap' class="prettyprint lang-html">http://quest.ms.mff.cuni.cz/ponk/api/process?input=txt&amp;output=txt&amp;text=Paní Marie Nováková z Myslíkovy ulice č. 25 dostala dopis od firmy Škoda.</pre></td>
-     <td style='vertical-align: middle; width: 6em'><button style='width: 100%' type="button" class="btn btn-success btn-xs" onclick="window.open('http://quest.ms.mff.cuni.cz/ponk/api/process?input=txt&amp;output=txt&amp;text=Paní Marie Nováková z Myslíkovy ulice č. 25 dostala dopis od firmy Škoda.')">vyzkoušet</button></td></tr>
+ <tr><td style='vertical-align: middle'><pre style='margin-bottom: 0; white-space: pre-wrap' class="prettyprint lang-html">http://quest.ms.mff.cuni.cz/ponk/api/process?input=txt&amp;text=Váš dlužník Vám na žádost do tří dnů vystaví potvrzení o čísle účtu, z něhož Vám vyplácí peníze. Pokud nás o to požádáte, zajistíme potvrzení sami.</pre></td>
+     <td style='vertical-align: middle; width: 6em'><button style='width: 100%' type="button" class="btn btn-success btn-xs" onclick="window.open('http://quest.ms.mff.cuni.cz/ponk/api/process?input=txt&amp;text=Váš dlužník Vám na žádost do tří dnů vystaví potvrzení o čísle účtu, z něhož Vám vyplácí peníze. Pokud nás o to požádáte, zajistíme potvrzení sami.')">vyzkoušet</button></td></tr>
 </table>
 
 <hr />
@@ -81,10 +86,10 @@ Odpověď je ve formátu <a href="http://en.wikipedia.org/wiki/JSON" target="_bl
 Popsané rozhraní REST API lze snadno používat pomocí <code>curl</code>. Několik příkladů:
 
 <h3>Předání vstupu z příkazové řádky (předpokládá se nastavení prostředí UTF-8)</h3>
-<pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data 'input=txt&amp;output=txt&amp;text=Paní Marie Nováková z Myslíkovy ulice č. 25 dostala dopis od firmy Škoda.' http://quest.ms.mff.cuni.cz/ponk/api/process</pre>
+<pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data 'input=txt&amp;output=html&amp;text=Váš dlužník Vám na žádost do tří dnů vystaví potvrzení o čísle účtu, z něhož Vám vyplácí peníze. Pokud nás o to požádáte, zajistíme potvrzení sami.' http://quest.ms.mff.cuni.cz/ponk/api/process</pre>
 
 <h3>Použití vstupního souboru (soubory musejí být kódovány v UTF-8)</h3>
 <pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data-urlencode 'input=txt' --data-urlencode 'output=html' --data-urlencode 'text@input_file.txt' http://quest.ms.mff.cuni.cz/ponk/api/process</pre>
 
 <h3>Konverze výsledku z formátu JSON do prostého textu</h3>
-<pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data 'input=txt&amp;output=txt&amp;text=Paní Marie Nováková z Myslíkovy ulice č. 25 dostala dopis od firmy Škoda.' http://quest.ms.mff.cuni.cz/ponk/api/process | PYTHONIOENCODING=utf-8 python3 -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['result'])"</pre>
+<pre style="white-space: pre-wrap" class="prettyprint lang-sh">curl --data 'input=txt&amp;output=html&amp;text=Váš dlužník Vám na žádost do tří dnů vystaví potvrzení o čísle účtu, z něhož Vám vyplácí peníze. Pokud nás o to požádáte, zajistíme potvrzení sami.' http://quest.ms.mff.cuni.cz/ponk/api/process | PYTHONIOENCODING=utf-8 python3 -c "import sys,json; sys.stdout.write(json.load(sys.stdin)['result'])"</pre>
