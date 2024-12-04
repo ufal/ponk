@@ -74,10 +74,10 @@ any '/api/process' => sub {
     my $method = $c->req->method;
     
     my $text = $c->param('text'); # input text
-    my $input_format = $c->param('input'); # input format
+    my $input_format = $c->param('input') // ''; # input format
     my $input_format_orig = $input_format;
     $input_format = 'docxBase64' if $input_format eq 'docx'; # the input is actually encoded in Base64, so we need to use this internal input format parameter
-    my $output_format = $c->param('output'); # output format
+    my $output_format = $c->param('output') // ''; # output format
     my $uilang = $c->param('uilang') // ''; # UI language
     # my $randomize = defined $c->param('randomize') ? 1 : 0; # randomization
 
@@ -116,7 +116,7 @@ any '/api/process' => sub {
                 result => "$result_utf8",
                 stats => "$stats_utf8",
                 app1_features => "$app1_features_utf8",
-		app1_rule_info => "$app1_rule_info"
+		app1_rule_info => "$app1_rule_info_utf8"
                };
     # print STDERR Dumper($data);
     return $c->render(json => $data);

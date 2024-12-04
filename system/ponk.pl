@@ -73,10 +73,10 @@ my $color_highlight_app1 = 'darkgreen'; # highlighting colour for ponk-app1
 
 
 # default output format
-my $OUTPUT_FORMAT_DEFAULT = 'txt';
-# default input format
 my $INPUT_FORMAT_DEFAULT = 'txt';
 # default UI language
+my $OUTPUT_FORMAT_DEFAULT = 'html';
+# default input format
 my $UI_LANGUAGE_DEFAULT = 'en';
 
 # variables for arguments
@@ -97,10 +97,10 @@ my $help;
 GetOptions(
     'i|input-file=s'         => \$input_file, # the name of the input file
     'si|stdin'               => \$stdin, # should the input be read from STDIN?
-    'if|input-format=s'      => \$input_format, # input format, possible values: txt, md, docx (and for internal purposes of the API server, also docxBase64)
-    'of|output-format=s'     => \$output_format, # output format, possible values: html, txt, md, conllu
+    'if|input-format=s'      => \$input_format, # input format, possible values: txt (default), md, docx (and for internal purposes of the API server, also docxBase64)
+    'of|output-format=s'     => \$output_format, # output format, possible values: html (default), conllu
     'os|output-statistics'   => \$output_statistics, # adds statistics to the output; if present, output is JSON with two items: data (in output-format) and stats (in HTML)
-    'uil|ui-language=s'      => \$ui_language, # localize the response whenever possible to the given language (en, cs)
+    'uil|ui-language=s'      => \$ui_language, # localize the response whenever possible to the given language: en (default), cs
     'sf|store-format=s'      => \$store_format, # log the result in the given format: txt, html, conllu
     'ss|store-statistics'    => \$store_statistics, # should statistics be logged as an HTML file?
     'll|logging-level=s'     => \$logging_level_override, # override the default (anonymous) logging level (0=full, 1=limited, 2=anonymous)
@@ -141,10 +141,10 @@ Usage: ponk.pl [options]
 options:  -i|--input-file [input text file name]
          -si|--stdin (input text provided via stdin)
          -if|--input-format [input format: txt (default), md, docx]
-         -of|--output-format [output format: html (default), txt, md, conllu]
+         -of|--output-format [output format: html (default), conllu]
          -os|--output-statistics (add PONK statistics to output; if present, output is JSON with two items: data (in output-format) and stats (in HTML))
-        -uil|--ui-language [language: localize the response whenever possible to the given language: en, cs]
-	 -sf|--store-format [format: log the output in the given format: txt, html, conllu]
+        -uil|--ui-language [language: localize the response whenever possible to the given language: en (default), cs]
+	 -sf|--store-format [format: log the output in the given format: html, conllu]
          -ss|--store-statistics (log statistics to an HTML file)
          -ll|--logging-level (override the default (anonymous) logging level (0=full, 1=limited, 2=anonymous))
           -v|--version (prints the version of the program and ends)
