@@ -43,12 +43,16 @@ following structure:</p>
  "message": "overview_message"
  "result": "processed_output"
  "stats": "statistics"
+ "app1_features": "list_of_used_rules_app1"
+ "app1_rule_info": "properties_of_used_rules_app1"
 }
 </pre>
 
 The <code>overview_message</code> is a short comprehensible message of what has been called;
 <br/>the <code>processed_output</code> is the output of PONK in the requested output format;
 <br/>and <code>statistics</code> is an HTML overview giving the PONK version, length of the text, processing time and information on the readability of the text as a whole.
+<br/><code>list_of_used_rules_app1</code> is an HTML list of rules from subapplication 1 that were used in the given text.
+<br/><code>properties_of_used_rules_app1</code> is a JSON structure with information about rules from subapplication 1 that were used in the given text.
 
 
 <h3>Method <a id='info'>info</a></h3>
