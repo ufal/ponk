@@ -1555,9 +1555,9 @@ END_HEAD
   $stats .= "<br/>Processing time: $rounded_time sec.\n";
   $stats .= "</p>\n";
   
-  $stats .= "<h4>Measures from PONK-APP1</h4>\n";
+  $stats .= "<h4>Measures from PONK-APP1 (work in progress!)</h4>\n";
   my $app1_string = app1_metrics2string('html', $app1_metrics);
-  $stats .= $app1_string;
+  $stats .= "<p>$app1_string</p>";
   
   $stats .= "$DESC\n";
   
@@ -2021,7 +2021,7 @@ sub call_ponk_app1 {
 
 }
 
-=item app1_metrisc2string
+=item app1_metrics2string
 
 Given a format (html or txt) and a decoded JSON with metrics from app1 (ref to array of hashes), produce a string to display
 
