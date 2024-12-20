@@ -10,7 +10,7 @@ use JSON;
 use Tree::Simple;
 use List::Util qw(min max);
 use Getopt::Long; # reading arguments
-use POSIX qw(strftime); # naming a file with date and time
+use POSIX qw(strftime round); # naming a file with date and time; rounding a number
 use File::Basename;
 use Time::HiRes qw(gettimeofday tv_interval); # to measure how long the program ran
 use Sys::Hostname;
@@ -18,6 +18,7 @@ use IPC::Run qw(run);
 use MIME::Base64;
 use Encode;
 use Data::Dumper;
+use Scalar::Util qw(looks_like_number);
 
 # STDIN and STDOUT in UTF-8
 binmode STDIN, ':encoding(UTF-8)';
@@ -26,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.25 20241203'; # version of the program
+my $VER = '0.26 20241220'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -2022,7 +2023,7 @@ sub call_ponk_app1 {
 
 =item app1_metrisc2string
 
-Given format (html or txt) and a decoded JSON with metrics from app1 (ref to array of hashes), produce a string to display
+Given a format (html or txt) and a decoded JSON with metrics from app1 (ref to array of hashes), produce a string to display
 
 =cut
 
@@ -2032,11 +2033,15 @@ sub app1_metrics2string {
   foreach my $metric (@$refar_metrics) {
     my %h_metric = %$metric;
     foreach my $name (keys %h_metric) {
+      my $value = $h_metric{$name} // '';
+      if (looks_like_number($value)) {
+        $value = round($value * 100) / 100;
+      }
       if ($format eq 'html') {
-        $text .= "$name: $h_metric{$name}<br/>\n";
+        $text .= "$name: $value<br/>\n";
       }
       else { # txt
-        $text .= "$name: $h_metric{$name}\n";
+        $text .= "$name: $value\n";
       }
     }
   }
