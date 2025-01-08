@@ -10,6 +10,8 @@
 
   var app1_rule_active = {}; // an object ("hash") to keep info if individual rules are active
   var app1_ruleid_highlighted = []; // an array of actually highlighted classes rule_id (when hovering over a span in the results)
+  
+  var app1_token_ids = []; // an array of ids of tokens in the result (<span>) marked by app1
 
   document.addEventListener("DOMContentLoaded", function() {
       getInfo();
@@ -117,6 +119,8 @@
 	  if ("result" in json) {
               output_file_content = json.result;
               //console.log("Found 'result' in return message:", output_file_content);
+              app1_token_ids = getSpanIds(output_file_content);
+              console.log("App1 token ids: ", app1_token_ids;
               displayFormattedOutput();
 	  }
 
@@ -150,8 +154,8 @@
 
       } catch(e) {
         jQuery('#submit').html('<span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span>');
-	jQuery('#submit').prop('disabled', false);
-	//console.log("Caught an error!");
+        jQuery('#submit').prop('disabled', false);
+        //console.log("Caught an error!");
       }
     }, error: function(jqXHR, textStatus) {
       alert("An error occurred" + ("responseText" in jqXHR ? ": " + jqXHR.responseText : "!"));
@@ -160,6 +164,18 @@
       jQuery('#submit').prop('disabled', false);
       //console.log("All completed");
     }});
+  }
+
+
+  // vrátí pole id z elementů span v daném html kódu
+  function getSpanIds(html) {
+    let parser = new DOMParser();
+    let doc = parser.parseFromString(html, "text/html");
+    
+    // Vybereme všechny span elementy a vytvoříme pole jejich id
+    let spanIds = Array.from(doc.querySelectorAll('span')).map(span => span.id);
+    
+    return spanIds;
   }
 
 
@@ -175,8 +191,8 @@
 
       if (app1_rule_info.hasOwnProperty(rule_name)) {
         console.log(`Key: ${rule_name}, Value:`, app1_rule_info[rule_name]);
-	let rule = app1_rule_info[rule_name];
-	app1_rule_active[rule_name] = 1; // store the info on activity status of this rule
+        let rule = app1_rule_info[rule_name];
+        app1_rule_active[rule_name] = 1; // store the info on activity status of this rule
         if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
           let {red, green, blue} = rule.foreground_color;
           //console.log(`Key: ${rule_name}, RGB Color: rgb(${red}, ${green}, ${blue})`);
