@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.26 20241220'; # version of the program
+my $VER = '0.27 20250108'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -43,7 +43,8 @@ $DESC .= <<END_DESC;
 </ul>
 <h4>Planned features:</h4>
 <ul>
-<li>TO-DO
+<li>Full support for ponk-app1 (rules and text-wide statistics)
+<li>Full support for ponk-app2 (lexical surprise)
 </ul>
 END_DESC
 
