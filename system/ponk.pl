@@ -1158,6 +1158,8 @@ END_OUTPUT_HEAD
   my $space_before = ''; # for storing info about SpaceAfter until the next token is printed
   
   my $html_sentence_element = ''; # it may be set, e.g., to h1 for level 1 headings
+
+  my $result_token_id_number = 1; # marked tokens in the result text need to have ids (used in the client part)
   
   foreach my $root (@trees) {
 
@@ -1288,7 +1290,10 @@ END_OUTPUT_HEAD
               $tooltip .= "$rule_name_lang: $role_name_lang";
 	    }
 	  }
-          $span_start = "<span class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" title=\"$tooltip\">";
+	  my $id = 'app1_token_id_' . $result_token_id_number;
+	  $result_token_id_number++;
+
+          $span_start = "<span id=\"$id\" class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" title=\"$tooltip\">";
           $span_end = '</span>';
         }
       }
