@@ -120,7 +120,7 @@
               output_file_content = json.result;
               //console.log("Found 'result' in return message:", output_file_content);
               app1_token_ids = getSpanIds(output_file_content);
-              console.log("App1 token ids: ", app1_token_ids;
+              //console.log("App1 token ids: ", app1_token_ids);
               displayFormattedOutput();
 	  }
 
@@ -144,6 +144,7 @@
 	    }
 	    app1_rule_info = ruleInfo; // store the info to the global variable
 	    applyApp1RuleInfoStyles(ruleInfo); // apply the styles to the web page
+	    highlightTokensWithMultipleActiveApp1Rules();
 	  }
 
 	  if ("stats" in json) {
@@ -155,7 +156,7 @@
       } catch(e) {
         jQuery('#submit').html('<span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span>');
         jQuery('#submit').prop('disabled', false);
-        //console.log("Caught an error!");
+        //console.log("doSubmit: Caught an error!");
       }
     }, error: function(jqXHR, textStatus) {
       alert("An error occurred" + ("responseText" in jqXHR ? ": " + jqXHR.responseText : "!"));
@@ -176,6 +177,44 @@
     let spanIds = Array.from(doc.querySelectorAll('span')).map(span => span.id);
     
     return spanIds;
+  }
+
+
+  // projde pole app1_token_ids a zvýrazní barevným pozadím příslušné tokeny, které jsou zasaženy více než jedním aktivním app1 pravidlem
+  // aktivní pravidla mají hodnotu 1 v hashi app1_rule_active
+  function highlightTokensWithMultipleActiveApp1Rules() {
+    // Projít všechny id v globální proměnné app1_token_ids
+    console.log("Entering highlightTokens...");
+    app1_token_ids.forEach(id => {
+        const element = document.getElementById(id);
+	if (element) {
+            // Filtr tříd, které začínají na 'app1_class_' a nemají další podtržítko za nimi
+            const validClasses = Array.from(element.classList).filter(className => {
+                // Získání části třídy bez prefixu 'app1_class_'
+                if (className.startsWith('app1_class_') && className.indexOf('_', 'app1_class_'.length) === -1) {
+                    const ruleName = className.slice('app1_class_'.length);
+                    // Zkontrolování, zda je ruleName v app1_rule_active s hodnotou 1
+                    return app1_rule_active[ruleName] === 1;
+                }
+                return false;
+            });
+
+            // Filtr tříd, které začínají na 'app1_class_' a nemají další podtržítko za nimi
+            //const validClasses = Array.from(element.classList).filter(className => 
+            //    className.startsWith('app1_class_') && 
+            //    className.indexOf('_', 'app1_class_'.length) === -1
+            //);
+            
+            // Pokud má element alespoň dvě platné třídy, nastavit žluté pozadí
+            if (validClasses.length >= 2) {
+              element.style.backgroundColor = 'yellow';
+              element.style.color = 'black';   
+            } else {
+                // Jinak odstranit nastavení pozadí
+                element.style.backgroundColor = '';
+            }
+        }
+    });
   }
 
 
@@ -212,6 +251,7 @@
       removeCSSClass(rule_class);
       app1_rule_active[rule_name] = 0; // store the info on activity status of this rule
     }
+    highlightTokensWithMultipleActiveApp1Rules();
   }
 
   // given the object with app1_rule_info, it applies the styles to the web page
