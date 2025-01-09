@@ -2016,7 +2016,7 @@ sub call_ponk_app1 {
         my $modified_conllu = $json_response->{'modified_conllu'};
         my $metrics_json = $json_response->{'metrics'};
         my $rules_info_json = $json_response->{'rule_info'};
-        # mylog(0, "PONK-APP1 modified_conllu:\n$modified_conllu\nPONK-APP1 metrics JSON:\n" . Dumper($metrics_json) . "\n");
+	# mylog(0, "PONK-APP1 JSON response:\n" . Dumper($json_response) . "\n");
         mylog(2, "Call PONK-APP1: Success.\n");
         return ($modified_conllu, $metrics_json, $rules_info_json);
     } else {
