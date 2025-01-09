@@ -207,8 +207,8 @@
             
             // Pokud má element alespoň dvě platné třídy, nastavit žluté pozadí
             if (validClasses.length >= 2) {
-              element.style.backgroundColor = 'yellow';
-              element.style.color = 'black';   
+              element.style.backgroundColor = '#727272';
+              //element.style.color = 'black';   
             } else {
                 // Jinak odstranit nastavení pozadí
                 element.style.backgroundColor = '';
