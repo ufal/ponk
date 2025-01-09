@@ -2016,6 +2016,7 @@ sub call_ponk_app1 {
         my $modified_conllu = $json_response->{'modified_conllu'};
         my $metrics_json = $json_response->{'metrics'};
         my $rules_info_json = $json_response->{'rule_info'};
+	# my $conflict_background_color = $json_response->{'conflict_background_color'}; # asi ji napíšu natvrdo do klienta
 	# mylog(0, "PONK-APP1 JSON response:\n" . Dumper($json_response) . "\n");
         mylog(2, "Call PONK-APP1: Success.\n");
         return ($modified_conllu, $metrics_json, $rules_info_json);
