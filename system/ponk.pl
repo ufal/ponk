@@ -1222,7 +1222,6 @@ END_OUTPUT_HEAD
       # from MasKIT, not needed: next if attr($node, 'hidden'); # do not output hidden nodes (originally parts of multiword expressions such as multiword street names)
       
       # COLLECT INFO ABOUT THE TOKEN
-      #my $replacement = attr($node, 'replacement');
       my $form = attr($node, 'form');
       my $classes = get_NameTag_marks($node) // '';
 
@@ -1287,7 +1286,8 @@ END_OUTPUT_HEAD
               my $rule_name_lang = $app1_rule_info_orig->{$rule_name}->{$lang . '_name'} // $rule_name;
 	      my $role_name = $2;
               my $role_name_lang = $app1_rule_info_orig->{$rule_name}->{$lang . '_participants'}->{$role_name} // $role_name;
-              $tooltip .= "$rule_name_lang: $role_name_lang";
+	      # $rule_name_lang =~ s/object/predicate/; # a temporary fix for making a screenshot to a paper before info from app1 gets corrected
+	      $tooltip .= "$rule_name_lang: $role_name_lang";
 	    }
 	  }
 	  my $id = 'app1_token_id_' . $result_token_id_number;
