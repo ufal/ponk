@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.28 20250109'; # version of the program
+my $VER = '0.29 20250204'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -876,6 +876,30 @@ sub parse_conllu {
       #warn "Emtpy line missing at the end of input\n";
   }
   # end of Jan Štěpánek's modified cycle for reading UD CoNLL
+
+  # Now let us add pointers to immediately left and right nodes in the sentence surface order
+  # And also pointers at roots to left and right neigbouring trees
+  my $prev_tree = undef;
+  foreach my $tree (@trees) {
+    # pointers to left and right trees at roots
+    if ($prev_tree) {
+      set_attr($prev_tree, 'right', $tree);
+      set_attr($tree, 'left', $prev_tree);
+    }
+    $prev_tree = $tree;
+    # pointers at nodes to left and right nodes
+    my @ordered_nodes = sort {attr($a, 'ord') <=> attr($b, 'ord')} descendants($tree);
+    my $prev_node = undef;
+    foreach my $node (@ordered_nodes) {
+      set_attr($node, 'left', $prev_node);
+      if ($prev_node) {
+        set_attr($prev_node, 'right', $node);
+      }
+      $prev_node = $node;
+    }
+    set_attr($ordered_nodes[-1], 'right', undef);
+  }
+
   return (\%start_offset_to_node, @trees);
 }
 
