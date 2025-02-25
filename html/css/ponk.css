@@ -121,14 +121,6 @@ ul.nav-tabs-gray > li > a:focus {
     background: #265a88;
 }
 
-.rotate-text {
-  writing-mode: vertical-rl;
-  text-align: left;
-  white-space: nowrap;
-  padding: 10px 5px;
-  cursor: pointer; /* Aby ukazatel myši vypadal jako ruka */
-}
-
 .full-height {
   height: 100%;
 }
@@ -137,17 +129,57 @@ ul.nav-tabs-gray > li > a:focus {
   position: relative;
 }
 
+#output_formatted {
+  height: 100%; /* Přizpůsobí se obsahu v rámci #output_all */
+  max-height: 600px; /* Maximální výška 700px */
+  overflow-y: auto; /* Posuvník, pokud obsah přesáhne 700px */
+}
+
+#features_app1 {
+  transition: all 0.3s ease-in-out;
+  width: 0;
+  padding: 0;
+  border: none;
+  overflow: hidden;
+  display: block !important;
+  box-sizing: border-box;
+  opacity: 0;
+  height: 100%; /* Přizpůsobí se výšce #output_all */
+  max-height: 300px; /* Maximální výška 200px */
+  overflow-y: auto; /* Posuvník, pokud obsah přesáhne 200px */
+}
+
+#features_app1.show {
+  width: 30%;
+  padding: 3px;
+  opacity: 0.8;
+}
+
+#features_app1_tab {
+  height: 100%; /* Přizpůsobí se výšce #output_all */
+  max-height: 300px; /* Maximální výška 200px */
+  overflow: hidden; /* Skryje případný přesah textu */
+}
+
+.rotate-text {
+  writing-mode: vertical-rl;
+  text-align: left;
+  white-space: nowrap;
+  padding: 10px 5px;
+  cursor: pointer;
+}
+
 .vertical-tab-right {
   padding-left: 10px;
   padding-right: 10px;
-  border-top-right-radius: 0.25rem !important; /* odpovídá Bootstrap 5's .rounded-end pro horní pravý roh */
-  border-bottom-right-radius: 0.25rem !important; /* odpovídá Bootstrap 5's .rounded-end pro dolní pravý roh */
+  border-top-right-radius: 0.25rem !important;
+  border-bottom-right-radius: 0.25rem !important;
 }
 
 .vertical-tab-green {
   background-color: white;
   color: #3c763d;
-  transition: background-color 0.3s ease; /* pro jemnější přechod */
+  transition: background-color 0.3s ease;
 }
 
 .vertical-tab-green:hover {
@@ -157,23 +189,6 @@ ul.nav-tabs-gray > li > a:focus {
 }
 
 .vertical-tab-green.active {
-  background-color: #dff0d8 !important; /* Zelené pozadí, když je features_app1 viditelný */
-}
-
-#features_app1 {
-  transition: all 0.3s ease-in-out;
-  width: 0;
-  padding: 0; /* Zajišťuje, že padding neovlivňuje skrytí */
-  border: none; /* Odstraní border, pokud by přispíval k viditelnosti */
-  overflow: hidden; /* Skryje obsah, který by mohl překračovat */
-  display: block !important;
-  box-sizing: border-box; /* Zajišťuje, že padding a border jsou zahrnuty ve width */
-  opacity: 0; /* Skryje obsah */
-}
-
-#features_app1.show {
-  width: 30%;
-  padding: 3px;
-  opacity: 0.8;
+  background-color: #dff0d8 !important;
 }
 

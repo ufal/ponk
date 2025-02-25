@@ -207,7 +207,7 @@
             
             // Pokud má element alespoň dvě platné třídy, nastavit žluté pozadí
             if (validClasses.length >= 2) {
-              element.style.backgroundColor = '#727272';
+              element.style.backgroundColor = '#c2c2c2';
               //element.style.color = 'black';   
             } else {
                 // Jinak odstranit nastavení pozadí
@@ -868,22 +868,18 @@
   <div class="tab-pane fade" id="output_stats"></div>
 
   <!-- ============ output panel s formátovaným textem, volbami po pravé straně a záložkou pro zobrazení těchto voleb =========== -->
-  <div class="tab-pane fade show active" id="output_panel" style="overflow: visible;">
-    <div class="d-flex align-items-stretch" style="height: 100%;">
-      <div id="output_all" class="position-relative output-wrapper border border-muted rounded-start p-3 pe-0" style="flex: 1">
-        <!-- ============ output panel s formátovaným textem =========== -->
-        <div id="output_formatted" class="full-height"></div>
-        <!-- ============ volby APP1 =========== -->
-        <!--div id="features_app1" class="side-panel full-height border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; height: 100%; background-color: white; z-index: 10; overflow-y: auto"></div-->
-        <div id="features_app1" class="side-panel full-height border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; height: 100%; background-color: white; z-index: 10; overflow-y: auto"></div>
-      </div>
-      <!-- ============ záložka na pravé straně pro zobrazení/skrytí features_app1 =========== -->
-      <div id="features_app1_tab" class="vertical-tab vertical-tab-green vertical-tab-right" onClick="toggleApp1Features();" style="width: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-        <span class="rotate-text">APP1 Features</span>
-      </div>
+ <div class="tab-pane fade show active" id="output_panel" style="overflow: visible;">
+  <div class="d-flex align-items-stretch" style="height: 100%;">
+    <div id="output_all" class="position-relative output-wrapper border border-muted rounded-start p-3 pe-0" style="flex: 1;">
+      <div id="output_formatted" class="full-height"></div>
+      <div id="features_app1" class="side-panel border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; background-color: white; z-index: 10; overflow-y: auto;"></div>
+    </div>
+    <div id="features_app1_tab" class="vertical-tab vertical-tab-green vertical-tab-right" onClick="toggleApp1Features();" style="width: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+      <span class="rotate-text">APP1 Features</span>
     </div>
   </div>
- <!--div class="btn" onClick="createOrReplaceCSSClass('highlighted-text-app1', { 'color': 'red !important', 'font-size': '20px' });">POKUS</div-->
+ </div>
+<!--div class="btn" onClick="createOrReplaceCSSClass('highlighted-text-app1', { 'color': 'red !important', 'font-size': '20px' });">POKUS</div-->
 </div>
 
 <!-- ================= ACKNOWLEDGEMENTS ================ -->
