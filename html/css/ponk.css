@@ -23,6 +23,31 @@ a:hover {
     text-decoration: underline;
 }
 
+
+/* Zajistí, že záložky budou vodorovné a flexibilní */
+.nav-tabs-custom {
+    display: flex;
+    width: 100%;
+}
+/* Nastavení šířek jednotlivých záložek */
+#input_text_header {
+    width: 40%; /* První záložka - 40% šířky */
+}
+#input_file_header {
+    width: 30%; /* Druhá záložka - 30% šířky */
+}
+.nav-tabs-custom .nav-item:last-child {
+    width: 30%; /* Třetí záložka - 30% šířky */
+}
+/* Upraví odkazy, aby vyplnily celou šířku svého rodiče */
+.nav-tabs-custom .nav-link {
+    display: block;
+    width: 100%;
+}
+
+
+
+
 /* Změní barvu textu neaktivních záložek */
 ul.nav-tabs-green > li > a {
   color: #3c763d;
@@ -121,6 +146,19 @@ ul.nav-tabs-gray > li > a:focus {
     background: #265a88;
 }
 
+
+/* input panel */
+
+#input {
+  outline: none; /* Odstraní ošklivý obrys při fokusu */
+  height: 100%; /* Přizpůsobí se obsahu v rámci #output_all */
+  max-height: 550px; /* Maximální výška */
+  overflow-y: auto; /* Posuvník, pokud obsah přesáhne max-height */
+  color: #333333; /* Tmavá barva pro normální text */
+}
+
+
+
 .full-height {
   height: 100%;
 }
@@ -145,7 +183,7 @@ ul.nav-tabs-gray > li > a:focus {
   box-sizing: border-box;
   opacity: 0;
   height: 100%; /* Přizpůsobí se výšce #output_all */
-  max-height: 300px; /* Maximální výška 200px */
+  max-height: 300px; /* Maximální výška */
   overflow-y: auto; /* Posuvník, pokud obsah přesáhne 200px */
 }
 
