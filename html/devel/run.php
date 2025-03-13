@@ -19,19 +19,16 @@
   });
 
   document.addEventListener("DOMContentLoaded", function() {
-      const textarea = document.getElementById('input');
-      let originalValue = textarea.value;
+      const text_input = document.getElementById('input');
+      let originalValue = text_input.innerHTML;
 
-      textarea.addEventListener('focus', function() {
-          if (this.value === originalValue) {
-              this.value = '';
-              this.style.color = '#333333'; // Změní barvu na tmavou při psaní
+      text_input.addEventListener('focus', function() {
+          if (this.innerHTML === originalValue) {
+              this.innerHTML = '';
           }
       });
-
-      // Nastavení barvy pro předvyplněný text při načtení
-      textarea.style.color = '#bbbbbb';
   });
+
 
   function toggleApp1Features() {
     //console.log("toggleApp1Features: Entering the function.");
@@ -61,11 +58,15 @@
       input_text = input_file_content;
       // console.log("doSubmit: Input text from a file: ", input_text);
     } else { // input as a directly entered text
-      input_text = jQuery('#input').val();
+      //input_text = jQuery('#input').val();
+      const editablePanel = document.getElementById('input');
+      input_text = editablePanel.textContent; // Získá čistý text bez HTML
+      // Odstranění obsahu <style>
+      input_text = input_text.replace(/\/\*[\s\S]*?\*\/|\.[\w-]+\s*{[^}]*}/g, '').trim();
     }
 
     //var input_text = jQuery('#input').val();
-    //console.log("doSubmit: Input text: ", input_text);
+    console.log("doSubmit: Input text: ", input_text);
     var input_format = jQuery('input[name=option_input]:checked').val();
     //console.log("doSubmit: Input format: ", input_format);
     output_format = jQuery('input[name=option_output]:checked').val();
@@ -102,7 +103,7 @@
     }
 
     output_file_content = null;
-    jQuery('#output_formatted').empty();
+    //jQuery('#output_formatted').empty();
     jQuery('#output_stats').empty();
     jQuery('#features_app1').empty();
     jQuery('#submit').html('<span class="fa fa-cog"></span> Waiting for Results <span class="fa fa-cog"></span>');
@@ -118,9 +119,12 @@
         try {
 	  if ("result" in json) {
               output_file_content = json.result;
-              //console.log("Found 'result' in return message:", output_file_content);
+              console.log("doSubmit: Found 'result' in return message:", output_file_content);
               app1_token_ids = getSpanIds(output_file_content);
-              //console.log("App1 token ids: ", app1_token_ids);
+	      //console.log("App1 token ids: ", app1_token_ids);
+	      const editablePanel = document.getElementById('input');
+	      editablePanel.innerHTML = output_file_content;
+	      console.log("doSubmit: New innerHTML of input: ", editablePanel.innerHTML);
               displayFormattedOutput();
 	  }
 
@@ -163,6 +167,10 @@
     }, complete: function() {
       jQuery('#submit').html('<span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span>');
       jQuery('#submit').prop('disabled', false);
+      // přepnutí na panel s textem:
+      const tabElement = document.querySelector('a[href="#input_text"]');
+      const tab = new bootstrap.Tab(tabElement);
+      tab.show();
       //console.log("All completed");
     }});
   }
@@ -539,10 +547,11 @@
       inputName.textContent = `${file.name} (loading...)`;
 
       if (!window.FileReader) {
-        inputName.value = `${file.name} (load error - file loading API not supported, please use newer browser)`;
+        inputName.value = `${file.name} (load error - file loading API not supported, please use a newer browser)`;
         console.log("handleFileChange: load error - file loading API not supported");
         inputName.innerHTML = `<span class="text-danger">${inputName.value}</span>`;
       } else {
+	t=document.getElementById('input'); t.innerHTML=''; // smaž případný předchozí ručně vložený text
         const input_format = document.querySelector('input[name="option_input"]:checked').value;
         const reader = new FileReader();
         console.log("handleFileChange: loading the file...");	      
@@ -594,7 +603,7 @@
     if (!output_file_content || !output_format) return;
     var formatted_output = formatOutput();
     var content_blob = new Blob([formatted_output], {type: output_format == "html" ? "text/html" : "text/plain"});
-    saveAs(content_blob, "citations." + output_format);
+    saveAs(content_blob, "ponk." + output_format);
   }
 
   function saveStats() {
@@ -630,7 +639,8 @@
     // Přidání <br> ke každému novému řádku v proměnné with_or_without_origs
     var formatted_content = output_format == "html" ? formatted_output : formatted_output.replace(/\n/g, "\n<br>");
     //console.log("displayFormattedOutput: ", formatted_content);
-    jQuery('#output_formatted').html(formatted_content);
+    const t=document.getElementById('input');
+    t.innerHTML=formatted_content;
   }
 
 
@@ -691,7 +701,7 @@
       radioInputTXT.checked = true;
     }
     const t=document.getElementById('input');
-    //t.value='';
+    //t.innerHTML='';
     t.focus();
   }
 
@@ -794,16 +804,24 @@
 <!-- ================= INPUT FIELDS ================ -->
 
 <!-- ================ záložky input panelů =============== -->
-<ul class="nav nav-tabs nav-fill nav-tabs-green">
+
+<!--ul class="nav nav-tabs nav-fill nav-tabs-green"-->
+<ul class="nav nav-tabs nav-tabs-green nav-tabs-custom">
   <li class="nav-item position-relative" id="input_text_header">
     <a class="nav-link active" href="#input_text" data-bs-toggle="tab" onclick="handleInputTextHeaderClicked();">
-      <span class="fa fa-font"></span> 
+      <span class="fa fa-font"></span>
       <?php echo $lang[$currentLang]['run_input_text']; ?>
     </a>
-    <!-- Tlačítko umístěné těsně u pravého okraje záložky -->
-    <button class="btn btn-sm btn-primary btn-ponk-colors btn-ponk-small position-absolute" style="top: 10px; right: 10px; z-index: 1;" onclick="var t=document.getElementById('input'); t.value=''; t.focus();">
-      <span class="fas fa-trash"></span> <?php echo $lang[$currentLang]['run_input_text_button_delete']; ?>
-    </button>
+    
+    <!-- Tlačítka umístěná těsně u pravého okraje záložky -->
+    <span class="position-absolute" style="margin: 0px; padding: 0px; top: 5px; right: 10px; z-index: 1">
+      <button class="btn btn-sm btn-primary btn-ponk-colors btn-ponk-small" style="top: 10px; right: 10px; z-index: 1;" onclick="var t=document.getElementById('input'); t.innerHTML=''; t.focus();">
+        <span class="fas fa-trash"></span> <?php echo $lang[$currentLang]['run_input_text_button_delete']; ?>
+      </button>
+      <button class="btn btn-primary btn-sm btn-ponk-colors btn-ponk-small" style="top: 10px; right: 10px; z-index: 1;" onclick="saveOutput();">
+        <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_text_button_save']; ?> 
+      </button>
+    </span>
   </li>
   <li class="nav-item" id="input_file_header">
     <a class="nav-link" href="#input_file" data-bs-toggle="tab">
@@ -811,45 +829,6 @@
       <?php echo $lang[$currentLang]['run_input_file']; ?>
     </a>
   </li>
-</ul>
-
-<!-- ================ input panely =============== -->
-<div class="tab-content" id="input_tabs" style="border: 1px solid #ddd; border-radius: 0 0 .25rem .25rem; padding: 15px;">
-  <!--div class="tab-pane show active" id="input_text">
-    <textarea id="input" class="form-control" rows="10" cols="80"></textarea>
-  </div-->
-<div class="tab-pane show active" id="input_text">
-    <textarea id="input" class="form-control" rows="10" cols="80"><?php echo $lang['cs']['run_input_text_default_text']; ?></textarea>
-</div>
-  <div class="tab-pane" id="input_file">
-    <div class="input-group">
-      <input type="text" class="form-control" id="input_file_name" readonly>
-      <label class="input-group-text btn btn-success btn-file" for="input_file_field"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ...</label>
-      <input type="file" id="input_file_field" class="visually-hidden" onchange="handleFileChange(this)">
-    </div>
-  </div>
-</div>
-
-<!-- ================= THE MAIN PROCESS BUTTON ================ -->
-
-<button id="submit" class="btn btn-primary btn-ponk-colors form-control mt-3" type="submit" onclick="doSubmit()">
-  <span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span>
-</button>
-
-<!-- ================= OUTPUT FIELDS ================ -->
-
-<!-- ================ záložky output panelů =============== -->
-<ul class="nav nav-tabs nav-fill nav-tabs-green">
-
-  <li class="nav-item position-relative">
-    <a class="nav-link active" href="#output_panel" data-bs-toggle="tab">
-      <span class="fa fa-font"></span> <?php echo $lang[$currentLang]['run_output_text']; ?>
-    </a>
-    <button class="btn btn-primary btn-sm btn-ponk-colors btn-ponk-small position-absolute" style="top: 10px; right: 10px; z-index: 1;" onclick="saveOutput();">
-      <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_text_button_save']; ?> 
-    </button>
-  </li>
-
   <li class="nav-item position-relative">
     <a class="nav-link" href="#output_stats" data-bs-toggle="tab">
       <span class="fa fa-table"></span> <?php echo $lang[$currentLang]['run_output_statistics']; ?>
@@ -858,20 +837,33 @@
       <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_statistics_button_save']; ?> 
     </button>
   </li>
-
 </ul>
 
-<!-- ================ output panely =============== -->
-<div class="tab-content" id="output_tabs" style="border: 1px solid #ddd; border-radius: 0 0 .25rem .25rem; padding: 15px;">
+<!-- ================= THE MAIN PROCESS BUTTON ================ -->
+
+<button id="submit" class="btn btn-primary btn-ponk-colors form-control" type="submit" onclick="doSubmit()">
+  <span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span>
+</button>
+
+<!-- ================ INPUT/OUTPUT PANELY =============== -->
+<div class="tab-content" id="input_tabs" style="border: 1px solid #ddd; border-radius: 0 0 .25rem .25rem; padding: 15px;">
 
   <!-- ============ output panel se statistikami =========== -->
   <div class="tab-pane fade" id="output_stats"></div>
 
-  <!-- ============ output panel s formátovaným textem, volbami po pravé straně a záložkou pro zobrazení těchto voleb =========== -->
- <div class="tab-pane fade show active" id="output_panel" style="overflow: visible;">
+  <!-- ===== input/output panel s formátovaným textem, volbami po pravé straně a záložkou pro zobrazení těchto voleb ===== -->
+ <div class="tab-pane fade show active" id="input_text" style="overflow: visible;">
   <div class="d-flex align-items-stretch" style="height: 100%;">
     <div id="output_all" class="position-relative output-wrapper border border-muted rounded-start p-3 pe-0" style="flex: 1;">
-      <div id="output_formatted" class="full-height"></div>
+      <!--div id="output_formatted" class="full-height"></div-->
+
+      <!-- ============ editovatelný vstupní/výstupní text =========== -->
+      <div class="tab-pane" id="input_text_proper">
+        <div id="input" contenteditable="true" class="p-3 border rounded" style="min-height: 100px;">
+          <span style="color: #bbbbbb"><?php echo $lang['cs']['run_input_text_default_text']; ?></span>
+        </div>
+      </div>
+
       <div id="features_app1" class="side-panel border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; background-color: white; z-index: 10; overflow-y: auto;"></div>
     </div>
     <div id="features_app1_tab" class="vertical-tab vertical-tab-green vertical-tab-right" onClick="toggleApp1Features();" style="width: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
@@ -879,8 +871,18 @@
     </div>
   </div>
  </div>
-<!--div class="btn" onClick="createOrReplaceCSSClass('highlighted-text-app1', { 'color': 'red !important', 'font-size': '20px' });">POKUS</div-->
+
+  <!-- ============ načtení souboru =========== -->
+  <div class="tab-pane" id="input_file">
+    <div class="input-group">
+      <input type="text" class="form-control" id="input_file_name" readonly>
+      <label class="input-group-text btn btn-success btn-file" for="input_file_field"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ...</label>
+      <input type="file" id="input_file_field" class="visually-hidden" onchange="handleFileChange(this)">
+    </div>
+  </div>
+
 </div>
+
 
 <!-- ================= ACKNOWLEDGEMENTS ================ -->
 
