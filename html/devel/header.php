@@ -42,6 +42,8 @@ $currentLang = $_SESSION['lang'];
   <!-- Bootstrap 5 JavaScript, nyní bez jQuery -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js" type="text/javascript"></script>
+  <!-- Načtení Turndown pro konverzi html do markdownu -->
+  <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
 </head>
 
 <body id="lindat-services">

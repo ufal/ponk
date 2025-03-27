@@ -13,6 +13,11 @@
   
   var app1_token_ids = []; // an array of ids of tokens in the result (<span>) marked by app1
 
+
+  // Inicializace Turndown pro převod html do markdownu
+  const turndownService = new TurndownService();
+
+
   document.addEventListener("DOMContentLoaded", function() {
       getInfo();
       //console.log("DOM byl kompletně načten!");
@@ -43,10 +48,15 @@
     }
   }
 
+
   function doSubmit() {
     //console.log("doSubmit: Entering the function.");
     app1_rule_active = {}; // forget previous app1 rules activity statuses
     var input_text;
+
+    var input_format = jQuery('input[name=option_input]:checked').val();
+    //console.log("doSubmit: Input format: ", input_format);
+
     let activePanelId = getActivePanelID('#input_tabs');
     if (activePanelId) {
       console.log('Aktivní panel ID:', activePanelId);
@@ -60,15 +70,31 @@
     } else { // input as a directly entered text
       //input_text = jQuery('#input').val();
       const editablePanel = document.getElementById('input');
-      input_text = editablePanel.textContent; // Získá čistý text bez HTML
+
+           
+      if (input_format === "txt") {
+        input_text = editablePanel.innerText; // Pouze text bez formátování
+        console.log("doSubmit: Input plain text: ", input_text);
+      } else {
+        let input_text_html = editablePanel.innerHTML; // Plný HTML obsah
+        console.log("doSubmit: Input html before testing html tag: ", input_text_html);
+        if (isHTML(input_text_html)) { // tzn. už zpracováváme dříve vrácenou html odpověď: html převedeme na MarkDown
+          console.log("doSubmit: Input html: ", input_text_html);
+          input_text = turndownService.turndown(input_text_html);
+          console.log("doSubmit: Input html as markdown: ", input_text);
+        }
+	else { // ručně vložený MarkDown
+          input_text = editablePanel.innerText;
+          console.log("doSubmit: Input MarkDown text: ", input_text);
+	}
+      }
+
       // Odstranění obsahu <style>
       input_text = input_text.replace(/\/\*[\s\S]*?\*\/|\.[\w-]+\s*{[^}]*}/g, '').trim();
     }
 
     //var input_text = jQuery('#input').val();
     console.log("doSubmit: Input text: ", input_text);
-    var input_format = jQuery('input[name=option_input]:checked').val();
-    //console.log("doSubmit: Input format: ", input_format);
     output_format = jQuery('input[name=option_output]:checked').val();
     //console.log("doSubmit: Output format: ", output_format);
     // Zjistíme stav checkboxu s id "option-randomize"
@@ -174,6 +200,13 @@
       //console.log("All completed");
     }});
   }
+
+
+  // Funkce pro detekci, zda text začíná <html>
+  function isHTML(text) {
+    return /^\s*<html/i.test(text); // Ignoruje mezery na začátku a je case-insensitive
+  }
+
 
 
   // vrátí pole id z elementů span v daném html kódu
