@@ -639,12 +639,20 @@
     saveAs(content_blob, "ponk." + output_format);
   }
 
-  function saveStats() {
-    if (!output_file_stats) return;
-    var stats_blob = new Blob([output_file_stats], {type: "text/html"});
-    saveAs(stats_blob, "statistics.html");
-  }
+  //function saveStats() {
+  //  if (!output_file_stats) return;
+  //  var stats_blob = new Blob([output_file_stats], {type: "text/html"});
+  //  saveAs(stats_blob, "statistics.html");
+  //}
 
+  function deleteAll() {
+    var inputDiv = document.getElementById('input');
+    inputDiv.innerHTML = '';
+    inputDiv.focus();
+    document.getElementById('output_stats').innerHTML = '';
+    document.getElementById('features_app1').innerHTML = '';
+    document.getElementById('features_app2').innerHTML = 'TODO';
+  }
 
   function formatOutput() { 
     var formatted_output = output_file_content;  
@@ -793,129 +801,121 @@
   </div>
 </div>
 
-  <!-- ================= OPTIONS ================ -->
-
-<div class="row gx-2 gy-0 mt-lg-3 mb-lg-2" style="font-size: 0.9rem;">
-  <div class="col-12 col-md-1 text-end">
-    <label class="form-label fw-bold me-5"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
-  </div>
-  <div class="col-12 col-md-10">
-    <div class="form-check form-check-inline">
-      <input class="form-check-input" type="radio" name="option_input" id="option_input_plaintext" value="txt" checked>
-      <label class="form-check-label" for="option_input_plaintext" title="<?php echo $lang[$currentLang]['run_options_input_plain_popup']; ?>">
-        <?php echo $lang[$currentLang]['run_options_input_plain']; ?>
-      </label>
-    </div>
-    <div class="form-check form-check-inline">
-      <input class="form-check-input" type="radio" name="option_input" id="option_input_markdown" value="md">
-      <label class="form-check-label" for="option_input_markdown" title="<?php echo $lang[$currentLang]['run_options_input_md_popup']; ?>">
-        <?php echo $lang[$currentLang]['run_options_input_md']; ?>
-      </label>
-    </div>
-    <div class="form-check form-check-inline">
-      <input class="form-check-input" type="radio" name="option_input" id="option_input_docx" value="docx" onchange="handleInputFormatChange();">
-      <label class="form-check-label" for="option_input_docx" title="<?php echo $lang[$currentLang]['run_options_input_msworddocx_popup']; ?>">
-        <?php echo $lang[$currentLang]['run_options_input_msworddocx']; ?>
-      </label>
-    </div>
-  </div>
-
-  <!--div class="col-12 col-md-2 text-end mt-0">
-    <label class="form-label fw-bold me-5"><?php echo $lang[$currentLang]['run_options_output_label']; ?>:</label>
-  </div>
-  <div class="col-12 col-md-10 mt-0">
-    <div class="form-check form-check-inline">
-      <input class="form-check-input" type="radio" name="option_output" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();">
-      <label class="form-check-label" for="option_output_html" title="<?php echo $lang[$currentLang]['run_options_output_html_popup']; ?>">
-        <?php echo $lang[$currentLang]['run_options_output_html']; ?>
-      </label>
-    </div>
-  </div-->
-</div>
-
 
 <!-- ================= INPUT FIELDS ================ -->
 
-<!-- ================ záložky input panelů =============== -->
+<div class="container-fluid border rounded px-0" style="height: 80vh;">
+  <div class="row gx-2 h-100">
 
-<!--ul class="nav nav-tabs nav-fill nav-tabs-green"-->
-<ul class="nav nav-tabs nav-tabs-green nav-tabs-custom">
-  <li class="nav-item position-relative" id="input_text_header">
-    <a class="nav-link active" href="#input_text" data-bs-toggle="tab" onclick="handleInputTextHeaderClicked();">
-      <span class="fa fa-font"></span>
-      <?php echo $lang[$currentLang]['run_input_text']; ?>
-    </a>
-    
-    <!-- Tlačítka umístěná těsně u pravého okraje záložky -->
-    <span class="position-absolute" style="margin: 0px; padding: 0px; top: 5px; right: 10px; z-index: 1">
-      <button class="btn btn-sm btn-primary btn-ponk-colors btn-ponk-small" style="top: 10px; right: 10px; z-index: 1;" onclick="var t=document.getElementById('input'); t.innerHTML=''; t.focus();">
-        <span class="fas fa-trash"></span> <?php echo $lang[$currentLang]['run_input_text_button_delete']; ?>
-      </button>
-      <button class="btn btn-primary btn-sm btn-ponk-colors btn-ponk-small" style="top: 10px; right: 10px; z-index: 1;" onclick="saveOutput();">
-        <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_text_button_save']; ?> 
-      </button>
-    </span>
-  </li>
-  <li class="nav-item" id="input_file_header">
-    <a class="nav-link" href="#input_file" data-bs-toggle="tab">
-      <span class="far fa-file-alt"></span> 
-      <?php echo $lang[$currentLang]['run_input_file']; ?>
-    </a>
-  </li>
-  <li class="nav-item position-relative">
-    <a class="nav-link" href="#output_stats" data-bs-toggle="tab">
-      <span class="fa fa-table"></span> <?php echo $lang[$currentLang]['run_output_statistics']; ?>
-    </a>
-    <button class="btn btn-primary btn-sm btn-ponk-colors btn-ponk-small position-absolute" style="top: 10px; right: 10px; z-index: 1;" onclick="saveStats();">
-      <span class="fa fa-download"></span> <?php echo $lang[$currentLang]['run_output_statistics_button_save']; ?> 
-    </button>
-  </li>
-</ul>
-
-<!-- ================= THE MAIN PROCESS BUTTON ================ -->
-
-<button id="submit" class="btn btn-primary btn-ponk-colors form-control" type="submit" onclick="doSubmit()">
-  <span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span>
-</button>
-
-<!-- ================ INPUT/OUTPUT PANELY =============== -->
-<div class="tab-content" id="input_tabs" style="border: 1px solid #ddd; border-radius: 0 0 .25rem .25rem; padding: 15px;">
-
-  <!-- ============ output panel se statistikami =========== -->
-  <div class="tab-pane fade" id="output_stats"></div>
-
-  <!-- ===== input/output panel s formátovaným textem, volbami po pravé straně a záložkou pro zobrazení těchto voleb ===== -->
- <div class="tab-pane fade show active" id="input_text" style="overflow: visible;">
-  <div class="d-flex align-items-stretch" style="height: 100%;">
-    <div id="output_all" class="position-relative output-wrapper border border-muted rounded-start p-3 pe-0" style="flex: 1;">
-      <!--div id="output_formatted" class="full-height"></div-->
-
-      <!-- ============ editovatelný vstupní/výstupní text =========== -->
-      <div class="tab-pane" id="input_text_proper">
-        <div id="input" contenteditable="true" class="p-3 border rounded" style="min-height: 100px;">
-          <span style="color: #bbbbbb"><?php echo $lang['cs']['run_input_text_default_text']; ?></span>
-        </div>
+<!-- Levá část (2/3 šířky) -->
+<div class="col-md-8 d-flex flex-column h-100">
+  <!-- Options -->
+  <div class="row gx-2 gy-0 mt-lg-3 mb-lg-2" style="font-size: 0.9rem;">
+    <div class="col-12 col-md-1 text-end ms-1">
+      <label class="form-label fw-bold me-5"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
+    </div>
+    <div class="col-12 col-md-10">
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="option_input" id="option_input_plaintext" value="txt" checked>
+        <label class="form-check-label" for="option_input_plaintext" title="<?php echo $lang[$currentLang]['run_options_input_plain_popup']; ?>">
+          <?php echo $lang[$currentLang]['run_options_input_plain']; ?>
+        </label>
       </div>
-
-      <div id="features_app1" class="side-panel border border-muted p-3 bg-light ms-3" style="position: absolute; right: 0; top: 0; background-color: white; z-index: 10; overflow-y: auto;"></div>
-    </div>
-    <div id="features_app1_tab" class="vertical-tab vertical-tab-green vertical-tab-right" onClick="toggleApp1Features();" style="width: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-      <span class="rotate-text">APP1 Features</span>
-    </div>
-  </div>
- </div>
-
-  <!-- ============ načtení souboru =========== -->
-  <div class="tab-pane" id="input_file">
-    <div class="input-group">
-      <input type="text" class="form-control" id="input_file_name" readonly>
-      <label class="input-group-text btn btn-success btn-file" for="input_file_field"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ...</label>
-      <input type="file" id="input_file_field" class="visually-hidden" onchange="handleFileChange(this)">
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="option_input" id="option_input_markdown" value="md">
+        <label class="form-check-label" for="option_input_markdown" title="<?php echo $lang[$currentLang]['run_options_input_md_popup']; ?>">
+          <?php echo $lang[$currentLang]['run_options_input_md']; ?>
+        </label>
+      </div>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="option_input" id="option_input_docx" value="docx" onchange="handleInputFormatChange();">
+        <label class="form-check-label" for="option_input_docx" title="<?php echo $lang[$currentLang]['run_options_input_msworddocx_popup']; ?>">
+          <?php echo $lang[$currentLang]['run_options_input_msworddocx']; ?>
+        </label>
+      </div>
     </div>
   </div>
 
+  <!-- Záložky levé části-->
+  <ul class="nav nav-tabs nav-tabs-green nav-tabs-custom nav-fill">
+    <li class="nav-item" id="input_text_header">
+      <a class="nav-link active d-flex align-items-center" href="#input_text" data-bs-toggle="tab" onclick="handleInputTextHeaderClicked();">
+        <span class="fa fa-font me-2"></span>
+        <span><?php echo $lang[$currentLang]['run_input_text']; ?></span>
+        <div class="ms-auto d-flex gap-2">
+          <button class="btn btn-sm btn-primary btn-ponk-colors btn-ponk-small" onclick="deleteAll(); event.stopPropagation();">
+            <span class="fas fa-trash"></span>
+          </button>
+          <button class="btn btn-primary btn-sm btn-ponk-colors btn-ponk-small" onclick="saveOutput(); event.stopPropagation();">
+            <span class="fa fa-download"></span>
+          </button>
+        </div>
+      </a>
+    </li>
+    <li class="nav-item">
+      <button id="submit" class="nav-link btn btn-primary btn-ponk-colors d-flex align-items-center justify-content-center w-100 text-white" type="submit" onclick="doSubmit()">
+        <span class="fa fa-arrow-down me-2"></span>
+        <span><?php echo $lang[$currentLang]['run_process_input']; ?></span>
+        <span class="fa fa-arrow-down ms-2"></span>
+      </button>
+    </li>
+    <li class="nav-item" id="input_file_header">
+      <a class="nav-link" href="#input_file" data-bs-toggle="tab">
+        <span class="far fa-file-alt"></span> 
+        <?php echo $lang[$currentLang]['run_input_file']; ?>
+      </a>
+    </li>
+  </ul>
+
+  <!-- Panely levé části -->
+  <div class="tab-content flex-grow-1" id="input_tabs" style="border: 1px solid #ddd; border-radius: .25rem .25rem .25rem .25rem; padding: 0px; overflow-y: auto;">
+    <div class="tab-pane fade show active h-100" id="input_text">
+      <div id="input" contenteditable="true" class="p-3 border rounded" style="min-height: 100px; height: 100%; overflow-y: auto;">
+        <span style="color: #bbbbbb"><?php echo $lang[$currentLang]['run_input_text_default_text']; ?></span>
+      </div>
+    </div>
+    <div class="tab-pane fade h-100" id="input_file">
+      <div class="input-group">
+        <input type="text" class="form-control" id="input_file_name" readonly>
+        <label class="input-group-text btn btn-success btn-file" for="input_file_field"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ...</label>
+        <input type="file" id="input_file_field" class="visually-hidden" onchange="handleFileChange(this)">
+      </div>
+    </div>
+  </div>
 </div>
 
+
+<!-- Pravá část (1/3 šířky) -->
+<div class="col-md-4 d-flex flex-column h-100">
+  <!-- Záložka pro pravou část -->
+  <ul class="nav nav-tabs nav-fill nav-tabs-green nav-tabs-custom nav-fill">
+    <li class="nav-item">
+      <a class="nav-link d-flex align-items-center" href="#output_stats" data-bs-toggle="tab">
+        <span><?php echo $lang[$currentLang]['run_output_statistics']; ?></span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link active d-flex align-items-center" href="#features_app1" data-bs-toggle="tab">
+        <span><?php echo $lang[$currentLang]['run_output_app1']; ?></span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link d-flex align-items-center" href="#features_app2" data-bs-toggle="tab">
+        <span><?php echo $lang[$currentLang]['run_output_app2']; ?></span>
+      </a>
+    </li>
+  </ul>
+
+  <!-- Panely pro pravou část -->
+  <div class="tab-content flex-grow-1" id="output_tabs" style="border: 1px solid #ddd; border-radius: .25rem; padding: 15px; overflow-y: auto;">
+    <div class="tab-pane fade h-100" id="output_stats" style="width: 100%;"></div>
+    <div id="features_app1" class="tab-pane active show fade h-100" style="width: 100%; white-space: normal; word-wrap: break-word;"></div>
+    <div id="features_app2" class="tab-pane fade h-100" style="width: 100%;">TODO</div>
+  </div>
+</div>
+
+  </div>
+</div>
 
 <!-- ================= ACKNOWLEDGEMENTS ================ -->
 

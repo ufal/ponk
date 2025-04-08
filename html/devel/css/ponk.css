@@ -173,7 +173,7 @@ ul.nav-tabs-gray > li > a:focus {
   overflow-y: auto; /* Posuvník, pokud obsah přesáhne 700px */
 }
 
-#features_app1 {
+#features_app1_old {
   transition: all 0.3s ease-in-out;
   width: 0;
   padding: 0;
