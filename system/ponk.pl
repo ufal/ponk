@@ -27,13 +27,13 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.31 20250313'; # version of the program
+my $VER = '0.32 20250408'; # version of the program
 
 my @features = ('testink ponk-app1');
 
 my $FEATS = join(' • ', @features); 
 
-my $DESC = "<h4>Features in this PONK version:</h4>\n<ul>\n";
+my $DESC = "<h5>Features in this PONK version:</h5>\n<ul>\n";
 
 foreach my $feature (@features) {
   $DESC .= "<li>$feature\n";
@@ -41,7 +41,7 @@ foreach my $feature (@features) {
 
 $DESC .= <<END_DESC;
 </ul>
-<h4>Planned features:</h4>
+<h5>Planned features:</h5>
 <ul>
 <li>Full support for ponk-app1 (rules and text-wide statistics)
 <li>Full support for ponk-app2 (lexical surprise)
@@ -1553,8 +1553,12 @@ sub get_stats_html {
   $stats .= <<END_HEAD;
 <head>
   <style>
-    h3 {
-      margin-top: 5px;
+    h4 {
+      margin-top: 3px;
+      font-size: 1.2rem;
+    }
+    h5 {
+      font-size: 1.1rem;
     }
     table {
       border-collapse: collapse;
@@ -1577,7 +1581,7 @@ END_HEAD
 
   $stats .= "<body>\n";
 
-  $stats .= "<h3>PONK version $VER</h3>\n";
+  $stats .= "<h4>PONK version $VER</h4>\n";
   
   $stats .= "<p>Number of sentences: $sentences_count\n";
   $stats .= "<br/>Number of tokens: $tokens_count\n";
@@ -1585,7 +1589,7 @@ END_HEAD
   $stats .= "<br/>Processing time: $rounded_time sec.\n";
   $stats .= "</p>\n";
   
-  $stats .= "<h4>Measures from PONK-APP1 (work in progress!)</h4>\n";
+  $stats .= "<h5>Measures from PONK-APP1 (work in progress!)</h5>\n";
   my $app1_string = app1_metrics2string('html', $app1_metrics);
   $stats .= "<p>$app1_string</p>";
   
