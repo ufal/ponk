@@ -743,7 +743,7 @@
 
   <!-- ================= ABOUT ================ -->
 
-<div class="card">
+<!--div class="card">
   <div class="card-header" role="tab" id="aboutHeading">
     <button class="btn btn-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#aboutContent" aria-expanded="false" aria-controls="aboutContent">
       <i class="fa-solid fa-caret-down"></i> <?php echo $lang[$currentLang]['run_about_line']; ?>
@@ -762,16 +762,17 @@
             }
           ?>
   </div>
-</div>
+</div-->
 
   <!-- ================= SERVER INFO ================ -->
 
-<div class="card">
-  <div class="card-header" role="tab" id="serverInfoHeading">
-    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent">
-      <i class="fa-solid fa-caret-down" aria-hidden="true"></i> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" class="d-none"></span>
+<div class="card mt-2">
+  <div class="card-header" role="tab" id="serverInfoHeading" style="padding: 0.2rem 1rem; min-height: unset;">
+    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent" style="padding: 0.2rem 0.5rem;">
+      <i class="fa-solid fa-caret-down" aria-hidden="true" style="font-size: 0.8rem;"></i> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" class="d-none"></span>
     </button>
   </div>
+
   <div id="serverInfoContent" class="collapse m-1" role="tabpanel" aria-labelledby="serverInfoHeading">
       <div id="server_info" class="d-none"></div>
 
@@ -794,8 +795,8 @@
 
   <!-- ================= OPTIONS ================ -->
 
-<div class="row gx-2 gy-0 mt-lg-3 mb-lg-3">
-  <div class="col-12 col-md-2 text-end">
+<div class="row gx-2 gy-0 mt-lg-3 mb-lg-2" style="font-size: 0.9rem;">
+  <div class="col-12 col-md-1 text-end">
     <label class="form-label fw-bold me-5"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
   </div>
   <div class="col-12 col-md-10">
@@ -819,7 +820,7 @@
     </div>
   </div>
 
-  <div class="col-12 col-md-2 text-end mt-0">
+  <!--div class="col-12 col-md-2 text-end mt-0">
     <label class="form-label fw-bold me-5"><?php echo $lang[$currentLang]['run_options_output_label']; ?>:</label>
   </div>
   <div class="col-12 col-md-10 mt-0">
@@ -827,10 +828,9 @@
       <input class="form-check-input" type="radio" name="option_output" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();">
       <label class="form-check-label" for="option_output_html" title="<?php echo $lang[$currentLang]['run_options_output_html_popup']; ?>">
         <?php echo $lang[$currentLang]['run_options_output_html']; ?>
-        <!-- (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">colour-marked</a>) -->
       </label>
     </div>
-  </div>
+  </div-->
 </div>
 
 
