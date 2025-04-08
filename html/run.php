@@ -13,6 +13,11 @@
   
   var app1_token_ids = []; // an array of ids of tokens in the result (<span>) marked by app1
 
+
+  // Inicializace Turndown pro převod html do markdownu
+  const turndownService = new TurndownService();
+
+
   document.addEventListener("DOMContentLoaded", function() {
       getInfo();
       //console.log("DOM byl kompletně načten!");
@@ -43,10 +48,15 @@
     }
   }
 
+
   function doSubmit() {
     //console.log("doSubmit: Entering the function.");
     app1_rule_active = {}; // forget previous app1 rules activity statuses
     var input_text;
+
+    var input_format = jQuery('input[name=option_input]:checked').val();
+    //console.log("doSubmit: Input format: ", input_format);
+
     let activePanelId = getActivePanelID('#input_tabs');
     if (activePanelId) {
       console.log('Aktivní panel ID:', activePanelId);
@@ -60,15 +70,31 @@
     } else { // input as a directly entered text
       //input_text = jQuery('#input').val();
       const editablePanel = document.getElementById('input');
-      input_text = editablePanel.textContent; // Získá čistý text bez HTML
+
+           
+      if (input_format === "txt") {
+        input_text = editablePanel.innerText; // Pouze text bez formátování
+        console.log("doSubmit: Input plain text: ", input_text);
+      } else {
+        let input_text_html = editablePanel.innerHTML; // Plný HTML obsah
+        console.log("doSubmit: Input html before testing html tag: ", input_text_html);
+        if (isHTML(input_text_html)) { // tzn. už zpracováváme dříve vrácenou html odpověď: html převedeme na MarkDown
+          console.log("doSubmit: Input html: ", input_text_html);
+          input_text = turndownService.turndown(input_text_html);
+          console.log("doSubmit: Input html as markdown: ", input_text);
+        }
+	else { // ručně vložený MarkDown
+          input_text = editablePanel.innerText;
+          console.log("doSubmit: Input MarkDown text: ", input_text);
+	}
+      }
+
       // Odstranění obsahu <style>
       input_text = input_text.replace(/\/\*[\s\S]*?\*\/|\.[\w-]+\s*{[^}]*}/g, '').trim();
     }
 
     //var input_text = jQuery('#input').val();
     console.log("doSubmit: Input text: ", input_text);
-    var input_format = jQuery('input[name=option_input]:checked').val();
-    //console.log("doSubmit: Input format: ", input_format);
     output_format = jQuery('input[name=option_output]:checked').val();
     //console.log("doSubmit: Output format: ", output_format);
     // Zjistíme stav checkboxu s id "option-randomize"
@@ -174,6 +200,13 @@
       //console.log("All completed");
     }});
   }
+
+
+  // Funkce pro detekci, zda text začíná <html>
+  function isHTML(text) {
+    return /^\s*<html/i.test(text); // Ignoruje mezery na začátku a je case-insensitive
+  }
+
 
 
   // vrátí pole id z elementů span v daném html kódu
@@ -710,7 +743,7 @@
 
   <!-- ================= ABOUT ================ -->
 
-<div class="card">
+<!--div class="card">
   <div class="card-header" role="tab" id="aboutHeading">
     <button class="btn btn-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#aboutContent" aria-expanded="false" aria-controls="aboutContent">
       <i class="fa-solid fa-caret-down"></i> <?php echo $lang[$currentLang]['run_about_line']; ?>
@@ -729,16 +762,17 @@
             }
           ?>
   </div>
-</div>
+</div-->
 
   <!-- ================= SERVER INFO ================ -->
 
-<div class="card">
-  <div class="card-header" role="tab" id="serverInfoHeading">
-    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent">
-      <i class="fa-solid fa-caret-down" aria-hidden="true"></i> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" class="d-none"></span>
+<div class="card mt-2">
+  <div class="card-header" role="tab" id="serverInfoHeading" style="padding: 0.2rem 1rem; min-height: unset;">
+    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent" style="padding: 0.2rem 0.5rem;">
+      <i class="fa-solid fa-caret-down" aria-hidden="true" style="font-size: 0.8rem;"></i> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" class="d-none"></span>
     </button>
   </div>
+
   <div id="serverInfoContent" class="collapse m-1" role="tabpanel" aria-labelledby="serverInfoHeading">
       <div id="server_info" class="d-none"></div>
 
@@ -761,8 +795,8 @@
 
   <!-- ================= OPTIONS ================ -->
 
-<div class="row gx-2 gy-0 mt-lg-3 mb-lg-3">
-  <div class="col-12 col-md-2 text-end">
+<div class="row gx-2 gy-0 mt-lg-3 mb-lg-2" style="font-size: 0.9rem;">
+  <div class="col-12 col-md-1 text-end">
     <label class="form-label fw-bold me-5"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
   </div>
   <div class="col-12 col-md-10">
@@ -786,7 +820,7 @@
     </div>
   </div>
 
-  <div class="col-12 col-md-2 text-end mt-0">
+  <!--div class="col-12 col-md-2 text-end mt-0">
     <label class="form-label fw-bold me-5"><?php echo $lang[$currentLang]['run_options_output_label']; ?>:</label>
   </div>
   <div class="col-12 col-md-10 mt-0">
@@ -794,10 +828,9 @@
       <input class="form-check-input" type="radio" name="option_output" value="html" id="option_output_html" checked onchange="handleOutputFormatChange();">
       <label class="form-check-label" for="option_output_html" title="<?php echo $lang[$currentLang]['run_options_output_html_popup']; ?>">
         <?php echo $lang[$currentLang]['run_options_output_html']; ?>
-        <!-- (<a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">colour-marked</a>) -->
       </label>
     </div>
-  </div>
+  </div-->
 </div>
 
 
