@@ -50,9 +50,10 @@ $currentLang = $_SESSION['lang'];
   <div class="lindat-common">
     <div class="container">
       <!-- Service title a menu vedle sebe -->
-      <div class="d-flex align-items-center justify-content-between pt-lg-3">
+      <div class="d-flex align-items-end justify-content-between pt-lg-3">
         <!-- Nápis PONK -->
-        <h1 class="me-3 mb-0">PONK</h1>
+	<!--h1 class="me-3 mb-0">PONK</h1-->
+        <img src="img/PONK.png" height="65px" style="padding-bottom: 5px; padding-top: 0px; padding-left: 2px">
 
         <!-- Menu a vlaječka -->
         <div class="d-flex align-items-center">
