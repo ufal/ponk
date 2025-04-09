@@ -132,7 +132,7 @@
     //jQuery('#output_formatted').empty();
     jQuery('#output_stats').empty();
     jQuery('#features_app1').empty();
-    jQuery('#submit').html('<span class="fa fa-cog"></span> Waiting for Results <span class="fa fa-cog"></span>');
+    jQuery('#submit').html('<span class="fa fa-cog"></span>&nbsp;<?php echo $lang[$currentLang]['run_process_input_processing']; ?>&nbsp;<span class="fa fa-cog"></span>');
     jQuery('#submit').prop('disabled', true);
 
     jQuery.ajax('//quest.ms.mff.cuni.cz/ponk/api/process', {
@@ -184,14 +184,14 @@
 	  }
 
       } catch(e) {
-        jQuery('#submit').html('<span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span>');
+        jQuery('#submit').html('<span class="fa fa-arrow-down"></span>&nbsp;<?php echo $lang[$currentLang]['run_process_input']; ?>&nbsp;<span class="fa fa-arrow-down"></span>');
         jQuery('#submit').prop('disabled', false);
         //console.log("doSubmit: Caught an error!");
       }
     }, error: function(jqXHR, textStatus) {
       alert("An error occurred" + ("responseText" in jqXHR ? ": " + jqXHR.responseText : "!"));
     }, complete: function() {
-      jQuery('#submit').html('<span class="fa fa-arrow-down"></span> <?php echo $lang[$currentLang]['run_process_input']; ?> <span class="fa fa-arrow-down"></span>');
+      jQuery('#submit').html('<span class="fa fa-arrow-down"></span>&nbsp;<?php echo $lang[$currentLang]['run_process_input']; ?>&nbsp;<span class="fa fa-arrow-down"></span>');
       jQuery('#submit').prop('disabled', false);
       // přepnutí na panel s textem:
       const tabElement = document.querySelector('a[href="#input_text"]');
