@@ -12,7 +12,7 @@
   </ul>
 </div>
 
-<p><?php echo $lang[$currentLang]['api_service_url']; ?>
+<p style="margin-left: 0px; margin-top: 8px; margin-bottom: 5px; margin-right: 5px"><?php echo $lang[$currentLang]['api_service_url']; ?>
 <code>http(s)://quest.ms.mff.cuni.cz/ponk/api/</code>.</p>
 
           <?php

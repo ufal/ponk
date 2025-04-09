@@ -3,11 +3,11 @@
 <?php
   if ($currentLang == 'cs') {
 ?>
-    <div style="margin: 5px"><?php require('about_cs.html') ?></div>
+    <div style="margin-left: 0px; margin-top: 8px; margin-bottom: 5px; margin-right: 5px"><?php require('about_cs.html') ?></div>
 <?php
   } else {
 ?>
-    <div style="margin: 5px"><?php require('about_en.html') ?></div>
+    <div style="margin-left: 0px; margin-top: 8px; margin-bottom: 5px; margin-right: 5px"><?php require('about_en.html') ?></div>
 <?php
   }
 ?>
@@ -18,7 +18,7 @@
   <table class="table table-striped table-bordered">
   <tr>
       <th><?php echo $lang[$currentLang]['info_basic_authors']; ?></th>
-      <td>Jiří Mírovský, Barbora Hladká, Michal Kuk
+      <td>Jiří Mírovský, Barbora Hladká
       <br><?php echo $lang[$currentLang]['info_basic_authors_subapplication']; ?> 1: Ivan Kraus, Arnold Stanovský
       <br><?php echo $lang[$currentLang]['info_basic_authors_subapplication']; ?> 2: Jan Černý, Ivana Kvapilíková
       <br><?php echo $lang[$currentLang]['info_basic_authors_subapplication']; ?> 3: Silvie Cinková, ...

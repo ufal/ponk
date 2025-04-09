@@ -3,11 +3,11 @@
 <?php
   if ($currentLang == 'cs') {
 ?>
-    <div style="margin: 5px"><?php require('about_cs.html') ?></div>
+    <div style="margin-left: 0px; margin-top: 8px; margin-bottom: 5px; margin-right: 5px"><?php require('about_cs.html') ?></div>
 <?php
   } else {
 ?>
-    <div style="margin: 5px"><?php require('about_en.html') ?></div>
+    <div style="margin-left: 0px; margin-top: 8px; margin-bottom: 5px; margin-right: 5px"><?php require('about_en.html') ?></div>
 <?php
   }
 ?>
