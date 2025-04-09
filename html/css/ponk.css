@@ -169,8 +169,8 @@ ul.nav-tabs-gray > li > a:focus {
 
 #output_formatted {
   height: 100%; /* Přizpůsobí se obsahu v rámci #output_all */
-  max-height: 600px; /* Maximální výška 700px */
-  overflow-y: auto; /* Posuvník, pokud obsah přesáhne 700px */
+  max-height: 600px; /* Maximální výška 600px */
+  overflow-y: auto; /* Posuvník, pokud obsah přesáhne 600px */
 }
 
 #features_app1_old {
