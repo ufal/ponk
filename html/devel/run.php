@@ -632,12 +632,32 @@
     document.body.removeChild(a);
   }
 
+  //function saveOutput() {
+  //  if (!output_file_content || !output_format) return;
+  //  var formatted_output = formatOutput();
+  //  var content_blob = new Blob([formatted_output], {type: output_format == "html" ? "text/html" : "text/plain"});
+  //  saveAs(content_blob, "ponk." + output_format);
+  //}
+
   function saveOutput() {
-    if (!output_file_content || !output_format) return;
-    var formatted_output = formatOutput();
-    var content_blob = new Blob([formatted_output], {type: output_format == "html" ? "text/html" : "text/plain"});
-    saveAs(content_blob, "ponk." + output_format);
-  }
+  // Kontrola, zda je definován output_format
+  //if (!output_format) return;
+
+  var output_format = "html";
+  console.log("saveOutput");
+  // Získání aktuálního HTML obsahu z <div id="input">
+  var inputDiv = document.getElementById('input');
+  var formatted_output = inputDiv.innerHTML;
+
+  // Formátování obsahu (pokud je funkce formatOutput() potřeba, jinak přeskočte)
+  //formatted_output = formatOutput(formatted_output);
+
+  // Vytvoření Blob podle formátu
+  var content_blob = new Blob([formatted_output], { type: output_format === "html" ? "text/html" : "text/plain" });
+
+  // Uložení souboru
+  saveAs(content_blob, "ponk." + output_format);
+}
 
   //function saveStats() {
   //  if (!output_file_stats) return;
