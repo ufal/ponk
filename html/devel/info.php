@@ -18,7 +18,7 @@
   <table class="table table-striped table-bordered">
   <tr>
       <th><?php echo $lang[$currentLang]['info_basic_authors']; ?></th>
-      <td>Jiří Mírovský, Barbora Hladká
+      <td>Jiří Mírovský, Barbora Hladká, Michal Kuk
       <br><?php echo $lang[$currentLang]['info_basic_authors_subapplication']; ?> 1: Ivan Kraus, Arnold Stanovský
       <br><?php echo $lang[$currentLang]['info_basic_authors_subapplication']; ?> 2: Jan Černý, Ivana Kvapilíková
       <br><?php echo $lang[$currentLang]['info_basic_authors_subapplication']; ?> 3: Silvie Cinková, ...
@@ -42,7 +42,7 @@
   </tr>
   <tr>
       <th><?php echo $lang[$currentLang]['info_basic_licence']; ?></th>
-      <td><a href="http://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA</a></td>
+      <td><a href="https://www.mozilla.org/MPL/2.0/" target="_blank">MPL 2.0</a></td>
   </tr>
   <tr>
       <th><?php echo $lang[$currentLang]['info_basic_contact']; ?></th>

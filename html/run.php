@@ -874,7 +874,7 @@
     </li>
     <li class="nav-item">
       <button id="submit" class="nav-link btn btn-primary btn-ponk-colors d-flex align-items-center justify-content-center w-100 text-white" type="submit" onclick="doSubmit()">
-        <span class="fa fa-arrow-down me-2"></span>
+	<span class="fa fa-arrow-down me-2"></span>
         <span><?php echo $lang[$currentLang]['run_process_input']; ?></span>
         <span class="fa fa-arrow-down ms-2"></span>
       </button>
