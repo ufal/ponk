@@ -1338,9 +1338,9 @@ sub get_output {
             }
             $SpacesBefore =~ s/\\s/ /g;
             while ($SpacesBefore =~ /\\n\\n/) {
-              $SpacesBefore =~ s/\\n\\n/\n<p><\/p>\\n/;
+              $SpacesBefore =~ s/\\n\\n/<p><\/p>/;
             }
-            $SpacesBefore =~ s/\\n/\n<br>/g;            
+            $SpacesBefore =~ s/\\n/<br>/g;            
             $SpacesBefore =~ s/\\t/&nbsp; /g;
           }
           else { # txt
@@ -1366,9 +1366,9 @@ sub get_output {
             }
             $SpacesAfter =~ s/\\s/ /g;
             while ($SpacesAfter =~ /\\n\\n/) {
-              $SpacesAfter =~ s/\\n\\n/\n<\/p><p>\\n/;
+              $SpacesAfter =~ s/\\n\\n/<\/p><p>/;
             }
-            $SpacesAfter =~ s/\\n/\n<br>/g;            
+            $SpacesAfter =~ s/\\n/<br>/g;            
             $SpacesAfter =~ s/\\t/&nbsp; /g;
           }
           else { # txt
