@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.32 20250408'; # version of the program
+my $VER = '0.33 20250409'; # version of the program
 
 my @features = ('testink ponk-app1');
 
@@ -1157,22 +1157,22 @@ sub get_output {
   # FILE HEADER
   
   if ($format eq 'html') {
-    $output .= "<html>\n";
-    $output .= <<END_OUTPUT_HEAD;
-<head>
-  <style>
-        /* source classes colours */
-        .highlighted-text {
-            color: $color_highlight_general;
-        }
-        .highlighted-text-app1 {
-            color: $color_highlight_app1;
-            font-weight: bold;
-        }
-  </style>
-</head>
-END_OUTPUT_HEAD
-    $output .= "<body>\n";
+    #$output .= "<html>\n";
+    #    $output .= <<END_OUTPUT_HEAD;
+    #<head>
+    #  <style>
+    #        /* source classes colours */
+    #        .highlighted-text {
+    #            color: $color_highlight_general;
+    #        }
+    #        .highlighted-text-app1 {
+    #            color: $color_highlight_app1;
+    #            font-weight: bold;
+    #        }
+    #  </style>
+    #</head>
+    #END_OUTPUT_HEAD
+    #$output .= "<body>\n";
   }
   
   my $first_par = 1; # for paragraph separation in txt and html formats (first par in the file should not be separated)
@@ -1194,11 +1194,11 @@ END_OUTPUT_HEAD
         $first_par = 0;
       }
       else {
-        $output .= "\n</p>\n" if $format eq 'html';
+        $output .= "</p>" if $format eq 'html';
         # $output .= "\n\n" if $format eq 'txt'; # maybe not needed since using SpacesAfter and SpacesBefore
       }
       
-      $output .= "<p>\n" if $format eq 'html';
+      $output .= "<p>" if $format eq 'html';
     }
 
     # check if this sentence is a heading
@@ -1430,9 +1430,9 @@ END_OUTPUT_HEAD
   # All sentences processed
 
   if ($format eq 'html') {
-    $output .= "\n</p>\n";
-    $output .= "</body>\n";
-    $output .= "</html>\n";
+    $output .= "</p>";
+    #$output .= "</body>\n";
+    #$output .= "</html>\n";
   }
 
   return $output;
