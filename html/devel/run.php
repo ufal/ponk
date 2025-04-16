@@ -824,39 +824,12 @@
 
 <!-- ================= INPUT FIELDS ================ -->
 
-<div class="container-fluid border rounded px-0" style="height: 80vh;">
+<div class="container-fluid border rounded px-0 mt-1" style="height: 80vh;">
   <div class="row gx-2 h-100">
 
 <!-- Levá část (2/3 šířky) -->
 <div class="col-md-8 d-flex flex-column h-100">
-  <!-- Options -->
-  <div class="row gx-2 gy-0 mt-lg-3 mb-lg-2" style="font-size: 0.9rem;">
-    <div class="col-12 col-md-1 text-end ms-1">
-      <label class="form-label fw-bold me-5"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
-    </div>
-    <div class="col-12 col-md-10">
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="option_input" id="option_input_plaintext" value="txt" checked>
-        <label class="form-check-label" for="option_input_plaintext" title="<?php echo $lang[$currentLang]['run_options_input_plain_popup']; ?>">
-          <?php echo $lang[$currentLang]['run_options_input_plain']; ?>
-        </label>
-      </div>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="option_input" id="option_input_markdown" value="md">
-        <label class="form-check-label" for="option_input_markdown" title="<?php echo $lang[$currentLang]['run_options_input_md_popup']; ?>">
-          <?php echo $lang[$currentLang]['run_options_input_md']; ?>
-        </label>
-      </div>
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="radio" name="option_input" id="option_input_docx" value="docx" onchange="handleInputFormatChange();">
-        <label class="form-check-label" for="option_input_docx" title="<?php echo $lang[$currentLang]['run_options_input_msworddocx_popup']; ?>">
-          <?php echo $lang[$currentLang]['run_options_input_msworddocx']; ?>
-        </label>
-      </div>
-    </div>
-  </div>
-
-  <!-- Záložky levé části-->
+  <!-- Záložky levé části -->
   <ul class="nav nav-tabs nav-tabs-green nav-tabs-custom nav-fill">
     <li class="nav-item" id="input_text_header">
       <a class="nav-link active d-flex align-items-center" href="#input_text" data-bs-toggle="tab" onclick="handleInputTextHeaderClicked();">
@@ -887,23 +860,47 @@
     </li>
   </ul>
 
-  <!-- Panely levé části -->
-  <div class="tab-content flex-grow-1" id="input_tabs" style="border: 1px solid #ddd; border-radius: .25rem .25rem .25rem .25rem; padding: 0px; overflow-y: auto;">
-    <div class="tab-pane fade show active h-100" id="input_text">
-      <div id="input" contenteditable="true" class="p-3 border rounded" style="min-height: 100px; height: 100%; overflow-y: auto;">
-        <span style="color: #bbbbbb"><?php echo $lang[$currentLang]['run_input_text_default_text']; ?></span>
+<!-- Panely levé části -->
+<div class="tab-content flex-grow-1" id="input_tabs" style="border: 1px solid #ddd; border-radius: .25rem .25rem .25rem .25rem; padding: 0px;">
+  <div class="tab-pane fade show active h-100" id="input_text">
+    <div id="input" contenteditable="true" class="p-3 border rounded" style="min-height: 100px; height: 100%; overflow-y: auto;">
+      <span style="color: #bbbbbb"><?php echo $lang[$currentLang]['run_input_text_default_text']; ?></span>
+    </div>
+  </div>
+  <div class="tab-pane fade h-100" id="input_file">
+    <!-- Přepínače formátu vstupu -->
+    <div class="d-flex align-items-center ms-2 mt-3 mb-2" style="font-size: 0.9rem;">
+      <label class="form-label fw-bold me-3"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
+      <div class="d-flex gap-3">
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="option_input" id="option_input_plaintext" value="txt" checked>
+          <label class="form-check-label" for="option_input_plaintext" title="<?php echo $lang[$currentLang]['run_options_input_plain_popup']; ?>">
+            <?php echo $lang[$currentLang]['run_options_input_plain']; ?>
+          </label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="option_input" id="option_input_markdown" value="md">
+          <label class="form-check-label" for="option_input_markdown" title="<?php echo $lang[$currentLang]['run_options_input_md_popup']; ?>">
+            <?php echo $lang[$currentLang]['run_options_input_md']; ?>
+          </label>
+        </div>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="option_input" id="option_input_docx" value="docx" onchange="handleInputFormatChange();">
+          <label class="form-check-label" for="option_input_docx" title="<?php echo $lang[$currentLang]['run_options_input_msworddocx_popup']; ?>">
+            <?php echo $lang[$currentLang]['run_options_input_msworddocx']; ?>
+          </label>
+        </div>
       </div>
     </div>
-    <div class="tab-pane fade h-100" id="input_file">
-      <div class="input-group">
-        <input type="text" class="form-control" id="input_file_name" readonly>
-        <label class="input-group-text btn btn-success btn-file" for="input_file_field"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ...</label>
-        <input type="file" id="input_file_field" class="visually-hidden" onchange="handleFileChange(this)">
-      </div>
+    <!-- Vstup pro soubor -->
+    <div class="input-group mb-2">
+      <input type="text" class="form-control" id="input_file_name" readonly>
+      <label class="input-group-text btn btn-success btn-file" for="input_file_field"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ...</label>
+      <input type="file" id="input_file_field" class="visually-hidden" onchange="handleFileChange(this)">
     </div>
   </div>
 </div>
-
+</div>
 
 <!-- Pravá část (1/3 šířky) -->
 <div class="col-md-4 d-flex flex-column h-100">
