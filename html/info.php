@@ -30,7 +30,7 @@
   </tr>
   <tr>
       <th><?php echo $lang[$currentLang]['info_basic_repository']; ?></th>
-      <td><a href="https://svn.ms.mff.cuni.cz/svn/ponk/projects/ponk/" target="_blank">https://svn.ms.mff.cuni.cz/svn/ponk/projects/ponk/</a> (TODO)</td>
+      <td><a href="https://github.com/ufal/ponk" target="_blank">https://github.com/ufal/ponk</a></td>
   </tr>
   <tr>
       <th><?php echo $lang[$currentLang]['info_basic_development_status']; ?></th>
