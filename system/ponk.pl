@@ -27,9 +27,9 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.33 20250416'; # version of the program
+my $VER = '0.34 20250416'; # version of the program
 
-my @features = ('testink ponk-app1');
+my @features = ('overall text measures', 'grammatical rules');
 
 my $FEATS = join(' • ', @features); 
 
@@ -44,7 +44,7 @@ $DESC .= <<END_DESC;
 <h5>Planned features:</h5>
 <ul>
 <li>Full support for ponk-app1 (rules and text-wide statistics)
-<li>Full support for ponk-app2 (lexical surprise)
+<li>Support for ponk-app2 (lexical surprise)
 </ul>
 END_DESC
 
@@ -544,13 +544,21 @@ if ($input_format eq 'md') {
 
 
 
+my $processing_time;
+my $processing_time_udpipe;
+my $processing_time_nametag;
+my $processing_time_app1;
+my $processing_time_app2;
+
+
 ############################################################################################
 # Let us tokenize and segmet the file using UDPipe REST API with PDT-C 1.0 model
 # This model is better for segmentation of texts with many dots in the middle of sentences.
 ############################################################################################
 
-my $conll_segmented = call_udpipe($input_content, 'segment');
+my $start_time_udpipe = [gettimeofday];
 
+my $conll_segmented = call_udpipe($input_content, 'segment');
 
 
 ####################################################################################
@@ -560,16 +568,22 @@ my $conll_segmented = call_udpipe($input_content, 'segment');
 
 my $conll_data = call_udpipe($conll_segmented, 'parse');
 
+
 # Store the result to a file (just to have it, not needed for further processing)
 #  open(OUT, '>:encoding(utf8)', "$input_file.conll") or die "Cannot open file '$input_file.conll' for writing: $!";
 #  print OUT $conll_data;
 #  close(OUT);
 
+# Measure time spent by UDPipe 
+my $end_time_udpipe = [gettimeofday];
+$processing_time_udpipe = tv_interval($start_time_udpipe, $end_time_udpipe);
 
 
 ###################################################################################
 # Now let us add info about named entities using NameTag REST API
 ###################################################################################
+
+my $start_time_nametag = [gettimeofday];
 
 my $conll_data_ne = call_nametag($conll_data);
 
@@ -578,6 +592,9 @@ my $conll_data_ne = call_nametag($conll_data);
 #  print OUT $conll_data_ne;
 #  close(OUT);
 
+# Measure time spent by NameTag 
+my $end_time_nametag = [gettimeofday];
+$processing_time_nametag = tv_interval($start_time_nametag, $end_time_nametag);
 
 
 ###################################################################################
@@ -593,7 +610,6 @@ my %start_offset2node = %$ref_ha_start_offset2node;
 # Now we have dependency trees of the sentences
 ###############################################
 
-my $processing_time;
 # print_log_header();
 
 # variables for statistics
@@ -662,13 +678,18 @@ if ($input_format eq 'md') {
 ##################################################################
 
 
-
 #################################################
 # Calling PONK-APP1
 #################################################
 
+my $start_time_app1 = [gettimeofday];
+
 my $conll_for_ponk_app1 = get_output('conllu', $ui_language);
 my ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = call_ponk_app1($conll_for_ponk_app1);
+
+# Measure time spent by ponk-app1 
+my $end_time_app1 = [gettimeofday];
+$processing_time_app1 = tv_interval($start_time_app1, $end_time_app1);
 
 # Export the modified trees to a file (for debugging, not needed for further processing)
 # open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
@@ -680,13 +701,31 @@ my ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = call_ponk_app1($conll_f
 # close(OUT);
 
 
+#################################################
+# Calling PONK-APP2
+#################################################
 
-#####################################
-# Parse the CoNLL-U from PONK-APP1
-#####################################
+my $start_time_app2 = [gettimeofday];
+
+my $app2_conllu = $app1_conllu;
+
+# Measure time spent by ponk-app2 
+my $end_time_app2 = [gettimeofday];
+$processing_time_app2 = tv_interval($start_time_app2, $end_time_app2);
+
+# Export the modified trees to a file (for debugging, not needed for further processing)
+# open(OUT, '>:encoding(utf8)', "$input_file.export_app2.conllu") or die "Cannot open file '$input_file.export_app2.conllu' for writing: $!";
+# print OUT $app2_conllu;
+# close(OUT);
 
 
-($ref_ha_start_offset2node, @trees) = parse_conllu($app1_conllu);
+
+################################################
+# Parse the CoNLL-U from PONK-APP1 and PONK-APP2
+################################################
+
+
+($ref_ha_start_offset2node, @trees) = parse_conllu($app2_conllu);
 %start_offset2node = %$ref_ha_start_offset2node;
 
 
@@ -697,8 +736,8 @@ my ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = call_ponk_app1($conll_f
 # print_log_tail();
 
 # Measure time spent so far
-my $end_time = [gettimeofday];
-$processing_time = tv_interval($start_time, $end_time);
+my $end_time_total = [gettimeofday];
+$processing_time = tv_interval($start_time, $end_time_total);
 
 # calculate and format statistics and list of app1 features if needed
 my $stats;
@@ -1544,9 +1583,13 @@ sub surface_text {
 =item get_stats_html
 
 Produces an html document with statistics about the process, using info from these variables:
-my $sentences_count;
-my $tokens_count;
-my $processing_time;
+$sentences_count;
+$tokens_count;
+$processing_time;
+$processing_time_udpipe;
+$processing_time_nametag;
+$processing_time_app1;
+$processing_time_app2;
 
 =cut
 
@@ -1588,10 +1631,18 @@ END_HEAD
   $stats .= "<p>Number of sentences: $sentences_count\n";
   $stats .= "<br/>Number of tokens: $tokens_count\n";
   my $rounded_time = sprintf("%.1f", $processing_time);
+  my $rounded_time_udpipe = sprintf("%.1f", $processing_time_udpipe);
+  my $rounded_time_nametag = sprintf("%.1f", $processing_time_nametag);
+  my $rounded_time_app1 = sprintf("%.1f", $processing_time_app1);
+  my $rounded_time_app2 = sprintf("%.1f", $processing_time_app2);
   $stats .= "<br/>Processing time: $rounded_time sec.\n";
+  $stats .= "<br/> &nbsp; - UDPipe: $rounded_time_udpipe sec.\n";
+  $stats .= "<br/> &nbsp; - NameTag: $rounded_time_nametag sec.\n";
+  $stats .= "<br/> &nbsp; - Measures + Rules: $rounded_time_app1 sec.\n";
+  $stats .= "<br/> &nbsp; - Lexical surprise: $rounded_time_app2 sec.\n";
   $stats .= "</p>\n";
   
-  $stats .= "<h5>Measures from PONK-APP1 (work in progress!)</h5>\n";
+  $stats .= "<h5>Measures from PONK-APP1</h5>\n";
   my $app1_string = app1_metrics2string('html', $app1_metrics);
   $stats .= "<p>$app1_string</p>";
   
