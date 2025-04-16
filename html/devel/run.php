@@ -863,7 +863,7 @@
 <!-- Panely levé části -->
 <div class="tab-content flex-grow-1" id="input_tabs" style="border: 1px solid #ddd; border-radius: .25rem .25rem .25rem .25rem; padding: 0px;">
   <div class="tab-pane fade show active h-100" id="input_text">
-    <div id="input" contenteditable="true" class="p-3 border rounded" style="min-height: 100px; height: 100%; overflow-y: auto;">
+    <div id="input" contenteditable="true" class="p-3 h-100" style="overflow-y: auto;">
       <span style="color: #bbbbbb"><?php echo $lang[$currentLang]['run_input_text_default_text']; ?></span>
     </div>
   </div>
