@@ -1685,8 +1685,12 @@ END_HEAD
   $stats .= "<br/>Processing time: $rounded_time sec.\n";
   $stats .= "<br/> &nbsp; - UDPipe: $rounded_time_udpipe sec.\n";
   $stats .= "<br/> &nbsp; - NameTag: $rounded_time_nametag sec.\n";
-  $stats .= "<br/> &nbsp; - Measures + Rules: $rounded_time_app1 sec.\n";
-  $stats .= "<br/> &nbsp; - Lexical surprise: $rounded_time_app2 sec.\n";
+  if ($apps =~ /\bapp1\b/) {
+    $stats .= "<br/> &nbsp; - Measures + Rules: $rounded_time_app1 sec.\n";
+  }
+  if ($apps =~ /\bapp2\b/) {
+    $stats .= "<br/> &nbsp; - Lexical surprise: $rounded_time_app2 sec.\n";
+  }
   $stats .= "</p>\n";
   
   $stats .= "<h5>Measures from PONK-APP1</h5>\n";

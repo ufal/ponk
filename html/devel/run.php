@@ -97,9 +97,6 @@
     console.log("doSubmit: Input text: ", input_text);
     output_format = jQuery('input[name=option_output]:checked').val();
     //console.log("doSubmit: Output format: ", output_format);
-    // Zjistíme stav checkboxu s id "option-randomize"
-    //var jeZaskrtnuto = $('#option_randomize').prop('checked');
-    //console.log("doSubmit: Randomize: ", jeZaskrtnuto);
 
           <?php
             if ($currentLang == 'cs') {
@@ -113,7 +110,8 @@
             }
           ?>
 
-    var options = {text: input_text, input: input_format, output: output_format, uilang: ui_lang};
+    var internal_apps = "app1,app2";
+    var options = {text: input_text, input: input_format, output: output_format, uilang: ui_lang, apps: internal_apps};
     //console.log("doSubmit: options: ", options);
     // Přidáme parametr "randomize", pokud je checkbox zaškrtnutý
     //if (jeZaskrtnuto) {
