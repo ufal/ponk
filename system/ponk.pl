@@ -709,7 +709,7 @@ $processing_time_app1 = tv_interval($start_time_app1, $end_time_app1);
 my $start_time_app2 = [gettimeofday];
 
 #my $app2_conllu = $app1_conllu;
-my ($app2_conllu, $app2_colors) = call_ponk_app2($app1_conllu);
+my ($app2_conllu, $app2_colours) = call_ponk_app2($app1_conllu);
 
 # Measure time spent by ponk-app2 
 my $end_time_app2 = [gettimeofday];
@@ -744,11 +744,14 @@ $processing_time = tv_interval($start_time, $end_time_total);
 # calculate and format statistics and list of app1 features if needed
 my $stats;
 my $app1_features;
-my $app1_rule_info;
+my $app1_rule_info_json;
+my $app2_colours_json;
+
 if ($store_statistics or $output_statistics) { # we need to calculate statistics
   $stats = get_stats_html();
   $app1_features = get_app1_features_html($ui_language);
-  $app1_rule_info = get_app1_rule_info_json();
+  $app1_rule_info_json = get_app1_rule_info_json();
+  $app2_colours_json = get_app2_colours_json();
 }
 
 # print the input text with marked sources in the selected output format to STDOUT
@@ -766,7 +769,8 @@ else { # statistics should be a part of output, i.e. output will be JSON with se
        data  => $output,
        stats => $stats,
        app1_features => $app1_features,
-       app1_rule_info => $app1_rule_info,
+       app1_rule_info => $app1_rule_info_json,
+       app2_colours => $app2_colours_json,
      };
   # Encode the Perl data structure into a JSON string
   my $json_string = encode_json($json_data);
@@ -1292,10 +1296,12 @@ sub get_output {
       my $form = attr($node, 'form');
       my $classes = get_NameTag_marks($node) // '';
 
-      my $span_start = '';
-      my $span_end = '';
-      my $info_span = '';
-      
+      my $span_app1_start = ''; # for rules
+      my $span_app1_end = '';
+
+      my $span_app2_start = ''; # for lexical surprise
+      my $span_app2_end = '';
+
       # take care of BOLD text
       my $bold_start = '';
       my $bold_end = '';
@@ -1332,39 +1338,46 @@ sub get_output {
         }
       }
 
-      # INFO FROM PONK-APP1
-      #if ($replacement and $format eq 'html') {
       if ($format eq 'html') {
+
+        # INFO FROM PONK-APP1
         #mylog(0, "Going to get app1 miscs for word '$form'\n");
         my @app1_miscs = get_app1_miscs(attr($node, 'misc')); # array of misc values from ponk-app1
         if (@app1_miscs) {
           #my $span_class = 'highlighted-text-app1';
-	  my $span_class = '';
+          my $span_class = '';
           my @rule_names = unify_array_keep_order( map {get_app1_rule_name($_)} @app1_miscs);
           foreach my $name (@rule_names) {
             $span_class .= " app1_class_$name";
           }
-	  # get tooltip:
+          # get tooltip:
           my $tooltip = "";
-	  foreach my $app1_misc (@app1_miscs) {
+          foreach my $app1_misc (@app1_miscs) {
             $tooltip .= "\n" if $tooltip;
-	    if ($app1_misc =~ /^PonkApp1:([^:]+):[^=]+=(.+)$/) {
+            if ($app1_misc =~ /^PonkApp1:([^:]+):[^=]+=(.+)$/) {
               my $rule_name = $1;
               my $rule_name_lang = $app1_rule_info_orig->{$rule_name}->{$lang . '_name'} // $rule_name;
-	      my $role_name = $2;
+              my $role_name = $2;
               my $role_name_lang = $app1_rule_info_orig->{$rule_name}->{$lang . '_participants'}->{$role_name} // $role_name;
-	      # $rule_name_lang =~ s/object/predicate/; # a temporary fix for making a screenshot to a paper before info from app1 gets corrected
-	      $tooltip .= "$rule_name_lang: $role_name_lang";
-	    }
-	  }
-	  my $id = 'app1_token_id_' . $result_token_id_number;
-	  $result_token_id_number++;
+              # $rule_name_lang =~ s/object/predicate/; # a temporary fix for making a screenshot to a paper before info from app1 gets corrected
+              $tooltip .= "$rule_name_lang: $role_name_lang";
+            }
+          }
+          my $id = 'app1_token_id_' . $result_token_id_number;
+          $result_token_id_number++;
 
-          $span_start = "<span id=\"$id\" class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" title=\"$tooltip\">";
-          $span_end = '</span>';
+          $span_app1_start = "<span id=\"$id\" class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" title=\"$tooltip\">";
+          $span_app1_end = '</span>';
         }
+        
+        # INFO FROM PONK-APP2
+        my $lexical_surprise = get_misc_value($node, 'PonkApp2:Surprisal') // '';
+        if ($lexical_surprise) {
+          $span_app2_start = "<span class=\"app2_class_$lexical_surprise\">";
+          $span_app2_end = '</span>';
+        }
+  
       }
-
 
       # PRINT THE TOKEN
       if ($format =~ /^(txt|html)$/) {
@@ -1395,7 +1408,7 @@ sub get_output {
           $output .= $SpacesBefore;          
         }
 
-        $output .= "$italics_end$bold_end$space_before$span_start$bold_start$italics_start$form$span_end$info_span";
+        $output .= "$italics_end$bold_end$space_before$span_app1_start$span_app2_start$bold_start$italics_start$form$span_app2_end$span_app1_end";
 
         $space_before = ($SpaceAfter eq 'No' or $SpacesAfter) ? '' : ' '; # store info about a space until the next token is about to be printed
         
@@ -1769,6 +1782,23 @@ sub get_app1_rule_info_json {
 
   return $app1_rule_info_json;
 }
+
+
+=item get_app2_colours_json
+
+
+=cut
+
+sub get_app2_colours_json {
+  # Vytvoření JSON objektu
+  my $json = JSON->new;
+
+  # Konverze Perlového hashe na JSON string
+  my $app2_colours_json = $json->encode($app2_colours);
+
+  return $app2_colours_json;
+}
+
 
 
 =item get_sentence
