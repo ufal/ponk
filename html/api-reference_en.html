@@ -31,6 +31,7 @@ handling.</p>
 <tr><th>Parameter</th><th>Mandatory</th><th>Data type</th><th>Description</th></tr>
 <tr><td>text</td><td>yes</td><td>string</td><td>Input text in <b>UTF-8</b>.</td></tr>
 <tr><td>input</td><td>no</td><td>string</td><td>Input format; possible values: <code>txt</code> (default), <code>md</code> (MarkDown), <code>docx</code> (MS Word),  see <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_input" target="_blank">input format</a> for details.</td></tr>
+<tr><td>apps</td><td>no</td><td>string</td><td>A comma-separated list of internal applications to call; possible values: <code>app1</code> (default; rules and text-wide measures), <code>app2</code> (lexical surprise).</td></tr>
 <tr><td>output</td><td>no</td><td>string</td><td>Output format; possible values: <code>html</code> (default), see <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">output format</a> for details.</td></tr>
 <tr><td>uilang</td><td>no</td><td>string</td><td>Language localization of the returned information; possible values: <code>en</code> (default), <code>cs</code>.</td></tr>
 </table>
@@ -46,6 +47,7 @@ following structure:</p>
  "stats": "statistics"
  "app1_features": "list_of_used_rules_app1"
  "app1_rule_info": "properties_of_used_rules_app1"
+ "app2_colours": "colours_for_app2"
 }
 </pre>
 
@@ -54,7 +56,7 @@ The <code>overview_message</code> is a short comprehensible message of what has 
 <br/>and <code>statistics</code> is an HTML overview giving the PONK version, length of the text, processing time and information on the readability of the text as a whole.
 <br/><code>list_of_used_rules_app1</code> is an HTML list of rules from subapplication 1 that were used in the given text.
 <br/><code>properties_of_used_rules_app1</code> is a JSON structure with information about rules from subapplication 1 that were used in the given text.
-
+<br/><code>colours_for_app2</code> is a JSON structure with information about colours for various levels of lexical surprise. 
 
 <h3>Method <a id='info'>info</a></h3>
 

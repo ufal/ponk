@@ -31,6 +31,7 @@ pro zpracování výsledků.</p>
 <tr><th>Parametr</th><th>Povinný</th><th>Typ dat</th><th>Popis</th></tr>
 <tr><td>text</td><td>ano</td><td>řetězec</td><td>Vstupní text v kódování <b>UTF-8</b>.</td></tr>
 <tr><td>input</td><td>ne</td><td>řetězec</td><td>Vstupní formát; možné hodnoty: <code>txt</code> (defaultní), <code>md</code> (MarkDown), <code>docx</code> (MS Word),  viz. <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_input" target="_blank">vstupní formát</a>.</td></tr>
+<tr><td>apps</td><td>ne</td><td>řetězec</td><td>Čárkou dělený seznam vnitřních podaplikací, které mají být volány; možné hodnoty: <code>app1</code> (defaultní; pravidla a míry nad celým textem), <code>app2</code> (lexikální překvapení).</td></tr>
 <tr><td>output</td><td>ne</td><td>řetězec</td><td>Výstupní formát; možné hodnoty: <code>html</code> (defaultní), viz. <a href="http://ufal.mff.cuni.cz/ponk/users-manual#run_ponk_output" target="_blank">výstupní formát</a>.</td></tr>
 <tr><td>uilang</td><td>ne</td><td>řetězec</td><td>Jazyková lokalizace vrácených informací; možné hodnoty: <code>en</code> (defaultní), <code>cs</code>.</td></tr>
 </table>
@@ -45,6 +46,7 @@ Odpověď serveru je ve formátu <a href="http://en.wikipedia.org/wiki/JSON" tar
  "stats": "statistiky"
  "app1_features": "seznam_uplatněných_pravidel_app1"
  "app1_rule_info": "vlastnosti_uplatněných_pravidel_app1"
+ "app2_colours": "barvy_pro_app2"
 }
 </pre>
 
@@ -53,7 +55,7 @@ Odpověď serveru je ve formátu <a href="http://en.wikipedia.org/wiki/JSON" tar
 <br/><code>statistiky</code> jsou přehled ve formátu HTML obsahující verzi služby PONK, délku textu, čas zpracování a informace o čitelnosti textu jakožto celku.
 <br/><code>seznam_uplatněných_pravidel_app1</code> je HTML seznam pravidel podaplikace 1, která byla uplatněna v daném textu.
 <br/><code>vlastnosti_uplatněných_pravidel_app1</code> je struktura JSON s informacemi o pravidlech podaplikace 1, která byla uplatněna v daném textu.
-
+<br/><code>barvy_pro_app2</code> je struktura JSON s definicí barev pro jednotlivé úrovně lexikálního překvapční.
 
 <h3>Metoda <a id='info'>info</a></h3>
 
