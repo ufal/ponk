@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.35 20250422'; # version of the program
+my $VER = '0.36 20250422'; # version of the program
 
 my @features = ('overall text measures', 'grammatical rules');
 
@@ -81,6 +81,8 @@ my $INPUT_FORMAT_DEFAULT = 'txt';
 my $OUTPUT_FORMAT_DEFAULT = 'html';
 # default input format
 my $UI_LANGUAGE_DEFAULT = 'en';
+# default list of internal applications to call
+my $APPS_DEFAULT = 'app1';
 
 # variables for arguments
 my $input_file;
@@ -91,6 +93,7 @@ my $output_statistics;
 my $ui_language;
 my $store_format;
 my $store_statistics;
+my $apps;
 my $logging_level_override;
 my $version;
 my $info;
@@ -106,6 +109,7 @@ GetOptions(
     'uil|ui-language=s'      => \$ui_language, # localize the response whenever possible to the given language: en (default), cs
     'sf|store-format=s'      => \$store_format, # log the result in the given format: txt, html, conllu
     'ss|store-statistics'    => \$store_statistics, # should statistics be logged as an HTML file?
+    'ap|apps=s'              => \$apps, # a comma-separated list of internal apps to call, possible values: app1 (default), app2
     'll|logging-level=s'     => \$logging_level_override, # override the default (anonymous) logging level (0=full, 1=limited, 2=anonymous)
     'v|version'              => \$version, # print the version of the program and exit
     'n|info'                 => \$info, # print the info (program version and supported features) as JSON and exit
@@ -149,6 +153,7 @@ options:  -i|--input-file [input text file name]
         -uil|--ui-language [language: localize the response whenever possible to the given language: en (default), cs]
 	 -sf|--store-format [format: log the output in the given format: html, conllu]
          -ss|--store-statistics (log statistics to an HTML file)
+         -ap|--apps [a comma-separated list of internal apps to call, possible values: app1 (default), app2]
          -ll|--logging-level (override the default (anonymous) logging level (0=full, 1=limited, 2=anonymous))
           -v|--version (prints the version of the program and ends)
           -n|--info (prints the program version and supported features as JSON and ends)
@@ -231,6 +236,19 @@ if ($store_format) {
 
 if ($store_statistics) {
   mylog(0, " - log PONK statistics in an HTML file\n");
+}
+
+$apps = lc($apps) if $apps;
+if (!defined $apps) {
+  mylog(0, " - internal sub-applications to call: not specified, set to default '$APPS_DEFAULT'\n");
+  $apps = $APPS_DEFAULT;
+}
+elsif ($apps !~ /^(app1|app2)(,(app1|app2))?$/) {
+  mylog(0, " - internal sub-applications to call: unknown ($apps), set to default '$APPS_DEFAULT'\n");
+  $apps = $APPS_DEFAULT;
+}
+else {
+  mylog(0, " - internal sub-applications to call: $apps\n");
 }
 
 if (defined($logging_level_override)) {
@@ -686,7 +704,15 @@ if ($input_format eq 'md') {
 my $start_time_app1 = [gettimeofday];
 
 my $conll_for_ponk_app1 = get_output('conllu', $ui_language);
-my ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = call_ponk_app1($conll_for_ponk_app1);
+
+my ($app1_conllu, $app1_metrics, $app1_rule_info_orig);
+
+if ($apps =~ /\bapp1\b/) {
+  ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = call_ponk_app1($conll_for_ponk_app1);
+}
+else {
+  ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = ($conll_for_ponk_app1, [{"APP1 Info" => "APP1 not called"}], [{"APP1 Info" => "APP1 not called"}]);
+}
 
 # Measure time spent by ponk-app1 
 my $end_time_app1 = [gettimeofday];
@@ -708,8 +734,14 @@ $processing_time_app1 = tv_interval($start_time_app1, $end_time_app1);
 
 my $start_time_app2 = [gettimeofday];
 
-#my $app2_conllu = $app1_conllu;
-my ($app2_conllu, $app2_colours) = call_ponk_app2($app1_conllu);
+my ($app2_conllu, $app2_colours);
+
+if ($apps =~ /\bapp2\b/) {
+  ($app2_conllu, $app2_colours) = call_ponk_app2($app1_conllu);
+}
+else {
+  ($app2_conllu, $app2_colours) = ($app1_conllu, [{"APP2 Info" => "APP2 not called"}]);
+}
 
 # Measure time spent by ponk-app2 
 my $end_time_app2 = [gettimeofday];

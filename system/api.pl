@@ -72,12 +72,13 @@ any '/api/info' => sub {
 any '/api/process' => sub {
     my $c = shift;
     my $method = $c->req->method;
-    
+
     my $text = $c->param('text'); # input text
     my $input_format = $c->param('input') // ''; # input format
     my $input_format_orig = $input_format;
     $input_format = 'docxBase64' if $input_format eq 'docx'; # the input is actually encoded in Base64, so we need to use this internal input format parameter
     my $output_format = $c->param('output') // ''; # output format
+    my $apps = $c->param('apps') // ''; # a comma-separated list of internal apps to call
     my $uilang = $c->param('uilang') // ''; # UI language
     # my $randomize = defined $c->param('randomize') ? 1 : 0; # randomization
 
@@ -87,6 +88,7 @@ any '/api/process' => sub {
                '--input-format', $input_format, 
                '--output-format', $output_format,
                '--ui-language', $uilang,
+               '--apps', $apps,
                '--output-statistics');
     #if ($randomize) {
     #    push(@cmd, '--randomize');
@@ -94,17 +96,17 @@ any '/api/process' => sub {
     my $stdin_data = $text;
     my $result_json;
     run \@cmd, \$stdin_data, \$result_json;
-        
+
     # Decode the output as a JSON object
     my $json_data = decode_json($result_json);
 
     # Access the 'data', 'stats' and other items in the JSON object
     my $result  = $json_data->{'data'};
-    my $stats = $json_data->{'stats'};
-    my $app1_features = $json_data->{'app1_features'};
-    my $app1_rule_info = $json_data->{'app1_rule_info'};
-    my $app2_colours = $json_data->{'app2_colours'};
-    
+    my $stats = $json_data->{'stats'} // '';
+    my $app1_features = $json_data->{'app1_features'} // '';
+    my $app1_rule_info = $json_data->{'app1_rule_info'} // '';
+    my $app2_colours = $json_data->{'app2_colours'} // '';
+
     # Read them as UTF-8
     my $result_utf8 = decode_utf8($result);
     my $stats_utf8 = decode_utf8($stats);
