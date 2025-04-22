@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.34 20250416'; # version of the program
+my $VER = '0.35 20250422'; # version of the program
 
 my @features = ('overall text measures', 'grammatical rules');
 
@@ -55,6 +55,7 @@ my %logging_level_label = (0 => 'full', 1 => 'limited', 2 => 'anonymous');
 my $udpipe_service_url = 'http://lindat.mff.cuni.cz/services/udpipe/api';
 my $nametag_service_url = 'http://lindat.mff.cuni.cz/services/nametag/api'; 
 my $ponk_app1_service_url = 'http://quest.ms.mff.cuni.cz/ponk-app1';
+my $ponk_app2_service_url = 'http://quest.ms.mff.cuni.cz/ponk-app2';
 
 my $hostname = hostname;
 if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe and nametag that do not log texts
@@ -707,7 +708,8 @@ $processing_time_app1 = tv_interval($start_time_app1, $end_time_app1);
 
 my $start_time_app2 = [gettimeofday];
 
-my $app2_conllu = $app1_conllu;
+#my $app2_conllu = $app1_conllu;
+my ($app2_conllu, $app2_colors) = call_ponk_app2($app1_conllu);
 
 # Measure time spent by ponk-app2 
 my $end_time_app2 = [gettimeofday];
@@ -2190,4 +2192,70 @@ sub convertFromDocx { # converting binary docx file do MarkDown
 =cut
 
     return $result;
+}
+
+
+######### CALLING PONK-APP2 #########
+
+=item call_ponk_app2
+
+Calling PONK-APP2 REST API; the text to be processed is passed in the argument in UD CONLL format
+Returns an array of two members:
+ - the text in UD CONLL format with additional info in misc
+ - hashref of decoded JSON with info how to display APP2 results
+If an error occurs, the function just returns the input conll text unchanged and a simple JSON with an error message.
+
+=cut
+
+sub call_ponk_app2 {
+    my $conllu = shift;
+
+    # Nastavení URL pro volání REST::API s parametry
+    my $url = "$ponk_app2_service_url/process-conllu";
+    mylog(2, "Call PONK-APP2: URL=$url\n");
+
+    my $ua = LWP::UserAgent->new;
+
+    # Převedení řetězce na bajty
+    my $conllu_bytes = encode("UTF-8", $conllu);
+
+    # Vytvoření POST požadavku s obsahem jako surový text
+    my $request = HTTP::Request->new(POST => $url);
+    $request->header('Content-Type' => 'text/plain; charset=UTF-8');
+    $request->content($conllu_bytes);
+
+=item
+
+    # Vytvoření POST požadavku s obsahem z proměnné $conllu_bytes
+    my $request = POST $url,
+        Content_Type => 'form-data',
+        Content => [
+          file => [
+            undef,                  # undef znamená, že LWP::UserAgent vygeneruje název souboru
+            'data.conllu',     # Jméno souboru na straně serveru - bez toho to nefunguje
+            Content => $conllu_bytes     # Obsah souboru
+          ]
+        ];
+
+=cut
+
+    # Odeslání požadavku
+    my $res = $ua->request($request);
+
+    # Zkontrolování, zda byla odpověď úspěšná
+    if ($res->is_success) {
+        # Získání odpovědi v JSON formátu
+        my $json_response = decode_json($res->content);
+        # Zpracování odpovědi
+        my $modified_conllu = $json_response->{'result'};
+        my $colors_json = $json_response->{'colors'};
+        # mylog(0, "PONK-APP2 JSON response:\n" . Dumper($json_response) . "\n");
+        mylog(2, "Call PONK-APP2: Success.\n");
+        return ($modified_conllu, $colors_json);
+    } else {
+        mylog(2, "call_ponk_app2: URL: $url\n");
+        mylog(2, "call_ponk_app2: Error: " . $res->status_line . "\n");
+        return ($conllu, [{"APP2 Error" => $res->status_line}]); 
+    }
+
 }
