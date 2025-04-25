@@ -51,7 +51,7 @@ Also:
    ```
    sudo systemctl status ponk-api
    sudo systemctl stop ponk-api
-   sudo systemctl restart poni-api
+   sudo systemctl restart ponk-api
    ```
 
 ===========
