@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.36 20250422'; # version of the program
+my $VER = '0.37 20250425'; # version of the program
 
 my @features = ('overall text measures', 'grammatical rules');
 
