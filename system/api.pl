@@ -128,5 +128,11 @@ any '/api/process' => sub {
 
 };
 
+app->config(hypnotoad => {
+    listen  => ['http://*:8080'],
+    workers => 4,
+    heartbeat_timeout => 50,
+});
+#app->log->level('debug');
 app->start;
 
