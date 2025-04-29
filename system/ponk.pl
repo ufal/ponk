@@ -1768,6 +1768,63 @@ END_HEAD
 }
 
 
+
+=item get_app2_colours_html
+
+In a given language ('cz' or 'en'), it produces an html document with a list of colours from PonkApp2.
+Information about the colours is taken from global variable $app2_colours, which contains a decoded JSON.
+
+=cut
+
+sub get_app2_colours_html {
+  my $lang = shift;
+  if (!$lang or $lang !~ /^(cz|en)$/) {
+    $lang = 'cz';
+  }
+
+  # compile the html response
+  my $colours = "<html>\n";
+  $colours .= <<END_HEAD;
+<head>
+  <style>
+    h3 {
+      margin-top: 5px;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid black;
+    }
+    th, td {
+      text-align: left;
+      padding-left: 2mm;
+      padding-right: 2mm;
+    }
+    td:last-child {
+      text-align: right;
+      padding-right: 20px;
+    }
+  </style>
+</head>
+END_HEAD
+
+  $colours .= "<body>\n";
+  
+  foreach my $surprise (keys %$app2_colours) {
+    my $colour = $app2_colours->{$surprise};
+    $colours .= "<div style=\"width: 100%; background-color: $colour; text-align: center;\">\n";
+    $colours .= "$surprise\n";
+    $colours .= "</div>\n";
+  }
+
+  $colours .= "</body>\n";
+  $colours .= "</html>\n";
+
+  return $colours;
+}
+
+
 =item get_app1_rule_info_json
 
 
