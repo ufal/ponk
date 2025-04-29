@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.37 20250425'; # version of the program
+my $VER = '0.38 20250429'; # version of the program
 
 my @features = ('overall text measures', 'grammatical rules');
 
@@ -62,6 +62,7 @@ if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe a
   $udpipe_service_url = 'http://udpipe:11001';
   $nametag_service_url = 'http://udpipe:11002';
   $ponk_app1_service_url = 'http://ponk-app1:8000'; # for now, in practice no difference from the original URL
+  # not working: $ponk_app2_service_url = 'http://ponk-app2:8000'; # for now, in practice no difference from the original URL
   $VER .= ' (no text logging)';
   $logging_level = 2; # anonymous logging level is default but to be sure...
 }
@@ -709,9 +710,10 @@ my ($app1_conllu, $app1_metrics, $app1_rule_info_orig);
 
 if ($apps =~ /\bapp1\b/) {
   ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = call_ponk_app1($conll_for_ponk_app1);
+  # print STDERR "app1_rule_info_orig: '$app1_rule_info_orig'\n";
 }
 else {
-  ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = ($conll_for_ponk_app1, [{"APP1 Info" => "APP1 not called"}], [{"APP1 Info" => "APP1 not called"}]);
+  ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = ($conll_for_ponk_app1, {"APP1 Info" => "APP1 not called"}, {"APP1 Info" => "APP1 not called"});
 }
 
 # Measure time spent by ponk-app1 
@@ -738,9 +740,10 @@ my ($app2_conllu, $app2_colours);
 
 if ($apps =~ /\bapp2\b/) {
   ($app2_conllu, $app2_colours) = call_ponk_app2($app1_conllu);
+  # print STDERR "app2_colours: '$app2_colours'\n";
 }
 else {
-  ($app2_conllu, $app2_colours) = ($app1_conllu, [{"APP2 Info" => "APP2 not called"}]);
+  ($app2_conllu, $app2_colours) = ($app1_conllu, {"APP2 Info" => "APP2 not called"});
 }
 
 # Measure time spent by ponk-app2 
@@ -775,15 +778,15 @@ $processing_time = tv_interval($start_time, $end_time_total);
 
 # calculate and format statistics and list of app1 features if needed
 my $stats;
-my $app1_features;
+my $app1_features_html;
 my $app1_rule_info_json;
-my $app2_colours_json;
+my $app2_colours_html;
 
 if ($store_statistics or $output_statistics) { # we need to calculate statistics
   $stats = get_stats_html();
-  $app1_features = get_app1_features_html($ui_language);
+  $app1_features_html = get_app1_features_html($ui_language);
   $app1_rule_info_json = get_app1_rule_info_json();
-  $app2_colours_json = get_app2_colours_json();
+  $app2_colours_html = get_app2_colours_html($ui_language);
 }
 
 # print the input text with marked sources in the selected output format to STDOUT
@@ -796,13 +799,15 @@ else { # statistics should be a part of output, i.e. output will be JSON with se
  # 'data' (in output-format)
  # 'stats' (in html)
  # 'app1_features' (in html)
+ # 'app1_rule_info' (in json)
+ # 'app2_colours' (in html)
  
   my $json_data = {
        data  => $output,
        stats => $stats,
-       app1_features => $app1_features,
+       app1_features => $app1_features_html,
        app1_rule_info => $app1_rule_info_json,
-       app2_colours => $app2_colours_json,
+       app2_colours => $app2_colours_html,
      };
   # Encode the Perl data structure into a JSON string
   my $json_string = encode_json($json_data);
@@ -1811,7 +1816,7 @@ END_HEAD
 
   $colours .= "<body>\n";
   
-  foreach my $surprise (keys %$app2_colours) {
+  foreach my $surprise (sort {$a <=> $b} keys %$app2_colours) {
     my $colour = $app2_colours->{$surprise};
     $colours .= "<div style=\"width: 100%; background-color: $colour; text-align: center;\">\n";
     $colours .= "$surprise\n";
@@ -1874,22 +1879,6 @@ sub get_app1_rule_info_json {
 =cut
 
   return $app1_rule_info_json;
-}
-
-
-=item get_app2_colours_json
-
-
-=cut
-
-sub get_app2_colours_json {
-  # Vytvoření JSON objektu
-  my $json = JSON->new;
-
-  # Konverze Perlového hashe na JSON string
-  my $app2_colours_json = $json->encode($app2_colours);
-
-  return $app2_colours_json;
 }
 
 

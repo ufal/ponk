@@ -97,9 +97,6 @@
     console.log("doSubmit: Input text: ", input_text);
     output_format = jQuery('input[name=option_output]:checked').val();
     //console.log("doSubmit: Output format: ", output_format);
-    // Zjistíme stav checkboxu s id "option-randomize"
-    //var jeZaskrtnuto = $('#option_randomize').prop('checked');
-    //console.log("doSubmit: Randomize: ", jeZaskrtnuto);
 
           <?php
             if ($currentLang == 'cs') {
@@ -113,7 +110,8 @@
             }
           ?>
 
-    var options = {text: input_text, input: input_format, output: output_format, uilang: ui_lang};
+    var internal_apps = "app1";
+    var options = {text: input_text, input: input_format, output: output_format, uilang: ui_lang, apps: internal_apps};
     //console.log("doSubmit: options: ", options);
     // Přidáme parametr "randomize", pokud je checkbox zaškrtnutý
     //if (jeZaskrtnuto) {
@@ -132,6 +130,7 @@
     //jQuery('#output_formatted').empty();
     jQuery('#output_stats').empty();
     jQuery('#features_app1').empty();
+    jQuery('#features_app2').empty();
     jQuery('#submit').html('<span class="fa fa-cog"></span>&nbsp;<?php echo $lang[$currentLang]['run_process_input_processing']; ?>&nbsp;<span class="fa fa-cog"></span>');
     jQuery('#submit').prop('disabled', true);
 
@@ -175,6 +174,12 @@
 	    app1_rule_info = ruleInfo; // store the info to the global variable
 	    applyApp1RuleInfoStyles(ruleInfo); // apply the styles to the web page
 	    highlightTokensWithMultipleActiveApp1Rules();
+	  }
+
+	  if ("app2_colours" in json) {
+            let output_app2_features = json.app2_colours;
+            console.log("Found 'app2_colours' in return message:", output_app2_features);
+            jQuery('#features_app2').html(output_app2_features);
 	  }
 
 	  if ("stats" in json) {
@@ -671,7 +676,7 @@
     inputDiv.focus();
     document.getElementById('output_stats').innerHTML = '';
     document.getElementById('features_app1').innerHTML = '';
-    document.getElementById('features_app2').innerHTML = 'TODO';
+    document.getElementById('features_app2').innerHTML = '';
   }
 
   function formatOutput() { 

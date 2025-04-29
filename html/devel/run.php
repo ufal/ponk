@@ -130,6 +130,7 @@
     //jQuery('#output_formatted').empty();
     jQuery('#output_stats').empty();
     jQuery('#features_app1').empty();
+    jQuery('#features_app2').empty();
     jQuery('#submit').html('<span class="fa fa-cog"></span>&nbsp;<?php echo $lang[$currentLang]['run_process_input_processing']; ?>&nbsp;<span class="fa fa-cog"></span>');
     jQuery('#submit').prop('disabled', true);
 
@@ -173,6 +174,12 @@
 	    app1_rule_info = ruleInfo; // store the info to the global variable
 	    applyApp1RuleInfoStyles(ruleInfo); // apply the styles to the web page
 	    highlightTokensWithMultipleActiveApp1Rules();
+	  }
+
+	  if ("app2_colours" in json) {
+            let output_app2_features = json.app2_colours;
+            console.log("Found 'app2_colours' in return message:", output_app2_features);
+            jQuery('#features_app2').html(output_app2_features);
 	  }
 
 	  if ("stats" in json) {
@@ -669,7 +676,7 @@
     inputDiv.focus();
     document.getElementById('output_stats').innerHTML = '';
     document.getElementById('features_app1').innerHTML = '';
-    document.getElementById('features_app2').innerHTML = 'TODO';
+    document.getElementById('features_app2').innerHTML = '';
   }
 
   function formatOutput() { 
@@ -925,7 +932,7 @@
   <div class="tab-content flex-grow-1" id="output_tabs" style="border: 1px solid #ddd; border-radius: .25rem; padding: 15px; overflow-y: auto;">
     <div class="tab-pane fade h-100" id="output_stats" style="width: 100%;"></div>
     <div id="features_app1" class="tab-pane active show fade h-100" style="width: 100%; white-space: normal; word-wrap: break-word;"></div>
-    <div id="features_app2" class="tab-pane fade h-100" style="width: 100%;">TODO</div>
+    <div id="features_app2" class="tab-pane fade h-100" style="width: 100%;"></div>
   </div>
 </div>
 
