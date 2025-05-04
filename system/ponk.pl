@@ -27,9 +27,9 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.38 20250429'; # version of the program
+my $VER = '0.39 20250504'; # version of the program
 
-my @features = ('overall text measures', 'grammatical rules');
+my @features = ('overall text measures', 'grammatical rules', 'lexical surprise');
 
 my $FEATS = join(' • ', @features); 
 
@@ -43,8 +43,7 @@ $DESC .= <<END_DESC;
 </ul>
 <h5>Planned features:</h5>
 <ul>
-<li>Full support for ponk-app1 (rules and text-wide statistics)
-<li>Support for ponk-app2 (lexical surprise)
+<li>Support for ponk-app3 (not yet available)
 </ul>
 END_DESC
 
@@ -780,13 +779,13 @@ $processing_time = tv_interval($start_time, $end_time_total);
 my $stats;
 my $app1_features_html;
 my $app1_rule_info_json;
-my $app2_colours_html;
+my $app2_colours_json;
 
 if ($store_statistics or $output_statistics) { # we need to calculate statistics
   $stats = get_stats_html();
   $app1_features_html = get_app1_features_html($ui_language);
   $app1_rule_info_json = get_app1_rule_info_json();
-  $app2_colours_html = get_app2_colours_html($ui_language);
+  $app2_colours_json = get_app2_colours_json();
 }
 
 # print the input text with marked sources in the selected output format to STDOUT
@@ -800,14 +799,14 @@ else { # statistics should be a part of output, i.e. output will be JSON with se
  # 'stats' (in html)
  # 'app1_features' (in html)
  # 'app1_rule_info' (in json)
- # 'app2_colours' (in html)
+ # 'app2_colours' (in json)
  
   my $json_data = {
        data  => $output,
        stats => $stats,
        app1_features => $app1_features_html,
        app1_rule_info => $app1_rule_info_json,
-       app2_colours => $app2_colours_html,
+       app2_colours => $app2_colours_json,
      };
   # Encode the Perl data structure into a JSON string
   my $json_string = encode_json($json_data);
@@ -1776,10 +1775,10 @@ END_HEAD
 
 =item get_app2_colours_html
 
+OBSOLETE, not used (instead, JSON is sent and html is created in javascript)
 In a given language ('cz' or 'en'), it produces an html document with a list of colours from PonkApp2.
 Information about the colours is taken from global variable $app2_colours, which contains a decoded JSON.
 
-=cut
 
 sub get_app2_colours_html {
   my $lang = shift;
@@ -1829,9 +1828,12 @@ END_HEAD
   return $colours;
 }
 
+=cut
+
 
 =item get_app1_rule_info_json
 
+Returns a JSON string of a Perl hash with app1 rule info.
 
 =cut
 
@@ -1842,45 +1844,25 @@ sub get_app1_rule_info_json {
   # Konverze Perlového hashe na JSON string
   my $app1_rule_info_json = $json->encode($app1_rule_info_orig);
 
-
-=item
-
-  my %ha_app1_rule_info = %$app1_rule_info_orig;
-  my $app1_rule_info_json = '{';
-  my $first_rule = 1;
-  foreach my $rule (keys(%ha_app1_rule_info)) {
-    if ($first_rule) {
-      $first_rule = 0;
-    }
-    else {
-      $app1_rule_info_json .= ', ';
-    }
-    # get info from the hash of one rule
-    my $haref_one_rule = $ha_app1_rule_info{$rule};
-    my %ha_one_rule = %$haref_one_rule;
-    my $one_rule_info = '{';
-    my $first_info = 1;
-    foreach my $info (keys(%ha_one_rule)) {
-      if ($first_info) {
-        $first_info = 0;
-      }
-      else {
-        $one_rule_info .= ', ';
-      }
-      $one_rule_info .= '"' . $info . '": "' . $ha_one_rule{$info} . '"';
-    }
-
-    $one_rule_info .= '}';
-
-    $app1_rule_info_json .= '"' . $rule . '": "' . $one_rule_info . '"';
-  }
-  $app1_rule_info_json .= '}';
-
-=cut
-
   return $app1_rule_info_json;
 }
 
+
+=item get_app2_colours_json
+
+Returns a JSON string of a Perl hash with app2 colours.
+
+=cut
+
+sub get_app2_colours_json {
+  # Vytvoření JSON objektu
+  my $json = JSON->new;
+
+  # Konverze Perlového hashe na JSON string
+  my $app2_colours_json = $json->encode($app2_colours);
+
+  return $app2_colours_json;
+}
 
 
 =item get_sentence

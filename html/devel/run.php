@@ -6,7 +6,8 @@
   var output_file_stats = null;
   var output_format = null;
   var app1_rule_info = null; // json converted to object with info about app1 rules
-  var app1_stylesheet = null; // inline stylesheet for app1
+  var app1_stylesheet = null; // inline stylesheet for app1 (rules)
+  var app2_stylesheet = null; // inline stylesheet for app2 (lexical surprise)
 
   var app1_rule_active = {}; // an object ("hash") to keep info if individual rules are active
   var app1_ruleid_highlighted = []; // an array of actually highlighted classes rule_id (when hovering over a span in the results)
@@ -34,20 +35,7 @@
       });
   });
 
-
-  function toggleApp1Features() {
-    //console.log("toggleApp1Features: Entering the function.");
-    const featuresPanel = document.getElementById('features_app1');
-    //const verticalTab = document.querySelector('.vertical-tab'); // Přidáno pro výběr vertikálního tabu
-    const verticalTab = document.getElementById('features_app1_tab'); // Přidáno pro výběr vertikálního tabu
-  
-    if (featuresPanel.classList.toggle('show')) {
-      verticalTab.classList.add('active');
-    } else {
-      verticalTab.classList.remove('active');
-    }
-  }
-
+  // Calling the SERVER:
 
   function doSubmit() {
     //console.log("doSubmit: Entering the function.");
@@ -177,10 +165,28 @@
 	  }
 
 	  if ("app2_colours" in json) {
-            let output_app2_features = json.app2_colours;
-            console.log("Found 'app2_colours' in return message:", output_app2_features);
-            jQuery('#features_app2').html(output_app2_features);
+            let app2_colours_json_string = json.app2_colours;
+	    console.log("Found 'app2_colours' in return message:", app2_colours_json_string);
+	    let app2_colours_html = generateApp2ColoursTable(app2_colours_json_string);
+	    jQuery('#features_app2').html(app2_colours_html);
+	    generateApp2Stylesheet(app2_colours_json_string);
 	  }
+          console.log("Going to check features_app1 tab\n");
+	  if (isTabActive('features_app1')) {
+            console.log("Going to activate app1_stylesheet\n");
+            toggleStylesheet('app1_stylesheet', 1);
+            console.log("Going to disactivate app2_stylesheet\n");
+            toggleStylesheet('app2_stylesheet', 0);
+          }
+          console.log("... after checking features_app1 tab\n");
+          console.log("Going to check features_app2 tab\n");
+	  if (isTabActive('features_app2')) {
+            console.log("Going to activate app2_stylesheet\n");
+            toggleStylesheet('app2_stylesheet', 1);
+            console.log("Going to disactivate app1_stylesheet\n");
+            toggleStylesheet('app1_stylesheet', 0);
+          }
+          console.log("... after checking features_app2 tab\n");
 
 	  if ("stats" in json) {
               output_file_stats = json.stats;
@@ -207,13 +213,99 @@
   }
 
 
+  function isTabActive(panelId) {
+    try {
+        // Najít <a> element s href="#panelId"
+        const tabLink = document.querySelector(`a.nav-link[href="#${panelId}"]`);
+        
+        // Pokud odkaz neexistuje, vrátit 0
+        if (!tabLink) {
+            console.error(`Odkaz pro panel s ID ${panelId} nebyl nalezen`);
+            return 0;
+        }
+        
+        // Zkontrolovat, zda má odkaz třídu active
+        return tabLink.classList.contains('active') ? 1 : 0;
+    } catch (error) {
+        console.error('Chyba při kontrole aktivního panelu:', error);
+        return 0;
+    }
+  }
+
+
+  function featuresApp1Activated() {
+    console.log("Going to activate app1_stylesheet\n");
+    toggleStylesheet('app1_stylesheet', 1);
+    console.log("Going to disactivate app2_stylesheet\n");
+    toggleStylesheet('app2_stylesheet', 0);
+  }
+
+  function featuresApp2Activated() {
+    console.log("Going to activate app2_stylesheet\n");
+    toggleStylesheet('app2_stylesheet', 1);
+    console.log("Going to disactivate app1_stylesheet\n");
+    toggleStylesheet('app1_stylesheet', 0);
+  }
+
+  // Aktivuje (při activate === 1) či deaktivuje daný stylesheet (app1_stylesheet či app2_stylesheet)
+  function toggleStylesheet(stylesheetName, activate) {
+    try {
+
+        // Najít cílový stylesheet
+        const targetStyleElement = document.getElementById(stylesheetName);
+        if (!targetStyleElement) {
+            console.error(`Stylesheet s ID ${stylesheetName} nebyl nalezen`);
+            return;
+        }
+
+        // Nastavit disabled vlastnost cílového stylesheetu
+        targetStyleElement.disabled = (activate === 0);
+
+    } catch (error) {
+        console.error('Chyba při přepínání stylesheetu:', error);
+    }
+  }
+
+
   // Funkce pro detekci, zda text začíná <html>
   function isHTML(text) {
     return /^\s*<html/i.test(text); // Ignoruje mezery na začátku a je case-insensitive
   }
 
 
-
+  // Převede JSON s definicí barev app2 na html tabulku
+  function generateApp2ColoursTable(jsonString) {
+    try {
+        // Parsování JSON řetězce na objekt
+        const data = JSON.parse(jsonString);
+        
+        // Extrakce klíčů a seřazení numericky
+        const sortedKeys = Object.keys(data).sort((a, b) => Number(a) - Number(b));
+        
+        // Vytvoření HTML tabulky
+        let html = '<table style="width: 100%; border-collapse: collapse;">';
+        
+        // Generování řádků pro každý klíč
+        sortedKeys.forEach(key => {
+            const backgroundColor = data[key];
+            html += `<tr>
+                        <td style="background-color: ${backgroundColor}; width: 100%; padding: 3px; text-align: center; line-height: 1.2; font-size: 0.8rem">
+                            ${key}
+                        </td>
+                    </tr>`;
+        });
+        
+        html += '</table>';
+        
+        return html;
+    } catch (error) {
+        console.error('Chyba při parsování JSON:', error);
+        return '<p>Chyba při generování tabulky: Neplatný JSON formát</p>';
+    }
+  }	
+	
+	
+	
   // vrátí pole id z elementů span v daném html kódu
   function getSpanIds(html) {
     let parser = new DOMParser();
@@ -347,6 +439,7 @@
     // If no inline stylesheet for app1 exists, create one
     if (!app1_stylesheet) {
       const styleElement = document.createElement('style');
+      styleElement.id = 'app1_stylesheet';
       styleElement.type = 'text/css';
       document.head.appendChild(styleElement);	    
       app1_stylesheet = styleElement.sheet; // set the global variable
@@ -369,6 +462,43 @@
     // Add the new or updated rule
     app1_stylesheet.insertRule(`.${className} { ${cssText} }`, app1_stylesheet.cssRules.length);
   }
+
+
+  function generateApp2Stylesheet(jsonString) {
+    // If no inline stylesheet for app2 exists, create one
+    if (!app2_stylesheet) {
+      const styleElement = document.createElement('style');
+      styleElement.id = 'app2_stylesheet';
+      styleElement.type = 'text/css';
+      document.head.appendChild(styleElement);      
+      app2_stylesheet = styleElement.sheet; // set the global variable
+    }
+    try {
+        // Parsování JSON řetězce na objekt
+        const data = JSON.parse(jsonString);
+        
+        // Vytvoření CSS pravidel
+        let css = '';
+        
+        // Generování třídy pro každý klíč
+        for (const key in data) {
+            if (data.hasOwnProperty(key)) {
+                const backgroundColor = data[key];
+                css += `.app2_class_${key} { background-color: ${backgroundColor}; }\n`;
+            }
+        }
+        
+        // Nastavit obsah <style> elementu
+        const styleElement = document.getElementById('app2_stylesheet');
+        styleElement.textContent = css;
+    } catch (error) {
+        console.error('Chyba při parsování JSON:', error);
+        // Nastavit chybovou zprávu do <style> elementu
+        const styleElement = document.getElementById('app2_stylesheet');
+        styleElement.textContent = '/* Chyba při generování stylesheetu: Neplatný JSON formát */';
+    }
+  }
+
 
 
   function removeCSSClass(className) {
@@ -485,7 +615,7 @@
 
   // funkce pro získání id aktivního panelu v dané sadě panelů
   // volat např. takto:
-  // let activePanelId = getActivePanel('#input_tabs');
+  // let activePanelId = getActivePanel('#output_tabs');
   // if (activePanelId) {
   //   console.log('Aktivní panel ID:', activePanelId);
   // }
@@ -866,12 +996,12 @@
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link active d-flex align-items-center" href="#features_app1" data-bs-toggle="tab">
+      <a class="nav-link active d-flex align-items-center" href="#features_app1" data-bs-toggle="tab" onclick="featuresApp1Activated()">
         <span><?php echo $lang[$currentLang]['run_output_app1']; ?></span>
       </a>
     </li>
     <li class="nav-item">
-      <a class="nav-link d-flex align-items-center" href="#features_app2" data-bs-toggle="tab">
+      <a class="nav-link d-flex align-items-center" href="#features_app2" data-bs-toggle="tab" onclick="featuresApp2Activated()">
         <span><?php echo $lang[$currentLang]['run_output_app2']; ?></span>
       </a>
     </li>
