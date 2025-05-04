@@ -51,4 +51,22 @@
   </table>
 </div>
 
+
+<!-- ================= ACKNOWLEDGEMENTS ================ -->
+
+<div class="mt-3 mb-3">
+  <?php
+    if ($currentLang == 'cs') {
+  ?>
+    <div><?php include('acknowledgements_cs.html'); ?></div>
+  <?php
+    } else {
+  ?>
+    <div><?php include('acknowledgements_en.html'); ?></div>
+  <?php
+    }
+  ?>
+</div>
+
+
 <?php require('footer.php') ?>

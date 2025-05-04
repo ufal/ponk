@@ -30,7 +30,7 @@
   </tr>
   <tr>
       <th><?php echo $lang[$currentLang]['info_basic_repository']; ?></th>
-      <td><a href="https://github.com/ufal/ponk" target="_blank">https://github.com/ufal/ponk</a></td>
+      <td><a href="https://svn.ms.mff.cuni.cz/svn/ponk/projects/ponk/" target="_blank">https://svn.ms.mff.cuni.cz/svn/ponk/projects/ponk/</a> (TODO)</td>
   </tr>
   <tr>
       <th><?php echo $lang[$currentLang]['info_basic_development_status']; ?></th>
@@ -50,5 +50,23 @@
   </tr>
   </table>
 </div>
+
+
+<!-- ================= ACKNOWLEDGEMENTS ================ -->
+
+<div class="mt-3 mb-3">
+  <?php
+    if ($currentLang == 'cs') {
+  ?>
+    <div><?php include('acknowledgements_cs.html'); ?></div>
+  <?php
+    } else {
+  ?>
+    <div><?php include('acknowledgements_en.html'); ?></div>
+  <?php
+    }
+  ?>
+</div>
+
 
 <?php require('footer.php') ?>

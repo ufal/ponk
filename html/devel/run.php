@@ -563,7 +563,8 @@
       document.getElementById('server_info').innerHTML = info;
       document.getElementById('server_info').classList.remove('d-none');
 
-      var short_info = "&nbsp; <?php echo $lang[$currentLang]['run_server_info_version']; ?>: <i>" + version + "</i>";
+      //var short_info = "&nbsp; <?php echo $lang[$currentLang]['run_server_info_version']; ?>: <i>" + version + "</i>";
+      var short_info = "<i>" + version + "</i>";
       //console.log("Short info: ", short_info);
       document.getElementById('server_short_info').innerHTML = short_info;
       document.getElementById('server_short_info').classList.remove('d-none');
@@ -774,58 +775,6 @@
 
 --></script>
 
-  <!-- ================= ABOUT ================ -->
-
-<!--div class="card">
-  <div class="card-header" role="tab" id="aboutHeading">
-    <button class="btn btn-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#aboutContent" aria-expanded="false" aria-controls="aboutContent">
-      <i class="fa-solid fa-caret-down"></i> <?php echo $lang[$currentLang]['run_about_line']; ?>
-    </button>
-  </div>
-  <div id="aboutContent" class="collapse m-1" role="tabpanel" aria-labelledby="aboutHeading">
-          <?php
-            if ($currentLang == 'cs') {
-          ?>
-    <div><?php require('about_cs.html') ?></div>
-          <?php
-            } else {
-          ?>
-    <div><?php require('about_en.html') ?></div>
-          <?php
-            }
-          ?>
-  </div>
-</div-->
-
-  <!-- ================= SERVER INFO ================ -->
-
-<div class="card mt-2">
-  <div class="card-header" role="tab" id="serverInfoHeading" style="padding: 0.2rem 1rem; min-height: unset;">
-    <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent" style="padding: 0.2rem 0.5rem;">
-      <i class="fa-solid fa-caret-down" aria-hidden="true" style="font-size: 0.8rem;"></i> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" class="d-none"></span>
-    </button>
-  </div>
-
-  <div id="serverInfoContent" class="collapse m-1" role="tabpanel" aria-labelledby="serverInfoHeading">
-      <div id="server_info" class="d-none"></div>
-
-      <?php
-      if ($currentLang == 'cs') {
-      ?>
-          <div><?php require('licence_cs.html'); ?></div>
-      <?php
-      } else {
-      ?>
-          <div><?php require('licence_en.html'); ?></div>
-      <?php
-      }
-      ?>
-
-      <p><?php echo $lang[$currentLang]['run_server_info_word_limit']; ?></p>
-      <div id="error" class="alert alert-danger d-none"></div>
-  </div>
-</div>
-
 
 <!-- ================= INPUT FIELDS ================ -->
 
@@ -937,22 +886,6 @@
 </div>
 
   </div>
-</div>
-
-<!-- ================= ACKNOWLEDGEMENTS ================ -->
-
-<div class="mt-3 mb-3">
-  <?php
-    if ($currentLang == 'cs') {
-  ?>
-    <div><?php include('acknowledgements_cs.html'); ?></div>
-  <?php
-    } else {
-  ?>
-    <div><?php include('acknowledgements_en.html'); ?></div>
-  <?php
-    }
-  ?>
 </div>
 
 <?php require('footer.php') ?>

@@ -52,8 +52,18 @@ $currentLang = $_SESSION['lang'];
       <!-- Service title a menu vedle sebe -->
       <div class="d-flex align-items-end justify-content-between pt-lg-3">
         <!-- Nápis PONK -->
-	<!--h1 class="me-3 mb-0">PONK</h1-->
         <img src="img/PONK.png" height="65px" style="padding-bottom: 5px; padding-top: 0px; padding-left: 2px">
+
+        <!-- Server info (pouze na run.php) -->
+        <?php if ($main_page == 'run.php') { ?>
+          <div class="server-info-header mx-3">
+            <div class="card-header" role="tab" id="serverInfoHeading" style="padding: 0.2rem 1rem; min-height: unset; background: none; border: none;">
+              <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent" style="padding: 0.2rem 0.5rem; font-size: 0.9rem; text-decoration: none;">
+                <i class="fa-solid fa-caret-down" aria-hidden="true" style="font-size: 0.8rem;"></i> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" class="d-none"></span>
+              </button>
+            </div>
+          </div>
+        <?php } ?>
 
         <!-- Menu a vlaječka -->
         <div class="d-flex align-items-center">
@@ -99,3 +109,26 @@ $currentLang = $_SESSION['lang'];
         </div>
       </div>
 
+      <!-- Rozbalovací panel (pouze na run.php, přes celou šířku) -->
+      <?php if ($main_page == 'run.php') { ?>
+        <div id="serverInfoContent" class="collapse mt-2" role="tabpanel" aria-labelledby="serverInfoHeading">
+          <div class="card">
+            <div class="card-body">
+              <div id="server_info" class="d-none"></div>
+              <?php
+              if ($currentLang == 'cs') {
+              ?>
+                  <div><?php require('licence_cs.html'); ?></div>
+              <?php
+              } else {
+              ?>
+                  <div><?php require('licence_en.html'); ?></div>
+              <?php
+              }
+              ?>
+              <p><?php echo $lang[$currentLang]['run_server_info_word_limit']; ?></p>
+              <div id="error" class="alert alert-danger d-none"></div>
+            </div>
+          </div>
+        </div>
+      <?php } ?>
