@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.39 20250504'; # version of the program
+my $VER = '0.40 20250506'; # version of the program
 
 my @features = ('overall text measures', 'grammatical rules', 'lexical surprise');
 
@@ -712,7 +712,7 @@ if ($apps =~ /\bapp1\b/) {
   # print STDERR "app1_rule_info_orig: '$app1_rule_info_orig'\n";
 }
 else {
-  ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = ($conll_for_ponk_app1, {"APP1 Info" => "APP1 not called"}, {"APP1 Info" => "APP1 not called"});
+  ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = ($conll_for_ponk_app1, [{"APP1 Info" => "APP1 not called"}], {"APP1 Info" => "APP1 not called"});
 }
 
 # Measure time spent by ponk-app1 
