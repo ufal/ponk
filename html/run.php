@@ -77,7 +77,7 @@
 	}
       }
 
-      // Odstranění obsahu <style>
+      // Odstranění obsahu <style> !!! je to ještě potřeba?
       input_text = input_text.replace(/\/\*[\s\S]*?\*\/|\.[\w-]+\s*{[^}]*}/g, '').trim();
     }
 
@@ -119,7 +119,8 @@
     jQuery('#output_stats').empty();
     jQuery('#features_app1').empty();
     jQuery('#features_app2').empty();
-    jQuery('#submit').html('<span class="fa fa-cog"></span>&nbsp;<?php echo $lang[$currentLang]['run_process_input_processing']; ?>&nbsp;<span class="fa fa-cog"></span>');
+    //jQuery('#submit').html('<span class="fa fa-cog"></span>&nbsp;<?php echo $lang[$currentLang]['run_process_input_processing']; ?>&nbsp;<span class="fa fa-cog"></span>');
+    jQuery('#submit').html('<span class="spinner-border spinner-border-sm" style="width: 1.2rem; height: 1.2rem;" role="status" aria-hidden="true"></span>&nbsp;<?php echo $lang[$currentLang]['run_process_input_processing']; ?>&nbsp;<span class="spinner-border spinner-border-sm" style="width: 1.2rem; height: 1.2rem; animation-direction: reverse;" role="status" aria-hidden="true"></span>');
     jQuery('#submit').prop('disabled', true);
 
     jQuery.ajax('//quest.ms.mff.cuni.cz/ponk/api/process', {
