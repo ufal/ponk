@@ -62,10 +62,10 @@
            
       if (input_format === "txt") {
         input_text = editablePanel.innerText; // Pouze text bez formátování
-        console.log("doSubmit: Input plain text: ", input_text);
+        //console.log("doSubmit: Input plain text: ", input_text);
       } else {
         let input_text_html = editablePanel.innerHTML; // Plný HTML obsah
-        console.log("doSubmit: Input html before testing html tag: ", input_text_html);
+        //console.log("doSubmit: Input html before testing html tag: ", input_text_html);
         if (isHTML(input_text_html)) { // tzn. už zpracováváme dříve vrácenou html odpověď: html převedeme na MarkDown
           console.log("doSubmit: Input html: ", input_text_html);
           input_text = turndownService.turndown(input_text_html);
@@ -82,7 +82,7 @@
     }
 
     //var input_text = jQuery('#input').val();
-    console.log("doSubmit: Input text: ", input_text);
+    //console.log("doSubmit: Input text: ", input_text);
     output_format = jQuery('input[name=option_output]:checked').val();
     //console.log("doSubmit: Output format: ", output_format);
 
@@ -130,21 +130,23 @@
       type: "POST",
       success: function(json) {
         try {
-	  if ("result" in json) {
-              output_file_content = json.result;
-              console.log("doSubmit: Found 'result' in return message:", output_file_content);
-              app1_token_ids = getSpanIds(output_file_content);
-	      //console.log("App1 token ids: ", app1_token_ids);
-	      const editablePanel = document.getElementById('input');
-	      editablePanel.innerHTML = output_file_content;
-	      console.log("doSubmit: New innerHTML of input: ", editablePanel.innerHTML);
-              displayFormattedOutput();
+          if ("result" in json) {
+            var full_html = json.result;
+            //console.log("doSubmit: Found 'result' in return message:", full_html);
+            output_file_content = getBodyContent(full_html).trim();
+            //console.log("doSubmit: Only trimmed 'body' content of 'result':", output_file_content);
+            app1_token_ids = getSpanIds(output_file_content);
+            //console.log("App1 token ids: ", app1_token_ids);
+            const editablePanel = document.getElementById('input');
+            editablePanel.innerHTML = output_file_content;
+            //console.log("doSubmit: New innerHTML of input: ", editablePanel.innerHTML);
+            displayFormattedOutput();
 	  }
 
           console.log("Looking for app1_features");
 	  if ("app1_features" in json) {
             let output_app1_features = json.app1_features;
-            console.log("Found 'app1_features' in return message:", output_app1_features);
+            //console.log("Found 'app1_features' in return message:", output_app1_features);
             jQuery('#features_app1').html(output_app1_features);
 	  }
 
@@ -166,7 +168,7 @@
 
 	  if ("app2_colours" in json) {
             let app2_colours_json_string = json.app2_colours;
-	    console.log("Found 'app2_colours' in return message:", app2_colours_json_string);
+	    //console.log("Found 'app2_colours' in return message:", app2_colours_json_string);
 	    let app2_colours_html = generateApp2ColoursTable(app2_colours_json_string);
 	    jQuery('#features_app2').html(app2_colours_html);
 	    generateApp2Stylesheet(app2_colours_json_string);
@@ -270,6 +272,16 @@
   // Funkce pro detekci, zda text začíná <html>
   function isHTML(text) {
     return /^\s*<html/i.test(text); // Ignoruje mezery na začátku a je case-insensitive
+  }
+
+
+  function getBodyContent(htmlString) {
+    // Použijeme DOMParser k parsování HTML řetězce
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+
+    // Vrátíme obsah elementu <body>
+    return doc.body.innerHTML;
   }
 
 
@@ -377,7 +389,8 @@
           const colorStyle = 'rgb(' + Math.round(red) + ', ' + Math.round(green) + ', ' + Math.round(blue) + ') !important';
           //console.log('Red:', red, 'Green:', green, 'Blue:', blue);
           //console.log('Color Style:', colorStyle);
-          let class_style = { 'color': colorStyle, 'font-weight': 'bold' };
+          //let class_style = { 'color': colorStyle, 'font-weight': 'bold' };
+          let class_style = { 'color': colorStyle, 'text-shadow': '0.02em 0 0 currentColor, -0.02em 0 0 currentColor' };
           createOrReplaceCSSClass(class_name, class_style);
           console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
         } else {
@@ -399,10 +412,10 @@
     if (typeof ruleInfo === 'object' && ruleInfo !== null) {
       for (let key in ruleInfo) {
         if (ruleInfo.hasOwnProperty(key)) {
-          console.log(`Key: ${key}, Value:`, ruleInfo[key]);
+          //console.log(`Key: ${key}, Value:`, ruleInfo[key]);
 	  let rule = ruleInfo[key];
 	  app1_rule_active[key] = 1;
-	  console.log(`Setting key ${key} activity status to 1`);
+	  //console.log(`Setting key ${key} activity status to 1`);
           if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
             let {red, green, blue} = rule.foreground_color;
             //console.log(`Key: ${key}, RGB Color: rgb(${red}, ${green}, ${blue})`);
@@ -410,11 +423,12 @@
             const colorStyle = 'rgb(' + Math.round(red) + ', ' + Math.round(green) + ', ' + Math.round(blue) + ') !important';
             //console.log('Red:', red, 'Green:', green, 'Blue:', blue);
             //console.log('Color Style:', colorStyle);
-            let class_style = { 'color': colorStyle, 'font-weight': 'bold' };
+            //let class_style = { 'color': colorStyle, 'font-weight': 'bold' };
+            let class_style = { 'color': colorStyle, 'text-shadow': '0.02em 0 0 currentColor, -0.02em 0 0 currentColor' };
             createOrReplaceCSSClass(class_name, class_style);
-            console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
+            //console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
           } else {
-            console.log(`Key: ${key}, Foreground color not available or not an object.`);
+            //console.log(`Key: ${key}, Foreground color not available or not an object.`);
           }
         }
       }
@@ -944,14 +958,13 @@
     </li>
   </ul>
 
-<!-- Panely levé části -->
-<div class="tab-content flex-grow-1" id="input_tabs" style="border: 1px solid #ddd; border-radius: .25rem .25rem .25rem .25rem; padding: 0px;">
-  <div class="tab-pane fade show active h-100" id="input_text">
-    <div id="input" contenteditable="true" class="p-3 h-100" style="overflow-y: auto;">
+<div class="tab-content flex-grow-1" id="input_tabs" style="border: 1px solid #ddd; border-radius: .25rem; height: 100vh; max-height: 100vh; overflow: hidden;">
+  <div class="tab-pane fade show active h-100" id="input_text" style="height: 100%; max-height: 100%;">
+    <div id="input" contenteditable="true" class="p-3 h-100" style="height: 100%; max-height: 100%; overflow-y: auto; box-sizing: border-box;" spellcheck="true" lang="cs">
       <span style="color: #bbbbbb"><?php echo $lang[$currentLang]['run_input_text_default_text']; ?></span>
     </div>
   </div>
-  <div class="tab-pane fade h-100" id="input_file">
+  <div class="tab-pane fade h-100" id="input_file" style="height: 100%; max-height: 100%;">
     <!-- Přepínače formátu vstupu -->
     <div class="d-flex align-items-center ms-2 mt-3 mb-2" style="font-size: 0.9rem;">
       <label class="form-label fw-bold me-3"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
@@ -984,6 +997,7 @@
     </div>
   </div>
 </div>
+
 </div>
 
 <!-- Pravá část (1/3 šířky) -->

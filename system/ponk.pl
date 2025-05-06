@@ -1222,6 +1222,25 @@ sub get_feat_value {
 }  
 
 
+sub generate_app2_stylesheet {
+    my ($haref_colours) = @_;
+
+    # Kontrola, zda je vstup platná hash reference
+    #unless (ref($haref_colours) eq 'HASH') {
+    #    carp "Chyba: Očekávána hash reference, obdržen " . (ref($haref_colours) || 'skalár');
+    #    return '/* Chyba při generování stylesheetu: Neplatný vstup */';
+    #}
+
+    # Vytvoření CSS pravidel
+    my $css = '';
+    while (my ($key, $background_color) = each %$haref_colours) {
+        $css .= ".app2_class_$key { background-color: $background_color; }\n";
+    }
+
+    return $css;
+}
+
+
 =item get_output
 
 Returns the processed input text in the given format (one of: txt, html, conllu).
@@ -1240,22 +1259,18 @@ sub get_output {
   # FILE HEADER
   
   if ($format eq 'html') {
-    #$output .= "<html>\n";
-    #    $output .= <<END_OUTPUT_HEAD;
-    #<head>
-    #  <style>
-    #        /* source classes colours */
-    #        .highlighted-text {
-    #            color: $color_highlight_general;
-    #        }
-    #        .highlighted-text-app1 {
-    #            color: $color_highlight_app1;
-    #            font-weight: bold;
-    #        }
-    #  </style>
-    #</head>
-    #END_OUTPUT_HEAD
-    #$output .= "<body>\n";
+    my $css = generate_app2_stylesheet($app2_colours);
+    $output .= "<html>\n";
+    $output .= <<END_OUTPUT_HEAD_START;
+<head>
+  <style>
+END_OUTPUT_HEAD_START
+    $output .= $css;
+    $output .= <<END_OUTPUT_HEAD_END;
+  </style>
+</head>
+END_OUTPUT_HEAD_END
+    $output .= "<body>\n";
   }
   
   my $first_par = 1; # for paragraph separation in txt and html formats (first par in the file should not be separated)
@@ -1523,8 +1538,8 @@ sub get_output {
 
   if ($format eq 'html') {
     $output .= "</p>";
-    #$output .= "</body>\n";
-    #$output .= "</html>\n";
+    $output .= "</body>\n";
+    $output .= "</html>\n";
   }
 
   return $output;

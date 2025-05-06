@@ -29,7 +29,7 @@ $currentLang = $_SESSION['lang'];
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="cs">
 <head>
   <title>PONK</title>
   <meta charset="utf-8">
