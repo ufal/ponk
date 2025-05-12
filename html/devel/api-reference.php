@@ -1,4 +1,3 @@
-<?php $main_page=basename(__FILE__); require('header.php') ?>
 
 <div class="dropdown float-end" style="margin-left: 10px; margin-bottom: 10px;">
   <button class="btn btn-secondary dropdown-toggle" type="button" id="tocDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -40,4 +39,3 @@
           ?>
 
 
-<?php require('footer.php') ?>

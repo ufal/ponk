@@ -1,4 +1,3 @@
-<?php $main_page=basename(__FILE__); require('header.php') ?>
 
 <script type="text/javascript"><!--
   var input_file_content = null;
@@ -1033,4 +1032,3 @@
   </div>
 </div>
 
-<?php require('footer.php') ?>

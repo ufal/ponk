@@ -1,4 +1,3 @@
-
 <?php
 // Spuštění session pro uchovávání jazyka mezi požadavky
 session_start();
@@ -29,20 +28,18 @@ $currentLang = $_SESSION['lang'];
 ?>
 
 <!DOCTYPE html>
-<html lang="cs">
+<html style="scroll-behavior: auto;">
 <head>
   <title>PONK</title>
   <meta charset="utf-8">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"> <!-- Aktualizovaná verze Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <link rel="stylesheet" href="css/lindat.css" type="text/css" />
   <link rel="stylesheet" href="css/ponk.css" type="text/css" />
 
-  <script src="https://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript"></script>
-  <!-- Bootstrap 5 JavaScript, nyní bez jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" type="text/javascript"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js" type="text/javascript"></script>
-  <!-- Načtení Turndown pro konverzi html do markdownu -->
   <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
 </head>
 
@@ -54,34 +51,32 @@ $currentLang = $_SESSION['lang'];
         <!-- Nápis PONK -->
         <img src="img/PONK.png" height="65px" style="padding-bottom: 5px; padding-top: 0px; padding-left: 2px">
 
-        <!-- Server info (pouze na run.php) -->
-        <?php if ($main_page == 'run.php') { ?>
-          <div class="server-info-header mx-3">
-            <div class="card-header" role="tab" id="serverInfoHeading" style="padding: 0.2rem 1rem; min-height: unset; background: none; border: none;">
-              <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent" style="padding: 0.2rem 0.5rem; font-size: 0.9rem; text-decoration: none;">
-                <i class="fa-solid fa-caret-down" aria-hidden="true" style="font-size: 0.8rem;"></i> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" class="d-none"></span>
-              </button>
-            </div>
+        <!-- Server info (zobrazeno pouze pro Run tab) -->
+        <div class="server-info-header mx-3" id="serverInfoHeader" style="display: none;">
+          <div class="card-header" role="tab" id="serverInfoHeading" style="padding: 0.2rem 1rem; min-height: unset; background: none; border: none;">
+            <button class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#serverInfoContent" aria-expanded="false" aria-controls="serverInfoContent" style="padding: 0.2rem 0.5rem; font-size: 0.9rem; text-decoration: none;">
+              <i class="fa-solid fa-caret-down" aria-hidden="true" style="font-size: 0.8rem;"></i> <?php echo $lang[$currentLang]['run_server_info_label']; ?>: <span id="server_short_info" class="d-none"></span>
+            </button>
           </div>
-        <?php } ?>
+        </div>
 
         <!-- Menu a vlaječka -->
         <div class="d-flex align-items-center">
           <!-- Menu -->
           <div class="menu-container position-relative">
-            <ul class="nav nav-tabs nav-tabs-gray mb-0">
+            <ul class="nav nav-tabs nav-tabs-gray mb-0" id="mainTabs">
               <li class="nav-item">
-                <a class="nav-link <?php if ($main_page == 'info.php') echo 'active'; ?>" href="info.php">
+                <a class="nav-link" href="#info" data-bs-toggle="tab" role="tab" aria-controls="info">
                   <span class="fa fa-info-circle"></span> <?php echo $lang[$currentLang]['menu_about']; ?>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link <?php if ($main_page == 'run.php') echo 'active'; ?>" href="run.php">
+                <a class="nav-link active" href="#run" data-bs-toggle="tab" role="tab" aria-controls="run">
                   <span class="fa fa-cogs"></span> <?php echo $lang[$currentLang]['menu_run']; ?>
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link <?php if ($main_page == 'api-reference.php') echo 'active'; ?>" href="api-reference.php">
+                <a class="nav-link" href="#api" data-bs-toggle="tab" role="tab" aria-controls="api">
                   <span class="fa fa-list"></span> <?php echo $lang[$currentLang]['menu_api']; ?>
                 </a>
               </li>
@@ -109,26 +104,98 @@ $currentLang = $_SESSION['lang'];
         </div>
       </div>
 
-      <!-- Rozbalovací panel (pouze na run.php, přes celou šířku) -->
-      <?php if ($main_page == 'run.php') { ?>
-        <div id="serverInfoContent" class="collapse mt-2" role="tabpanel" aria-labelledby="serverInfoHeading">
-          <div class="card">
-            <div class="card-body">
-              <div id="server_info" class="d-none"></div>
-              <?php
-              if ($currentLang == 'cs') {
-              ?>
-                  <div><?php require('licence_cs.html'); ?></div>
-              <?php
-              } else {
-              ?>
-                  <div><?php require('licence_en.html'); ?></div>
-              <?php
-              }
-              ?>
-              <p><?php echo $lang[$currentLang]['run_server_info_word_limit']; ?></p>
-              <div id="error" class="alert alert-danger d-none"></div>
-            </div>
+      <!-- Rozbalovací panel pro server info -->
+      <div id="serverInfoContent" class="collapse mt-2" role="tabpanel" aria-labelledby="serverInfoHeading">
+        <div class="card">
+          <div class="card-body">
+            <div id="server_info" class="d-none"></div>
+            <?php
+            if ($currentLang == 'cs') {
+            ?>
+                <div><?php require('licence_cs.html'); ?></div>
+            <?php
+            } else {
+            ?>
+                <div><?php require('licence_en.html'); ?></div>
+            <?php
+            }
+            ?>
+            <p><?php echo $lang[$currentLang]['run_server_info_word_limit']; ?></p>
+            <div id="error" class="alert alert-danger d-none"></div>
           </div>
         </div>
-      <?php } ?>
+      </div>
+
+  <!-- JavaScript pro zobrazení server info a správu tabu -->
+  <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+      const mainTabs = document.querySelector('#mainTabs');
+      const serverInfoHeader = document.querySelector('#serverInfoHeader');
+      const serverInfoContent = document.querySelector('#serverInfoContent');
+
+      function updateServerInfoVisibility() {
+        const runTab = document.querySelector('#run');
+        if (runTab && runTab.classList.contains('active')) {
+          serverInfoHeader.style.display = 'block';
+        } else {
+          serverInfoHeader.style.display = 'none';
+          serverInfoContent.classList.remove('show');
+        }
+      }
+
+      // Spustit při načtení stránky
+      updateServerInfoVisibility();
+
+      // Sledovat změnu tabu a zabránit scrollování
+      mainTabs.querySelectorAll('a[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('click', function(e) {
+          e.preventDefault(); // Zabránit defaultnímu scrollování
+          new bootstrap.Tab(this).show();
+        });
+        tab.addEventListener('shown.bs.tab', updateServerInfoVisibility);
+      });
+
+      // Zpracování URL hash při načtení stránky bez scrollování
+      if (window.location.hash) {
+        const hash = window.location.hash;
+        console.log('Processing hash:', hash);
+        if (['#info', '#run', '#api'].includes(hash)) {
+          const tabLink = mainTabs.querySelector(`a[href="${hash}"]`);
+          if (tabLink) {
+            console.log('Activating tab:', hash);
+            new bootstrap.Tab(tabLink).show();
+            // Zabránit scrollování k tab-content
+            window.scrollTo({ top: 0, behavior: 'auto' });
+          } else {
+            console.error('Tab link not found for hash:', hash);
+          }
+        }
+      }
+
+      // Aktualizovat hash při změně tabu bez scrollování
+      mainTabs.querySelectorAll('a[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function(e) {
+          history.replaceState(null, null, e.target.getAttribute('href')); // Aktualizovat hash bez scrollování
+          console.log('Tab switched to:', e.target.getAttribute('href'));
+        });
+      });
+
+      // Event delegation pro odkazy v about_en.html a about_cs.html
+      document.addEventListener('click', function(e) {
+        const link = e.target.closest('a[href="#info"], a[href="#run"], a[href="#api"]');
+        if (link) {
+          e.preventDefault(); // Zabránit defaultnímu scrollování
+          const targetId = link.getAttribute('href');
+          console.log('Link clicked:', targetId);
+          const tabLink = mainTabs.querySelector(`a[href="${targetId}"]`);
+          if (tabLink) {
+            console.log('Switching to tab:', targetId);
+            new bootstrap.Tab(tabLink).show();
+            window.scrollTo({ top: 0, behavior: 'auto' }); // Udržet stránku nahoře
+          } else {
+            console.error('Tab link not found for:', targetId);
+          }
+        }
+      });
+    });
+  </script>
