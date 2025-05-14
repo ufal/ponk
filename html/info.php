@@ -1,4 +1,3 @@
-<?php $main_page=basename(__FILE__); require('header.php') ?>
 
 <?php
   if ($currentLang == 'cs') {
@@ -69,4 +68,3 @@
 </div>
 
 
-<?php require('footer.php') ?>
