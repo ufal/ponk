@@ -46,7 +46,7 @@
 
     let activePanelId = getActivePanelID('#input_tabs');
     if (activePanelId) {
-      console.log('Aktivní panel ID:', activePanelId);
+      //console.log('Aktivní panel ID:', activePanelId);
     }
     if (activePanelId && activePanelId == 'input_file') { // input from a file
       if (!input_file_content) {
@@ -143,7 +143,7 @@
             displayFormattedOutput();
 	  }
 
-          console.log("Looking for app1_features");
+          //console.log("Looking for app1_features");
 	  if ("app1_features" in json) {
             let output_app1_features = json.app1_features;
             //console.log("Found 'app1_features' in return message:", output_app1_features);
@@ -173,22 +173,22 @@
 	    jQuery('#features_app2').html(app2_colours_html);
 	    generateApp2Stylesheet(app2_colours_json_string);
 	  }
-          console.log("Going to check features_app1 tab\n");
+          //console.log("Going to check features_app1 tab\n");
 	  if (isTabActive('features_app1')) {
-            console.log("Going to activate app1_stylesheet\n");
+            //console.log("Going to activate app1_stylesheet\n");
             toggleStylesheet('app1_stylesheet', 1);
-            console.log("Going to disactivate app2_stylesheet\n");
+            //console.log("Going to disactivate app2_stylesheet\n");
             toggleStylesheet('app2_stylesheet', 0);
           }
-          console.log("... after checking features_app1 tab\n");
-          console.log("Going to check features_app2 tab\n");
+          //console.log("... after checking features_app1 tab\n");
+          //console.log("Going to check features_app2 tab\n");
 	  if (isTabActive('features_app2')) {
-            console.log("Going to activate app2_stylesheet\n");
+            //console.log("Going to activate app2_stylesheet\n");
             toggleStylesheet('app2_stylesheet', 1);
-            console.log("Going to disactivate app1_stylesheet\n");
+            //console.log("Going to disactivate app1_stylesheet\n");
             toggleStylesheet('app1_stylesheet', 0);
           }
-          console.log("... after checking features_app2 tab\n");
+          //console.log("... after checking features_app2 tab\n");
 
 	  if ("stats" in json) {
               output_file_stats = json.stats;
@@ -236,16 +236,16 @@
 
 
   function featuresApp1Activated() {
-    console.log("Going to activate app1_stylesheet\n");
+    //console.log("Going to activate app1_stylesheet\n");
     toggleStylesheet('app1_stylesheet', 1);
-    console.log("Going to disactivate app2_stylesheet\n");
+    //console.log("Going to disactivate app2_stylesheet\n");
     toggleStylesheet('app2_stylesheet', 0);
   }
 
   function featuresApp2Activated() {
-    console.log("Going to activate app2_stylesheet\n");
+    //console.log("Going to activate app2_stylesheet\n");
     toggleStylesheet('app2_stylesheet', 1);
-    console.log("Going to disactivate app1_stylesheet\n");
+    //console.log("Going to disactivate app1_stylesheet\n");
     toggleStylesheet('app1_stylesheet', 0);
   }
 
@@ -334,7 +334,7 @@
   // aktivní pravidla mají hodnotu 1 v hashi app1_rule_active
   function highlightTokensWithMultipleActiveApp1Rules() {
     // Projít všechny id v globální proměnné app1_token_ids
-    console.log("Entering highlightTokens...");
+    //console.log("Entering highlightTokens...");
     app1_token_ids.forEach(id => {
         const element = document.getElementById(id);
 	if (element) {
@@ -376,10 +376,10 @@
     let checkbox = document.getElementById(checkbox_id);
     // Kontrola, zda je checkbox zaškrtnutý
     if (checkbox.checked) {
-      console.log("Checkbox je zaškrtnutý, class='" + rule_class + "'");
+      //console.log("Checkbox je zaškrtnutý, class='" + rule_class + "'");
 
       if (app1_rule_info.hasOwnProperty(rule_name)) {
-        console.log(`Key: ${rule_name}, Value:`, app1_rule_info[rule_name]);
+        //console.log(`Key: ${rule_name}, Value:`, app1_rule_info[rule_name]);
         let rule = app1_rule_info[rule_name];
         app1_rule_active[rule_name] = 1; // store the info on activity status of this rule
         if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
@@ -392,7 +392,7 @@
           //let class_style = { 'color': colorStyle, 'font-weight': 'bold' };
           let class_style = { 'color': colorStyle, 'text-shadow': '0.02em 0 0 currentColor, -0.02em 0 0 currentColor' };
           createOrReplaceCSSClass(class_name, class_style);
-          console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
+          //console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
         } else {
           console.log(`Key: ${rule_name}, Foreground color not available or not an object.`);
         }
@@ -448,7 +448,7 @@
   });*/
 
   function createOrReplaceCSSClass(className, properties) {
-    console.log("createOrReplaceCSSClass: className='" + className + "'");
+    //console.log("createOrReplaceCSSClass: className='" + className + "'");
 
     // If no inline stylesheet for app1 exists, create one
     if (!app1_stylesheet) {
@@ -516,7 +516,7 @@
 
 
   function removeCSSClass(className) {
-    console.log("removeCSSClass: className='" + className + "'");
+    //console.log("removeCSSClass: className='" + className + "'");
     if (!app1_stylesheet) {
       return;
     }
@@ -526,17 +526,17 @@
       if (rules[i].selectorText === `.${className}`) {
         // Remove the rule if it matches the className
         app1_stylesheet.deleteRule(i);
-        console.log(`Removed CSS class: .${className}`);
+        //console.log(`Removed CSS class: .${className}`);
         return; // Exit the function once the class is removed
       }
     }
-    console.log(`CSS class .${className} not found or was already removed.`);
+    //console.log(`CSS class .${className} not found or was already removed.`);
   }
 
 
-  // given a rule name (e.g., RuleLiteraryStyle), it adds bold font to its class in the inline stylesheet
-  function app1RuleHoverStart(app1_rule) {
-    //console.log("app1RuleHoveStart with rule name", app1_rule);
+  // given a rule name (e.g., RuleLiteraryStyle), it adds border info to its class in the inline stylesheet (nejde takto přidat !important a ohraničení se neobjevovalo u vícetřídých slov (u druhých tříd)
+  function app1RuleHoverStartOld(app1_rule) {
+    //console.log("app1RuleHoverStart with rule name", app1_rule);
     let ruleIndex = Array.from(app1_stylesheet.cssRules).findIndex(rule => rule.selectorText === '.app1_class_' + app1_rule);
     if (ruleIndex !== -1) {
         let rule = app1_stylesheet.cssRules[ruleIndex];
@@ -560,9 +560,59 @@
     }
   }
 
-  // given a rule name (e.g., RuleLiteraryStyle), it sets normal font to its class in the inline stylesheet
+  function app1RuleHoverStart(app1_rule) { // verze funkce, která přidá ohraničení s příznakem !important; musí nejdřív přečíst stávající vlastnosti a nové k nim přidat (aby se původní nezapomněly)
+    //console.log("app1RuleHoverStart with rule name", app1_rule);
+    let ruleIndex = Array.from(app1_stylesheet.cssRules).findIndex(rule => rule.selectorText === '.app1_class_' + app1_rule);
+    if (ruleIndex !== -1) {
+        let rule = app1_stylesheet.cssRules[ruleIndex];
+        
+        // Načtení původních stylů
+        let existingStyles = rule.style.cssText || '';
+        
+        // Rozdělení stávajících stylů na objekt pro snazší manipulaci
+        let styleMap = {};
+        if (existingStyles) {
+            existingStyles.split(';').forEach(style => {
+                let [property, value] = style.split(':').map(s => s.trim());
+                if (property && value) {
+                    styleMap[property] = value.replace(/!important\s*$/, '').trim(); // Odstranění !important pro čistou hodnotu
+                }
+            });
+        }
+
+        // Nové vlastnosti, které chceme přidat nebo přepsat
+        const newStyles = {
+            'border-top': '2px solid black',
+            'border-bottom': '2px solid black',
+            'border-radius': '2px',
+            'padding': '0px',
+            'display': 'inline',
+            'outline': '1px solid black',
+            'outline-offset': '-1px'
+        };
+
+        // Kombinace původních a nových stylů (nové přepisují staré)
+        Object.assign(styleMap, newStyles);
+
+        // Vytvoření nového cssText s !important pro nové vlastnosti
+        let newCssText = Object.entries(styleMap).map(([property, value]) => {
+            // Přidání !important pouze pro nové vlastnosti
+            if (newStyles.hasOwnProperty(property)) {
+                return `${property}: ${value} !important`;
+            }
+            return `${property}: ${value}`;
+        }).join('; ');
+
+        // Nastavení nového cssText
+        rule.style.cssText = newCssText;
+    } else {
+        console.log("No class definition for", app1_rule);
+    }
+  }
+
+  // given a rule name (e.g., RuleLiteraryStyle), it removes border info from its class in the inline stylesheet
   function app1RuleHoverEnd(app1_rule) {
-    //console.log("app1RuleHoveEnd with rule name", app1_rule);
+    //console.log("app1RuleHoverEnd with rule name", app1_rule);
     let ruleIndex = Array.from(app1_stylesheet.cssRules).findIndex(rule => rule.selectorText === '.app1_class_' + app1_rule);
     if (ruleIndex !== -1) {
         let rule = app1_stylesheet.cssRules[ruleIndex];
@@ -583,22 +633,22 @@
 
   // given a text piece in the result (a span element), it highlights the element and all other elements with the same active rule+id class
   function app1SpanHoverStart(element) {
-    console.log("app1SpanHoveStart; classes: ");
+    //console.log("app1SpanHoveStart; classes: ");
     app1_ruleid_highlighted = [];
     var classes = element.classList;
     for(var i = 0; i < classes.length; i++) {
       var class_name = classes[i];
-      console.log(class_name);
+      //console.log(class_name);
       let withoutPrefix = class_name.replace("app1_class_", "");
       let parts = withoutPrefix.split('_');
       if (parts.length > 1) {
         let rule = parts[0]; // "RuleVerbalNouns"
         let id = parts[1];   // "1e938644"
 
-        console.log(rule);  // Výstup: RuleVerbalNouns
-	console.log(id);    // Výstup: 1e938644
+        //console.log(rule);  // Výstup: RuleVerbalNouns
+	//console.log(id);    // Výstup: 1e938644
 	if (app1_rule_active[rule]) {
-          console.log(" - rule active!");
+          //console.log(" - rule active!");
 	  createOrReplaceCSSClass(class_name, {
 	    //'box-shadow': '1px 2px 1px 2px black',
             'outline': '1px solid black',
@@ -618,10 +668,10 @@
   }
 
   function app1SpanHoverEnd(element) {
-    console.log("app1SpanHoverEnd; removing classes: ");
+    //console.log("app1SpanHoverEnd; removing classes: ");
     for(var i = 0; i < app1_ruleid_highlighted.length; i++) {
       var ruleid = app1_ruleid_highlighted[i];
-      console.log(ruleid);
+      //console.log(ruleid);
       removeCSSClass(ruleid);
     }
     app1_ruleid_highlighted = [];
