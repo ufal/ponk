@@ -922,7 +922,7 @@
 
 <!-- ================= INPUT FIELDS ================ -->
 
-<div class="container-fluid border rounded px-0 mt-1" style="height: 80vh;">
+<div class="container-fluid border rounded px-0 mt-1" style="height: 85vh;">
   <div class="row gx-2 h-100">
 
 <!-- Levá část (2/3 šířky) -->

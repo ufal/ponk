@@ -53,12 +53,12 @@ $currentLang = $_SESSION['lang'];
 </head>
 
 <body id="lindat-services">
-  <div class="lindat-common">
+  <div class="lindat-common mt-1 mb-2">
     <div class="container">
       <!-- Service title a menu vedle sebe -->
       <div class="d-flex align-items-end justify-content-between pt-lg-3">
         <!-- Nápis PONK -->
-        <img src="img/PONK.png" height="65px" style="padding-bottom: 5px; padding-top: 0px; padding-left: 2px">
+        <img src="img/PONK.png" height="70px" style="padding-bottom: 5px; padding-top: 0px; padding-left: 2px">
 
         <!-- Server info (zobrazeno pouze pro Run tab) -->
         <div class="server-info-header mx-3" id="serverInfoHeader" style="display: none;">
