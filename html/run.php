@@ -13,6 +13,8 @@
   
   var app1_token_ids = []; // an array of ids of tokens in the result (<span>) marked by app1
 
+  var app2_colours_json_string = null;
+  var app2_min_surprise = 0; // minimum level of surprise to be highlighted
 
   // Inicializace Turndown pro převod html do markdownu
   const turndownService = new TurndownService();
@@ -167,11 +169,11 @@
 	  }
 
 	  if ("app2_colours" in json) {
-            let app2_colours_json_string = json.app2_colours;
+            app2_colours_json_string = json.app2_colours;
 	    //console.log("Found 'app2_colours' in return message:", app2_colours_json_string);
-	    let app2_colours_html = generateApp2ColoursTable(app2_colours_json_string);
+	    let app2_colours_html = generateApp2ColoursTable();
 	    jQuery('#features_app2').html(app2_colours_html);
-	    generateApp2Stylesheet(app2_colours_json_string);
+	    generateApp2Stylesheet(app2_min_surprise);
 	  }
           //console.log("Going to check features_app1 tab\n");
 	  if (isTabActive('features_app1')) {
@@ -285,11 +287,11 @@
   }
 
 
-  // Převede JSON s definicí barev app2 na html tabulku
-  function generateApp2ColoursTable(jsonString) {
+  // Převede globální JSON s definicí barev app2 (app2_colours_json_string) na html tabulku
+  function generateApp2ColoursTable() {
     try {
         // Parsování JSON řetězce na objekt
-        const data = JSON.parse(jsonString);
+        const data = JSON.parse(app2_colours_json_string);
         
         // Extrakce klíčů a seřazení numericky
         const sortedKeys = Object.keys(data).sort((a, b) => Number(a) - Number(b));
@@ -299,15 +301,16 @@
         
         // Generování řádků pro každý klíč
         sortedKeys.forEach(key => {
-            const backgroundColor = data[key];
+            //const backgroundColor = data[key];
             html += `<tr>
-                        <td style="background-color: ${backgroundColor}; width: 100%; padding: 3px; text-align: center; line-height: 1.2; font-size: 0.8rem">
+                        <td class="app2_class_${key}" style="width: 100%; padding: 3px; text-align: center; line-height: 1.2; font-size: 0.8rem" onclick="generateApp2Stylesheet(${key})">
                             ${key}
                         </td>
-                    </tr>`;
+			</tr>`;
         });
         
         html += '</table>';
+        //console.log(html);
         
         return html;
     } catch (error) {
@@ -478,7 +481,8 @@
   }
 
 
-  function generateApp2Stylesheet(jsonString) {
+  function generateApp2Stylesheet(min_surprise_level) {
+    app2_min_surprise = min_surprise_level; // store the minimal surprise level to a global variable (to be used in next doSubmit)
     // If no inline stylesheet for app2 exists, create one
     if (!app2_stylesheet) {
       const styleElement = document.createElement('style');
@@ -489,18 +493,20 @@
     }
     try {
         // Parsování JSON řetězce na objekt
-        const data = JSON.parse(jsonString);
+        const data = JSON.parse(app2_colours_json_string);
         
         // Vytvoření CSS pravidel
         let css = '';
         
-        // Generování třídy pro každý klíč
-        for (const key in data) {
-            if (data.hasOwnProperty(key)) {
-                const backgroundColor = data[key];
-                css += `.app2_class_${key} { background-color: ${backgroundColor}; }\n`;
+	// Generování třídy pro každý klíč (číselná úroveň překvapení)
+	for (const key in data) {
+            if (Number(key) >= Number(min_surprise_level)) {
+                if (data.hasOwnProperty(key)) {
+                    const backgroundColor = data[key];
+                    css += `.app2_class_${key} { background-color: ${backgroundColor}; }\n`;
+                }
             }
-        }
+	}
         
         // Nastavit obsah <style> elementu
         const styleElement = document.getElementById('app2_stylesheet');
