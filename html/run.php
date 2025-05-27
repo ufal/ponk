@@ -297,7 +297,7 @@
         const sortedKeys = Object.keys(data).sort((a, b) => Number(a) - Number(b));
         
 	// Vytvoření úvodní informace a HTML tabulky
-        let html = "<h3 class=\"mt-0 pt-0\"><?php echo $lang[$currentLang]['run_output_app2_label']; ?></h3>";
+        let html = "<h4 class=\"mt-0 pt-0\"><?php echo $lang[$currentLang]['run_output_app2_label']; ?></h4>";
 	html += "<p style=\"font-size: 0.9rem;\"><?php echo $lang[$currentLang]['run_output_app2_info']; ?>";
 	html += " <?php echo $lang[$currentLang]['run_output_app2_documentation']; ?></p>";
         html += '<table style="width: 100%; border-collapse: collapse;">';
