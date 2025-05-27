@@ -359,12 +359,11 @@
             //);
             
             // Pokud má element alespoň dvě platné třídy, nastavit žluté pozadí
-            if (validClasses.length >= 2) {
-              element.style.backgroundColor = '#c2c2c2';
-              //element.style.color = 'black';   
-            } else {
-                // Jinak odstranit nastavení pozadí
-                element.style.backgroundColor = '';
+	    if (validClasses.length >= 2) {
+              element.classList.add('multiple_rules');
+	    } else {
+              // Jinak odstranit nastavení pozadí
+              element.classList.remove('multiple_rules');
             }
         }
     });
@@ -410,6 +409,11 @@
 
   // given the object with app1_rule_info, it applies the styles to the web page
   function applyApp1RuleInfoStyles(ruleInfo) {
+    // First, add a class for tokens with multiple rules
+    createOrReplaceCSSClass('multiple_rules', {
+      backgroundColor: '#d2d2d2'
+    });
+    // Now add clases from app1_rule_info
     // console.log("app1_rule_info:", ruleInfo);
     // Iterace přes klíče
     if (typeof ruleInfo === 'object' && ruleInfo !== null) {
@@ -452,32 +456,36 @@
 
   function createOrReplaceCSSClass(className, properties) {
     //console.log("createOrReplaceCSSClass: className='" + className + "'");
-
-    // If no inline stylesheet for app1 exists, create one
+    // Vytvoření inline stylesheetu, pokud neexistuje
     if (!app1_stylesheet) {
       const styleElement = document.createElement('style');
       styleElement.id = 'app1_stylesheet';
       styleElement.type = 'text/css';
-      document.head.appendChild(styleElement);	    
-      app1_stylesheet = styleElement.sheet; // set the global variable
+      document.head.appendChild(styleElement);
+      app1_stylesheet = styleElement.sheet; // Nastaví globální proměnnou
     }
 
-    // Convert properties object to CSS string
-    const cssText = Object.entries(properties).map(([prop, value]) => 
-        `${prop}:${value};`).join('');
+    // Převod vlastností na CSS řetězec
+    const cssText = Object.entries(properties)
+      .map(([prop, value]) => `${prop.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}:${value};`)
+      .join(' ');
 
-    // Remove the rule if it already exists
+    // Odstranění existujícího pravidla, pokud existuje
     if (app1_stylesheet.cssRules) {
-        for (let i = 0; i < app1_stylesheet.cssRules.length; i++) {
-            if (app1_stylesheet.cssRules[i].selectorText === `.${className}`) {
-                app1_stylesheet.deleteRule(i);
-                break;
-            }
+      for (let i = 0; i < app1_stylesheet.cssRules.length; i++) {
+        if (app1_stylesheet.cssRules[i].selectorText === `.${className}`) {
+          app1_stylesheet.deleteRule(i);
+          break;
         }
+      }
     }
 
-    // Add the new or updated rule
-    app1_stylesheet.insertRule(`.${className} { ${cssText} }`, app1_stylesheet.cssRules.length);
+    // Přidání nového pravidla pomocí insertRule
+    try {
+      app1_stylesheet.insertRule(`.${className} { ${cssText} }`, app1_stylesheet.cssRules.length);
+    } catch (e) {
+      console.error(`Chyba při přidávání pravidla pro třídu .${className}:`, e);
+    }
   }
 
 
