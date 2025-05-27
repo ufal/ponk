@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.40 20250506'; # version of the program
+my $VER = '0.40 20250527'; # version of the program
 
 my @features = ('overall text measures', 'grammatical rules', 'lexical surprise');
 
@@ -1250,8 +1250,8 @@ Returns the processed input text in the given format (one of: txt, html, conllu)
 sub get_output {
   my $format = shift;
   my $lang = shift;
-  if (!$lang or $lang !~ /^(cz|en)$/) {
-    $lang = 'cz';
+  if (!$lang or $lang !~ /^(cs|en)$/) {
+    $lang = 'cs';
   }
 
   my $output = '';
@@ -1665,11 +1665,11 @@ sub get_stats_html {
 <head>
   <style>
     h4 {
-      margin-top: 3px;
-      font-size: 1.2rem;
+      margin-top: 2px;
+      font-size: 1.3rem;
     }
     h5 {
-      font-size: 1.1rem;
+      font-size: 1.2rem;
     }
     table {
       border-collapse: collapse;
@@ -1692,31 +1692,59 @@ END_HEAD
 
   $stats .= "<body>\n";
 
-  $stats .= "<h4>PONK version $VER</h4>\n";
-  
-  $stats .= "<p>Number of sentences: $sentences_count\n";
-  $stats .= "<br/>Number of tokens: $tokens_count\n";
+  $stats .= "<h4>PONK <span style=\"font-size: 1.1rem\">$VER</span></h4>\n";
+ 
   my $rounded_time = sprintf("%.1f", $processing_time);
   my $rounded_time_udpipe = sprintf("%.1f", $processing_time_udpipe);
   my $rounded_time_nametag = sprintf("%.1f", $processing_time_nametag);
   my $rounded_time_app1 = sprintf("%.1f", $processing_time_app1);
   my $rounded_time_app2 = sprintf("%.1f", $processing_time_app2);
-  $stats .= "<br/>Processing time: $rounded_time sec.\n";
-  $stats .= "<br/> &nbsp; - UDPipe: $rounded_time_udpipe sec.\n";
-  $stats .= "<br/> &nbsp; - NameTag: $rounded_time_nametag sec.\n";
+  if ($ui_language eq 'cs') { 
+    $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\">Doba zpracování: $rounded_time s</p>\n";
+  }
+  else {
+    $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\">Processing time: $rounded_time s</p>\n";
+  }
+  $stats .= "<p style=\"margin-top: 2px; line-height: 1; font-size: 0.9rem\"> &nbsp; - UDPipe: $rounded_time_udpipe s\n";
+  $stats .= "<br/> &nbsp; - NameTag: $rounded_time_nametag s\n";
   if ($apps =~ /\bapp1\b/) {
-    $stats .= "<br/> &nbsp; - Measures + Rules: $rounded_time_app1 sec.\n";
+    if ($ui_language eq 'cs') { 
+      $stats .= "<br/> &nbsp; - Míry + Pravidla: $rounded_time_app1 s\n";
+    }
+    else {
+      $stats .= "<br/> &nbsp; - Measures + Rules: $rounded_time_app1 s\n";
+    }
   }
   if ($apps =~ /\bapp2\b/) {
-    $stats .= "<br/> &nbsp; - Lexical surprise: $rounded_time_app2 sec.\n";
+    if ($ui_language eq 'cs') { 
+      $stats .= "<br/> &nbsp; - Lexikální překvapení: $rounded_time_app2 s\n";
+    }
+    else {
+      $stats .= "<br/> &nbsp; - Lexical surprise: $rounded_time_app2 s\n";
+    }
   }
   $stats .= "</p>\n";
+ 
+  # Text-wide measures from APP1
   
-  $stats .= "<h5>Measures from PONK-APP1</h5>\n";
+  if ($ui_language eq 'cs') { 
+    $stats .= "<h5>Míry textu jako celku</h5>\n";
+  }
+  else {
+    $stats .= "<h5>Text-wide measures</h5>\n";
+  }
+
+  if ($ui_language eq 'cs') { 
+    $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - počet vět: $sentences_count, slov (vč. interp.): $tokens_count\n";
+  }
+  else {
+    $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - number of sentences: $sentences_count, tokens: $tokens_count\n";
+  } 
+
   my $app1_string = app1_metrics2string('html', $app1_metrics);
-  $stats .= "<p>$app1_string</p>";
+  $stats .= "<p style=\"font-size: 0.9rem; line-height: 1.1\">$app1_string</p>";
   
-  $stats .= "$DESC\n";
+  # $stats .= "$DESC\n";
   
   $stats .= "</body>\n";
   $stats .= "</html>\n";
@@ -1727,7 +1755,7 @@ END_HEAD
 
 =item get_app1_features_html
 
-In a given language ('cz' or 'en'), it produces an html document with a list of features from PonkApp1 used in the document.
+In a given language ('cs' or 'en'), it produces an html document with a list of features from PonkApp1 used in the document.
 It searches for the features that are actually found in the text in the global list @trees.
 Information about the features is taken from global variable $app1_rule_info_orig, which contains a decoded JSON.
 
@@ -1735,8 +1763,8 @@ Information about the features is taken from global variable $app1_rule_info_ori
 
 sub get_app1_features_html {
   my $lang = shift;
-  if (!$lang or $lang !~ /^(cz|en)$/) {
-    $lang = 'cz';
+  if (!$lang or $lang !~ /^(cs|en)$/) {
+    $lang = 'cs';
   }
 
   # get only rules actually found in the given text:
@@ -1791,14 +1819,14 @@ END_HEAD
 =item get_app2_colours_html
 
 OBSOLETE, not used (instead, JSON is sent and html is created in javascript)
-In a given language ('cz' or 'en'), it produces an html document with a list of colours from PonkApp2.
+In a given language ('cs' or 'en'), it produces an html document with a list of colours from PonkApp2.
 Information about the colours is taken from global variable $app2_colours, which contains a decoded JSON.
 
 
 sub get_app2_colours_html {
   my $lang = shift;
-  if (!$lang or $lang !~ /^(cz|en)$/) {
-    $lang = 'cz';
+  if (!$lang or $lang !~ /^(cs|en)$/) {
+    $lang = 'cs';
   }
 
   # compile the html response
@@ -2237,7 +2265,7 @@ sub app1_metrics2string {
         $value = round($value * 100) / 100;
       }
       if ($format eq 'html') {
-        $text .= "$name: $value<br/>\n";
+        $text .= " &nbsp; - $name: $value<br/>\n";
       }
       else { # txt
         $text .= "$name: $value\n";
