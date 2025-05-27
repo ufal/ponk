@@ -296,14 +296,17 @@
         // Extrakce klíčů a seřazení numericky
         const sortedKeys = Object.keys(data).sort((a, b) => Number(a) - Number(b));
         
-        // Vytvoření HTML tabulky
-        let html = '<table style="width: 100%; border-collapse: collapse;">';
+	// Vytvoření úvodní informace a HTML tabulky
+        let html = "<h3 class=\"mt-0 pt-0\"><?php echo $lang[$currentLang]['run_output_app2_label']; ?></h3>";
+	html += "<p style=\"font-size: 0.9rem;\"><?php echo $lang[$currentLang]['run_output_app2_info']; ?>";
+	html += " <?php echo $lang[$currentLang]['run_output_app2_documentation']; ?></p>";
+        html += '<table style="width: 100%; border-collapse: collapse;">';
         
         // Generování řádků pro každý klíč
         sortedKeys.forEach(key => {
             //const backgroundColor = data[key];
             html += `<tr>
-                        <td class="app2_class_${key}" style="width: 100%; padding: 3px; text-align: center; line-height: 1.2; font-size: 0.8rem" onclick="generateApp2Stylesheet(${key})">
+                        <td class="app2_class_${key}" style="width: 100%; padding: 3px; text-align: center; line-height: 1.1; font-size: 0.8rem" onclick="generateApp2Stylesheet(${key})">
                             ${key}
                         </td>
 			</tr>`;
