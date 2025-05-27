@@ -148,8 +148,14 @@
           //console.log("Looking for app1_features");
 	  if ("app1_features" in json) {
             let output_app1_features = json.app1_features;
-            //console.log("Found 'app1_features' in return message:", output_app1_features);
-            jQuery('#features_app1').html(output_app1_features);
+	    //console.log("Found 'app1_features' in return message:", output_app1_features);
+            // Vytvoření úvodní informace
+            let html = "<h4 class=\"mt-0 pt-0\"><?php echo $lang[$currentLang]['run_output_app1_rules_label']; ?></h4>";
+            html += "<p style=\"font-size: 0.9rem;\"><?php echo $lang[$currentLang]['run_output_app1_rules_info']; ?>";
+            html += " <?php echo $lang[$currentLang]['run_output_app1_rules_documentation']; ?></p>";
+	    // přidání seznamu pravidel
+            html += output_app1_features;
+            jQuery('#features_app1').html(html);
 	  }
 
 	  if ("app1_rule_info" in json) {
