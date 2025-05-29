@@ -43,7 +43,8 @@
     app1_rule_active = {}; // forget previous app1 rules activity statuses
     var input_text;
 
-    var input_format = jQuery('input[name=option_input]:checked').val();
+    //var input_format = jQuery('input[name=option_input]:checked').val();
+    var input_format = 'txt';
     //console.log("doSubmit: Input format: ", input_format);
 
     let activePanelId = getActivePanelID('#input_tabs');
@@ -63,6 +64,10 @@
            
       if (input_format === "txt") {
         input_text = editablePanel.innerText; // Pouze text bez formátování
+        if (!input_text || input_text.trim().length === 0) {
+          //console.log("doSubmit: Empty plain text input - not doing anything");
+          return;
+	}
         //console.log("doSubmit: Input plain text: ", input_text);
       } else {
         let input_text_html = editablePanel.innerHTML; // Plný HTML obsah
@@ -1023,12 +1028,12 @@
         <span class="fa fa-arrow-down ms-2"></span>
       </button>
     </li>
-    <li class="nav-item" id="input_file_header">
+    <!--li class="nav-item" id="input_file_header">
       <a class="nav-link" href="#input_file" data-bs-toggle="tab">
         <span class="far fa-file-alt"></span> 
         <?php echo $lang[$currentLang]['run_input_file']; ?>
       </a>
-    </li>
+    </li-->
   </ul>
 
 <div class="tab-content flex-grow-1" id="input_tabs" style="border: 1px solid #ddd; border-radius: .25rem; height: 100vh; max-height: 100vh; overflow: hidden;">
@@ -1037,9 +1042,9 @@
       <span style="color: #bbbbbb"><?php echo $lang[$currentLang]['run_input_text_default_text']; ?></span>
     </div>
   </div>
-  <div class="tab-pane fade h-100" id="input_file" style="height: 100%; max-height: 100%;">
+  <!--div class="tab-pane fade h-100" id="input_file" style="height: 100%; max-height: 100%;">
     <!-- Přepínače formátu vstupu -->
-    <div class="d-flex align-items-center ms-2 mt-3 mb-2" style="font-size: 0.9rem;">
+    <!--div class="d-flex align-items-center ms-2 mt-3 mb-2" style="font-size: 0.9rem;">
       <label class="form-label fw-bold me-3"><?php echo $lang[$currentLang]['run_options_input_label']; ?>:</label>
       <div class="d-flex gap-3">
         <div class="form-check form-check-inline">
@@ -1063,12 +1068,12 @@
       </div>
     </div>
     <!-- Vstup pro soubor -->
-    <div class="input-group mb-2">
+    <!--div class="input-group mb-2">
       <input type="text" class="form-control" id="input_file_name" readonly>
       <label class="input-group-text btn btn-success btn-file" for="input_file_field"><?php echo $lang[$currentLang]['run_input_file_button_load']; ?> ...</label>
       <input type="file" id="input_file_field" class="visually-hidden" onchange="handleFileChange(this)">
     </div>
-  </div>
+  </div-->
 </div>
 
 </div>
