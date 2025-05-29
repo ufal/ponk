@@ -705,14 +705,14 @@ my $start_time_app1 = [gettimeofday];
 
 my $conll_for_ponk_app1 = get_output('conllu', $ui_language);
 
-my ($app1_conllu, $app1_metrics, $app1_rule_info_orig);
+my ($app1_conllu, $app1_metrics, $app1_metrics_info, $app1_rule_info_orig);
 
 if ($apps =~ /\bapp1\b/) {
-  ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = call_ponk_app1($conll_for_ponk_app1);
+  ($app1_conllu, $app1_metrics, $app1_metrics_info, $app1_rule_info_orig) = call_ponk_app1($conll_for_ponk_app1);
   # print STDERR "app1_rule_info_orig: '$app1_rule_info_orig'\n";
 }
 else {
-  ($app1_conllu, $app1_metrics, $app1_rule_info_orig) = ($conll_for_ponk_app1, [{"APP1 Info" => "APP1 not called"}], {"APP1 Info" => "APP1 not called"});
+  ($app1_conllu, $app1_metrics, $app1_metrics_info, $app1_rule_info_orig) = ($conll_for_ponk_app1, [{"APP1 Info" => "APP1 not called"}], {"APP1 Info" => "APP1 not called"}, {"APP1 Info" => "APP1 not called"});
 }
 
 # Measure time spent by ponk-app1 
@@ -725,7 +725,7 @@ $processing_time_app1 = tv_interval($start_time_app1, $end_time_app1);
 # close(OUT);
 # Export the metrics (for debugging, not needed for further processing)
 # open(OUT, '>:encoding(utf8)', "$input_file.export_app1.metrics") or die "Cannot open file '$input_file.export_app1.metrics' for writing: $!";
-# print OUT app1_metrics2string('txt', $app1_metrics);
+# print OUT app1_metrics2string('txt', $app1_metrics, $app1_metrics_info);
 # close(OUT);
 
 
@@ -1692,6 +1692,25 @@ END_HEAD
 
   $stats .= "<body>\n";
 
+  # Text-wide measures from APP1
+  
+  if ($ui_language eq 'cs') { 
+    $stats .= "<h4 style=\"margin-bottom: 10px\">Míry textu jako celku</h4>\n";
+  }
+  else {
+    $stats .= "<h4>Text-wide measures</h4>\n";
+  }
+
+  #if ($ui_language eq 'cs') { 
+  #  $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - počet vět: $sentences_count, slov (vč. interp.): $tokens_count\n";
+  #}
+  #else {
+  #  $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - number of sentences: $sentences_count, tokens: $tokens_count\n";
+  #} 
+
+  my $app1_string = app1_metrics2string('html', $app1_metrics, $app1_metrics_info);
+  $stats .= "<p style=\"font-size: 0.9rem; line-height: 1.3\">$app1_string</p>";
+  
   $stats .= "<h4>PONK <span style=\"font-size: 1.1rem\">$VER</span></h4>\n";
  
   my $rounded_time = sprintf("%.1f", $processing_time);
@@ -1723,27 +1742,8 @@ END_HEAD
       $stats .= "<br/> &nbsp; - Lexical surprise: $rounded_time_app2 s\n";
     }
   }
-  $stats .= "</p>\n";
+  $stats .= "<br/>&nbsp;</p>\n";
  
-  # Text-wide measures from APP1
-  
-  if ($ui_language eq 'cs') { 
-    $stats .= "<h5>Míry textu jako celku</h5>\n";
-  }
-  else {
-    $stats .= "<h5>Text-wide measures</h5>\n";
-  }
-
-  if ($ui_language eq 'cs') { 
-    $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - počet vět: $sentences_count, slov (vč. interp.): $tokens_count\n";
-  }
-  else {
-    $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - number of sentences: $sentences_count, tokens: $tokens_count\n";
-  } 
-
-  my $app1_string = app1_metrics2string('html', $app1_metrics);
-  $stats .= "<p style=\"font-size: 0.9rem; line-height: 1.1\">$app1_string</p>";
-  
   # $stats .= "$DESC\n";
   
   $stats .= "</body>\n";
@@ -2197,6 +2197,7 @@ Calling PONK-APP1 REST API; the text to be processed is passed in the argument i
 Returns an array of three members:
  - the text in UD CONLL format with additional info in misc
  - hashref of decoded JSON of measured metrics
+ - hashref of decoded JSON of info on the metrics
  - hashref of decoded JSON with info how to display APP1 rules
 If an error occurs, the function just returns the input conll text unchanged and twice a simple JSON with an error message.
 
@@ -2235,27 +2236,87 @@ sub call_ponk_app1 {
         # Zpracování odpovědi
         my $modified_conllu = $json_response->{'modified_conllu'};
         my $metrics_json = $json_response->{'metrics'};
+	my $metrics_info_json = $json_response->{'metric_info'};
         my $rules_info_json = $json_response->{'rule_info'};
 	# my $conflict_background_color = $json_response->{'conflict_background_color'}; # asi ji napíšu natvrdo do klienta
 	# mylog(0, "PONK-APP1 JSON response:\n" . Dumper($json_response) . "\n");
         mylog(2, "Call PONK-APP1: Success.\n");
-        return ($modified_conllu, $metrics_json, $rules_info_json);
+        return ($modified_conllu, $metrics_json, $metrics_info_json, $rules_info_json);
     } else {
         mylog(2, "call_ponk_app1: URL: $url\n");
         mylog(2, "call_ponk_app1: Error: " . $res->status_line . "\n");
-        return ($conllu, [{"APP1 Error" => $res->status_line}], [{"APP1 Error" => $res->status_line}]); 
+        return ($conllu, [{"APP1 Error" => $res->status_line}], {"APP1 Error" => $res->status_line}, {"APP1 Error" => $res->status_line}); 
     }
 
 }
 
+
+
+
+=item get_interval
+
+Based on the given info and value, it returns the interval the value belongs to. The info may look like:
+      "intrevals": {
+        "bad": [
+          null,
+          0.3940104681019158
+        ],
+        "medium": [
+          0.3940104681019158,
+          0.4496595967530767
+        ],
+        "good": [
+          0.4496595967530767,
+          null
+        ]
+      }
+Hope the authors will fix the intrevals typo...
+
+=cut
+
+sub get_interval {
+    my ($info, $value) = @_;
+
+    # Reference na intervaly
+    my $intervals = $info->{intervals} // $info->{intrevals};
+
+    return undef if !$intervals;
+
+    # Detekce orientace intervalů: pokud bad má vyšší hodnoty než good, vyšší = horší
+    my $bad_upper = $intervals->{bad}->[1];
+    my $good_upper = $intervals->{good}->[1];
+    my $is_higher_worse = (!defined $bad_upper || !defined $good_upper) 
+        ? (defined $bad_upper ? 1 : 0) 
+        : ($bad_upper > $good_upper);
+
+    # Kontrola intervalů
+    for my $category (qw/bad medium good/) {
+        my ($lower, $upper) = @{$intervals->{$category}};
+
+        # Převod null na neomezené hranice
+        $lower = defined $lower ? $lower : ($is_higher_worse ? -1e308 : 1e308);
+        $upper = defined $upper ? $upper : ($is_higher_worse ? 1e308 : -1e308);
+
+        # Kontrola, zda $value spadá do intervalu
+        if ($value >= $lower && $value <= $upper) {
+            return $category;
+        }
+    }
+
+    return undef; # Pokud hodnota nespadá do žádného intervalu
+}
+
 =item app1_metrics2string
 
-Given a format (html or txt) and a decoded JSON with metrics from app1 (ref to array of hashes), produce a string to display
+Given a format (html or txt)
+and a decoded JSON with metrics from app1 (ref to array of hashes)
+and a decoded JSON with info about the metrics,
+produce a string to display (in language given by global $ui_language)
 
 =cut
 
 sub app1_metrics2string {
-  my ($format, $refar_metrics) = @_;
+  my ($format, $refar_metrics, $refha_metrics_info) = @_;
   my $text = '';
   foreach my $metric (@$refar_metrics) {
     my %h_metric = %$metric;
@@ -2264,8 +2325,26 @@ sub app1_metrics2string {
       if (looks_like_number($value)) {
         $value = round($value * 100) / 100;
       }
+      my $info = $refha_metrics_info->{$name};
+      my $doc = '';
+      my $hint = '';
+      if ($info) {
+        $name = $ui_language eq 'cs' ? ($info->{cz_name} // $name) : ($info->{en_name} // $name);
+	$doc = $ui_language eq 'cs' ? ($info->{cz_doc} // $name) : ($info->{en_doc} // $name);
+	$hint = $ui_language eq 'cs' ? ($info->{cz_hint} // '') : ($info->{en_hint} // '');
+      }
+      my $tooltip = $doc;
+      my $interval = get_interval($info, $value);
+      if ($interval and ($interval eq 'bad' or $interval eq 'medium')) {
+        $tooltip .= "\n$hint" if $hint;
+      }
+
+      my $bg_colour = "#dff0d8";
+      $bg_colour = "#ffe097" if $interval eq 'medium';
+      $bg_colour = "#ffa097" if $interval eq 'bad';
+
       if ($format eq 'html') {
-        $text .= " &nbsp; - $name: $value<br/>\n";
+        $text .= " &nbsp;<span style=\"background-color: $bg_colour\" title=\"$tooltip\"> - $name: $value</span><br/>\n";
       }
       else { # txt
         $text .= "$name: $value\n";
