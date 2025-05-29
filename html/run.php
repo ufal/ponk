@@ -1038,7 +1038,7 @@
 
 <div class="tab-content flex-grow-1" id="input_tabs" style="border: 1px solid #ddd; border-radius: .25rem; height: 100vh; max-height: 100vh; overflow: hidden;">
   <div class="tab-pane fade show active h-100" id="input_text" style="height: 100%; max-height: 100%;">
-    <div id="input" contenteditable="true" class="p-3 h-100" style="height: 100%; max-height: 100%; overflow-y: auto; box-sizing: border-box;" spellcheck="true" lang="cs">
+    <div id="input" contenteditable="true" class="p-3 h-100" style="height: 100%; max-height: 100%; overflow-y: auto; box-sizing: border-box;" spellcheck="true" lang="cs" onpaste="event.preventDefault(); document.execCommand('insertText', false, event.clipboardData.getData('text/plain'));">
       <span style="color: #bbbbbb"><?php echo $lang[$currentLang]['run_input_text_default_text']; ?></span>
     </div>
   </div>
