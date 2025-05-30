@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.40 20250527'; # version of the program
+my $VER = '0.41 20250530'; # version of the program
 
 my @features = ('overall text measures', 'grammatical rules', 'lexical surprise');
 
@@ -2223,7 +2223,8 @@ sub call_ponk_app1 {
             undef,                  # undef znamená, že LWP::UserAgent vygeneruje název souboru
             'data.conllu',     # Jméno souboru na straně serveru - bez toho to nefunguje
             Content => $conllu_bytes     # Obsah souboru
-          ]
+          ],
+	  profile => 'noninstitutional'  # Přidán parametr profile s hodnotou institutional
         ];
 
     # Odeslání požadavku
