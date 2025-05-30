@@ -254,6 +254,13 @@
   }
 
 
+  function featuresOverallActivated() {
+    //console.log("Going to disactivate app1_stylesheet\n");
+    toggleStylesheet('app1_stylesheet', 0);
+    //console.log("Going to disactivate app2_stylesheet\n");
+    toggleStylesheet('app2_stylesheet', 0);
+  }
+
   function featuresApp1Activated() {
     //console.log("Going to activate app1_stylesheet\n");
     toggleStylesheet('app1_stylesheet', 1);
@@ -1089,7 +1096,7 @@
   <!-- Záložka pro pravou část -->
   <ul class="nav nav-tabs nav-fill nav-tabs-green nav-tabs-custom nav-fill">
     <li class="nav-item">
-      <a class="nav-link d-flex align-items-center" href="#output_stats" data-bs-toggle="tab">
+      <a class="nav-link d-flex align-items-center" href="#output_stats" data-bs-toggle="tab" onclick="featuresOverallActivated()">
         <span><?php echo $lang[$currentLang]['run_output_statistics']; ?></span>
       </a>
     </li>
