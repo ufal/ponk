@@ -1697,13 +1697,6 @@ END_HEAD
 
   # Text-wide measures from APP1
   
-  if ($ui_language eq 'cs') { 
-    $stats .= "<h4 style=\"margin-bottom: 10px\">Míry textu jako celku</h4>\n";
-  }
-  else {
-    $stats .= "<h4>Text-wide measures</h4>\n";
-  }
-
   #if ($ui_language eq 'cs') { 
   #  $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - počet vět: $sentences_count, slov (vč. interp.): $tokens_count\n";
   #}

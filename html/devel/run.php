@@ -206,7 +206,13 @@
 	  if ("stats" in json) {
               output_file_stats = json.stats;
               //console.log("Found 'stats' in return message:", output_file_stats);
-              jQuery('#output_stats').html(output_file_stats);
+              // Vytvoření úvodní informace
+              let html = "<h4 class=\"mt-0 pt-0\"><?php echo $lang[$currentLang]['run_output_app1_measures_label']; ?></h4>";
+              html += "<p style=\"font-size: 0.9rem;\"><?php echo $lang[$currentLang]['run_output_app1_measures_info']; ?>";
+              html += " <?php echo $lang[$currentLang]['run_output_app1_measures_documentation']; ?></p>";
+              // přidání seznamu pravidel
+              html += output_file_stats;
+              jQuery('#output_stats').html(html);
 	  }
 
       } catch(e) {
