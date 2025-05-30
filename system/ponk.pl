@@ -1282,6 +1282,9 @@ END_OUTPUT_HEAD_END
   my $html_sentence_element = ''; # it may be set, e.g., to h1 for level 1 headings
 
   my $result_token_id_number = 1; # marked tokens in the result text need to have ids (used in the client part)
+
+  my $app1_lang = $lang;
+  $app1_lang = 'cz' if $app1_lang eq 'cs'; # app1 uses 'cz'
   
   foreach my $root (@trees) {
 
@@ -1407,9 +1410,9 @@ END_OUTPUT_HEAD_END
             $tooltip .= "\n" if $tooltip;
             if ($app1_misc =~ /^PonkApp1:([^:]+):[^=]+=(.+)$/) {
               my $rule_name = $1;
-              my $rule_name_lang = $app1_rule_info_orig->{$rule_name}->{$lang . '_name'} // $rule_name;
+              my $rule_name_lang = $app1_rule_info_orig->{$rule_name}->{$app1_lang . '_name'} // $rule_name;
               my $role_name = $2;
-              my $role_name_lang = $app1_rule_info_orig->{$rule_name}->{$lang . '_participants'}->{$role_name} // $role_name;
+              my $role_name_lang = $app1_rule_info_orig->{$rule_name}->{$app1_lang . '_participants'}->{$role_name} // $role_name;
               # $rule_name_lang =~ s/object/predicate/; # a temporary fix for making a screenshot to a paper before info from app1 gets corrected
               $tooltip .= "$rule_name_lang: $role_name_lang";
             }
@@ -1798,10 +1801,11 @@ sub get_app1_features_html {
 END_HEAD
 
   $features .= "<body>\n";
-  
+  my $lang_code = $lang;
+  $lang_code = 'cz' if $lang_code eq 'cs'; # app1 uses 'cz'  
   foreach my $feature (@app1_list_of_features) {
-    my $name = $app1_rule_info_orig->{$feature}->{$lang . '_name'} // $feature;
-    my $doc = $app1_rule_info_orig->{$feature}->{$lang . '_doc'} // '';
+    my $name = $app1_rule_info_orig->{$feature}->{$lang_code . '_name'} // $feature;
+    my $doc = $app1_rule_info_orig->{$feature}->{$lang_code . '_doc'} // '';
     $features .= "<div><label class=\"toggle-container\" title=\"$doc\" onmouseover=\"app1RuleHoverStart(\'$feature\')\" onmouseout=\"app1RuleHoverEnd(\'$feature\')\">\n";
     $features .= "  <input checked type=\"checkbox\" id=\"check_app1_feature_" . $feature . "\" onchange=\"app1RuleCheckboxToggled(this.id)\">\n";
     $features .= "  <span class=\"checkmark app1_class_" . $feature . "\">$name</span>\n";
