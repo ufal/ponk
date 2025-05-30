@@ -1697,25 +1697,26 @@ END_HEAD
 
   # Text-wide measures from APP1
   
-  #if ($ui_language eq 'cs') { 
-  #  $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - počet vět: $sentences_count, slov (vč. interp.): $tokens_count\n";
-  #}
-  #else {
-  #  $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - number of sentences: $sentences_count, tokens: $tokens_count\n";
-  #} 
 
   my $app1_string = app1_metrics2string('html', $app1_metrics, $app1_metrics_info);
   $stats .= "<p style=\"font-size: 0.9rem; line-height: 1.3\">$app1_string</p>";
   
   $stats .= "<h4>PONK <span style=\"font-size: 1.1rem\">$VER</span></h4>\n";
  
+  if ($ui_language eq 'cs') { 
+    $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - počet vět: $sentences_count, slov (vč. interp.): $tokens_count\n";
+  }
+  else {
+    $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - number of sentences: $sentences_count, tokens: $tokens_count\n";
+  }
+
   my $rounded_time = sprintf("%.1f", $processing_time);
   my $rounded_time_udpipe = sprintf("%.1f", $processing_time_udpipe);
   my $rounded_time_nametag = sprintf("%.1f", $processing_time_nametag);
   my $rounded_time_app1 = sprintf("%.1f", $processing_time_app1);
   my $rounded_time_app2 = sprintf("%.1f", $processing_time_app2);
   if ($ui_language eq 'cs') { 
-    $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\">Doba zpracování: $rounded_time s</p>\n";
+    $stats .= "<p style=\"font-size: 0.9rem; margin-top: 5px; margin-bottom: 0px\">Doba zpracování: $rounded_time s</p>\n";
   }
   else {
     $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\">Processing time: $rounded_time s</p>\n";
@@ -2204,7 +2205,7 @@ sub call_ponk_app1 {
     my $conllu = shift;
 
     # Nastavení URL pro volání REST::API s parametry
-    my $url = "$ponk_app1_service_url/raw";
+    my $url = "$ponk_app1_service_url/raw?profile=noninstitutional";
     mylog(2, "Call PONK-APP1: URL=$url\n");
 
     my $ua = LWP::UserAgent->new;
@@ -2221,7 +2222,7 @@ sub call_ponk_app1 {
             'data.conllu',     # Jméno souboru na straně serveru - bez toho to nefunguje
             Content => $conllu_bytes     # Obsah souboru
           ],
-	  profile => 'noninstitutional'  # Přidán parametr profile s hodnotou institutional
+	  # profile => 'noninstitutional'  # Not working
         ];
 
     # Odeslání požadavku
