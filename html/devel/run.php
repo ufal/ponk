@@ -164,7 +164,7 @@
 	  }
 
 	  if ("app1_rule_info" in json) {
-            // console.log("app1_rule_info found in JSON: ", json.app1_rule_info);
+            //console.log("app1_rule_info found in JSON: ", json.app1_rule_info);
             let ruleInfo = json.app1_rule_info;
             // Kontrola, zda ruleInfo není string, pokud ano, pokus o parsování; bez toho to prostě nefungovalo.
             if (typeof ruleInfo === 'string') {
@@ -202,6 +202,13 @@
             toggleStylesheet('app1_stylesheet', 0);
           }
           //console.log("... after checking features_app2 tab\n");
+
+	  if (isTabActive('output_stats')) {
+            //console.log("Going to disactivate app2_stylesheet\n");
+            toggleStylesheet('app2_stylesheet', 0);
+            //console.log("Going to disactivate app1_stylesheet\n");
+            toggleStylesheet('app1_stylesheet', 0);
+	  }
 
 	  if ("stats" in json) {
               output_file_stats = json.stats;
