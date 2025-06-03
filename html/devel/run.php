@@ -309,7 +309,7 @@
             return text;
           },
           allowHTML: true, // Enable HTML rendering for <br> and other tags
-          delay: [500, 0], // 0.5s show delay, 0s hide delay
+          delay: [300, 0], // 0.5s show delay, 0s hide delay
           interactive(reference) {
             const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
             return hasFix;
