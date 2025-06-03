@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.41 20250530'; # version of the program
+my $VER = '0.42 20250306'; # version of the program
 
 my @features = ('overall text measures', 'grammatical rules', 'lexical surprise');
 
@@ -1420,7 +1420,7 @@ END_OUTPUT_HEAD_END
           my $id = 'app1_token_id_' . $result_token_id_number;
           $result_token_id_number++;
 
-          $span_app1_start = "<span id=\"$id\" class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" title=\"$tooltip\">";
+          $span_app1_start = "<span id=\"$id\" class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" data-tooltip=\"$tooltip\">";
           $span_app1_end = '</span>';
         }
         
@@ -1699,9 +1699,9 @@ END_HEAD
   
 
   my $app1_string = app1_metrics2string('html', $app1_metrics, $app1_metrics_info);
-  $stats .= "<p style=\"font-size: 0.9rem; line-height: 1.3\">$app1_string</p>";
+  $stats .= "<p style=\"font-size: 0.9rem;\">$app1_string</p>";
   
-  $stats .= "<h4>PONK <span style=\"font-size: 1.1rem\">$VER</span></h4>\n";
+  $stats .= "<h4 style=\"margin-top: 20px;\">PONK <span style=\"font-size: 1.1rem\">$VER</span></h4>\n";
  
   if ($ui_language eq 'cs') { 
     $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - počet vět: $sentences_count, slov (vč. interp.): $tokens_count\n";
@@ -1800,7 +1800,7 @@ END_HEAD
   foreach my $feature (@app1_list_of_features) {
     my $name = $app1_rule_info_orig->{$feature}->{$lang_code . '_name'} // $feature;
     my $doc = $app1_rule_info_orig->{$feature}->{$lang_code . '_doc'} // '';
-    $features .= "<div><label class=\"toggle-container\" title=\"$doc\" onmouseover=\"app1RuleHoverStart(\'$feature\')\" onmouseout=\"app1RuleHoverEnd(\'$feature\')\">\n";
+    $features .= "<div><label class=\"toggle-container\" data-tooltip=\"$doc\" onmouseover=\"app1RuleHoverStart(\'$feature\')\" onmouseout=\"app1RuleHoverEnd(\'$feature\')\">\n";
     $features .= "  <input checked type=\"checkbox\" id=\"check_app1_feature_" . $feature . "\" onchange=\"app1RuleCheckboxToggled(this.id)\">\n";
     $features .= "  <span class=\"checkmark app1_class_" . $feature . "\">$name</span>\n";
     $features .= "</label></div>\n";
@@ -2276,34 +2276,52 @@ Hope the authors will fix the intrevals typo...
 sub get_interval {
     my ($info, $value) = @_;
 
-    # Reference na intervaly
+    # Reference to intervals
     my $intervals = $info->{intervals} // $info->{intrevals};
-
     return undef if !$intervals;
 
-    # Detekce orientace intervalů: pokud bad má vyšší hodnoty než good, vyšší = horší
+    # Determine if higher values are worse
     my $bad_upper = $intervals->{bad}->[1];
     my $good_upper = $intervals->{good}->[1];
-    my $is_higher_worse = (!defined $bad_upper || !defined $good_upper) 
-        ? (defined $bad_upper ? 1 : 0) 
-        : ($bad_upper > $good_upper);
+    my $is_higher_worse = 0;  # Default: higher values are better
 
-    # Kontrola intervalů
+    if (defined $bad_upper && defined $good_upper) {
+        $is_higher_worse = $bad_upper > $good_upper ? 1 : 0;
+    }
+    elsif (!defined $bad_upper && defined $good_upper) {
+        $is_higher_worse = 1;
+    }
+    elsif (defined $bad_upper && !defined $good_upper) {
+        $is_higher_worse = 0;
+    }
+    elsif (!defined $bad_upper && !defined $good_upper) {
+        my $bad_lower = $intervals->{bad}->[0];
+        my $good_lower = $intervals->{good}->[0];
+        if (defined $bad_lower && defined $good_lower) {
+            $is_higher_worse = $bad_lower > $good_lower ? 1 : 0;
+        }
+    }
+
+    # print STDERR "bad_upper: ", (defined $bad_upper ? $bad_upper : "undef"), ", good_upper: ", (defined $good_upper ? $good_upper : "undef"), ", is_higher_worse: $is_higher_worse\n";
+
+    # Check intervals
     for my $category (qw/bad medium good/) {
         my ($lower, $upper) = @{$intervals->{$category}};
 
-        # Převod null na neomezené hranice
-        $lower = defined $lower ? $lower : ($is_higher_worse ? -1e308 : 1e308);
-        $upper = defined $upper ? $upper : ($is_higher_worse ? 1e308 : -1e308);
+        # Convert null to unbounded limits based on orientation
+        $lower = defined $lower ? $lower : ($is_higher_worse ? -1e308 : -1e308);
+        $upper = defined $upper ? $upper : ($is_higher_worse ? 1e308 : 1e308);
 
-        # Kontrola, zda $value spadá do intervalu
+        # Check if $value falls within the interval
         if ($value >= $lower && $value <= $upper) {
             return $category;
         }
     }
 
-    return undef; # Pokud hodnota nespadá do žádného intervalu
+    return undef; # Value doesn't fall into any interval
 }
+
+
 
 =item app1_metrics2string
 
@@ -2330,20 +2348,22 @@ sub app1_metrics2string {
       if ($info) {
         $name = $ui_language eq 'cs' ? ($info->{cz_name} // $name) : ($info->{en_name} // $name);
 	$doc = $ui_language eq 'cs' ? ($info->{cz_doc} // $name) : ($info->{en_doc} // $name);
+	$doc =~ s/\"/&quot;/g;
 	$hint = $ui_language eq 'cs' ? ($info->{cz_hint} // '') : ($info->{en_hint} // '');
+	$hint =~ s/\"/&quot;/g;
       }
       my $tooltip = $doc;
       my $interval = get_interval($info, $value);
       if ($interval and ($interval eq 'bad' or $interval eq 'medium')) {
-        $tooltip .= "\n$hint" if $hint;
+        $tooltip .= "<br>$hint" if $hint;
       }
 
       my $bg_colour = "#dff0d8";
-      $bg_colour = "#ffe097" if $interval eq 'medium';
-      $bg_colour = "#ffa097" if $interval eq 'bad';
+      $bg_colour = "#ffe097" if ($interval and $interval eq 'medium');
+      $bg_colour = "#ffa097" if ($interval and $interval eq 'bad');
 
       if ($format eq 'html') {
-        $text .= " &nbsp;<span style=\"background-color: $bg_colour\" title=\"$tooltip\"> - $name: $value</span><br/>\n";
+        $text .= " &nbsp;<span style=\"background-color: $bg_colour\" data-tooltip=\"$tooltip\"> - $name: $value</span><br/>\n";
       }
       else { # txt
         $text .= "$name: $value\n";

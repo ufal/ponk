@@ -21,11 +21,10 @@
 
 
   document.addEventListener("DOMContentLoaded", function() {
-      getInfo();
       //console.log("DOM byl kompletně načten!");
-  });
-
-  document.addEventListener("DOMContentLoaded", function() {
+	  
+      getInfo();
+    
       const text_input = document.getElementById('input');
       let originalValue = text_input.innerHTML;
 
@@ -34,7 +33,19 @@
               this.innerHTML = '';
           }
       });
+
+      // Tooltips:
+      // Check if Popper.js is loaded
+      if (typeof Popper === 'undefined') {
+        console.error('Popper.js is not loaded.');
+        return;
+      } else {
+        //console.log('Popper.js is loaded successfully');
+      }
+      // Initial tooltip initialization (optional, as content is loaded later)
+      //initTooltips();
   });
+
 
   // Calling the SERVER:
 
@@ -218,9 +229,11 @@
               html += "<p style=\"font-size: 0.9rem;\"><?php echo $lang[$currentLang]['run_output_app1_measures_info']; ?>";
               html += " <?php echo $lang[$currentLang]['run_output_app1_measures_documentation']; ?></p>";
               // přidání seznamu pravidel
-              html += output_file_stats;
+	      html += output_file_stats;
               jQuery('#output_stats').html(html);
 	  }
+
+	  initTooltips(); // initialize tooltips in the obtained content
 
       } catch(e) {
         jQuery('#submit').html('<span class="fa fa-arrow-down"></span>&nbsp;<?php echo $lang[$currentLang]['run_process_input']; ?>&nbsp;<span class="fa fa-arrow-down"></span>');
@@ -240,6 +253,159 @@
     }});
   }
 
+
+  function fix(elementId) {
+      console.log(`Fix called for element ID: ${elementId}`);
+      // Implement your fix logic here
+  }
+
+
+// Function to initialize or reinitialize tooltips
+    function initTooltips(selector = '[data-tooltip]') {
+      //console.log('Initializing tooltips for selector:', selector);
+      
+      // Check if Tippy.js is loaded
+      if (typeof tippy === 'undefined') {
+        console.error('Tippy.js is not loaded.');
+        return;
+      }
+
+      // Find elements with data-tooltip
+      const tooltipElements = document.querySelectorAll(selector);
+      //console.log(`Found ${tooltipElements.length} elements with data-tooltip attribute`);
+
+      if (tooltipElements.length === 0) {
+        //console.warn('No elements with data-tooltip attribute found.');
+        return;
+      }
+
+      // Log each element's tooltip data
+      tooltipElements.forEach((el, index) => {
+        const hasFix = el.getAttribute('data-tooltip-fix') === 'true';
+        if (hasFix && !el.id) {
+          console.warn(`Element ${index + 1} has data-tooltip-fix="true" but no ID. Fix button will not work.`);
+        }
+        //console.log(`Element ${index + 1}: ID=${el.id || 'none'}, data-tooltip="${el.getAttribute('data-tooltip')}", data-tooltip-fix="${el.getAttribute('data-tooltip-fix')}", interactive=${hasFix}`);
+      });
+
+      // Initialize Tippy.js for these elements
+      try {
+        tippy(selector, {
+          content(reference) {
+            const text = reference.getAttribute('data-tooltip');
+            const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
+            const elementId = reference.id;
+            //console.log(`Creating tooltip for element ID=${elementId || 'none'}, text="${text}", hasFix=${hasFix}`);
+
+            if (hasFix && elementId) {
+              const div = document.createElement('div');
+              div.textContent = text;
+              const button = document.createElement('button');
+              button.textContent = 'Fix';
+              button.onclick = () => fix(elementId);
+              div.appendChild(button);
+              return div;
+            }
+            return text;
+          },
+          allowHTML: true, // Enable HTML rendering for <br> and other tags
+          delay: [500, 0], // 0.5s show delay, 0s hide delay
+          interactive(reference) {
+            const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
+            return hasFix;
+          },
+          arrow: false, // No arrow
+          placement: 'bottom', // Prefer bottom, auto-adjusts
+          boundary: 'viewport', // Keep within viewport
+          offset: [0, 2], // 2px gap from element
+          onCreate(instance) {
+            const hasFix = instance.reference.getAttribute('data-tooltip-fix') === 'true';
+            instance.setProps({ interactive: hasFix }); // Explicitly set interactive
+            //console.log(`Tooltip created for element ID=${instance.reference.id || 'none'}, interactive=${instance.props.interactive}`);
+          },
+          //onShow(instance) {
+            //console.log(`Tooltip showing for element ID=${instance.reference.id || 'none'}, interactive=${instance.props.interactive}`);
+          //},
+          //onHide(instance) {
+            //console.log(`Tooltip hiding for element ID=${instance.reference.id || 'none'}, interactive=${instance.props.interactive}`);
+          //}
+        });
+        //console.log('Tooltips initialized successfully');
+      } catch (error) {
+        console.error('Error initializing tooltips:', error);
+      }
+    }
+
+
+// Function to initialize or reinitialize tooltips
+    function initTooltips2(selector = '[data-tooltip]') {
+      console.log('Initializing tooltips for selector:', selector);
+      
+      // Check if Tippy.js is loaded
+      if (typeof tippy === 'undefined') {
+        console.error('Tippy.js is not loaded.');
+        return;
+      }
+
+      // Find elements with data-tooltip
+      const tooltipElements = document.querySelectorAll(selector);
+      console.log(`Found ${tooltipElements.length} elements with data-tooltip attribute`);
+
+      if (tooltipElements.length === 0) {
+        console.warn('No elements with data-tooltip attribute found.');
+        return;
+      }
+
+      // Log each element's tooltip data
+      tooltipElements.forEach((el, index) => {
+        const hasFix = el.getAttribute('data-tooltip-fix') === 'true';
+        console.log(`Element ${index + 1}: ID=${el.id}, data-tooltip="${el.getAttribute('data-tooltip')}", data-tooltip-fix="${el.getAttribute('data-tooltip-fix')}", interactive=${hasFix}`);
+      });
+
+      // Initialize Tippy.js for these elements
+      try {
+        tippy(selector, {
+          content(reference) {
+            const text = reference.getAttribute('data-tooltip');
+            const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
+            const elementId = reference.id;
+            console.log(`Creating tooltip for element ID=${elementId}, text="${text}", hasFix=${hasFix}`);
+
+            if (hasFix && elementId) {
+              const div = document.createElement('div');
+              div.textContent = text;
+              const button = document.createElement('button');
+              button.textContent = 'Fix';
+              button.onclick = () => fix(elementId);
+              div.appendChild(button);
+              return div;
+            }
+            return text;
+          },
+          delay: [500, 0], // 0.5s show delay, 0s hide delay
+          interactive: function(reference) {
+            const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
+            return hasFix; // Interactive only if hasFix is true
+          },
+          arrow: false, // No arrow
+          placement: 'bottom', // Prefer bottom, auto-adjusts
+          boundary: 'viewport', // Keep within viewport
+          offset: [0, 2], // 2px gap from element
+          onCreate(instance) {
+            console.log(`Tooltip created for element ID=${instance.reference.id}, interactive=${instance.props.interactive}`);
+          },
+          onShow(instance) {
+            console.log(`Tooltip showing for element ID=${instance.reference.id}, interactive=${instance.props.interactive}`);
+          },
+          onHide(instance) {
+            console.log(`Tooltip hiding for element ID=${instance.reference.id}, interactive=${instance.props.interactive}`);
+          }
+        });
+        console.log('Tooltips initialized successfully');
+      } catch (error) {
+        console.error('Error initializing tooltips:', error);
+      }
+    }
 
   function isTabActive(panelId) {
     try {
