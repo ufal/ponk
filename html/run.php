@@ -932,7 +932,17 @@
   
   function getInfo() { // call the server and get the PONK version and a list of supported features
 
-    var options = {info: null};
+    <?php
+      if ($currentLang == 'cs') {
+    ?>
+    var options = {info: null, uilang: 'cs'};
+    <?php
+      } else {
+    ?>
+    var options = {info: null, uilang: 'en'};
+    <?php
+      }
+    ?>
     //console.log("getInfo: options: ", options);
 
     var form_data = null;

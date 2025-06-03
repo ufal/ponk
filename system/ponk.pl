@@ -27,25 +27,41 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER = '0.42 20250306'; # version of the program
+my $VER_en = '0.42 20250306'; # version of the program
+my $VER_cs = '0.42 20250306'; # version of the program
 
-my @features = ('overall text measures', 'grammatical rules', 'lexical surprise');
+my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
+my @features_en = ('overall text measures', 'grammatical rules', 'lexical surprise');
 
-my $FEATS = join(' • ', @features); 
+my $FEATS_cs = join(' • ', @features_cs); 
+my $FEATS_en = join(' • ', @features_en); 
 
-my $DESC = "<h5>Features in this PONK version:</h5>\n<ul>\n";
+my $DESC_cs = "<h5>Vlastnosti této verze PONKu:</h5>\n<ul>\n";
+my $DESC_en = "<h5>Features in this PONK version:</h5>\n<ul>\n";
 
-foreach my $feature (@features) {
-  $DESC .= "<li>$feature\n";
+foreach my $feature (@features_cs) {
+  $DESC_cs .= "<li>$feature\n";
 }
 
-$DESC .= <<END_DESC;
+foreach my $feature (@features_en) {
+  $DESC_en .= "<li>$feature\n";
+}
+
+$DESC_cs .= <<END_DESC_cs;
+</ul>
+<h5>Plánované vlastnosti:</h5>
+<ul>
+<li>Podpora ponk-app3 (zatím ve vývoji)
+</ul>
+END_DESC_cs
+
+$DESC_en .= <<END_DESC_en;
 </ul>
 <h5>Planned features:</h5>
 <ul>
 <li>Support for ponk-app3 (not yet available)
 </ul>
-END_DESC
+END_DESC_en
 
 my $logging_level = 2; # default log level, can be changed using the -ll parameter (0=full, 1=limited, 2=anonymous)
 
@@ -62,7 +78,8 @@ if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe a
   $nametag_service_url = 'http://udpipe:11002';
   $ponk_app1_service_url = 'http://ponk-app1:8000'; # for now, in practice no difference from the original URL
   # not working: $ponk_app2_service_url = 'http://ponk-app2:8000'; # for now, in practice no difference from the original URL
-  $VER .= ' (no text logging)';
+  $VER_cs .= ' (bez ukládání textů)';
+  $VER_en .= ' (no text logging)';
   $logging_level = 2; # anonymous logging level is default but to be sure...
 }
 
@@ -125,15 +142,29 @@ my $script_dir = dirname($script_path);  # Získá pouze adresář ze získané 
 
 
 if ($version) {
-  print "PONK version $VER.\n";
+  if ($ui_language eq 'cs') {
+    print "PONK verze $VER_cs.\n";
+  }
+  else {
+    print "PONK version $VER_en.\n";
+  }
   exit 0;
 }
 
 if ($info) {
-  my $json_data = {
-       version  => $VER,
-       features => $FEATS,
-     };
+  my $json_data;
+  if ($ui_language eq 'cs') {
+    $json_data = { 
+       version  => $VER_cs,
+       features => $FEATS_cs,
+    };
+  }
+  else {
+    $json_data = {
+       version  => $VER_en,
+       features => $FEATS_en,
+    };
+  }
   # Encode the Perl data structure into a JSON string
   my $json_string = encode_json($json_data);
   # Print the JSON string to STDOUT
@@ -142,7 +173,7 @@ if ($info) {
 }
 
 if ($help) {
-  print "PONK version $VER.\n";
+  print "PONK version $VER_en.\n";
   my $text = <<'END_TEXT';
 Usage: ponk.pl [options]
 options:  -i|--input-file [input text file name]
@@ -168,7 +199,7 @@ END_TEXT
 ###################################################################################
 
 mylog(2, "####################################################################\n");
-mylog(2, "PONK $VER (logging level: $logging_level - $logging_level_label{$logging_level})\n");
+mylog(2, "PONK $VER_en (logging level: $logging_level - $logging_level_label{$logging_level})\n");
 mylog(2, "####################################################################\n");
 
 mylog(0, "Arguments:\n");
@@ -1701,12 +1732,13 @@ END_HEAD
   my $app1_string = app1_metrics2string('html', $app1_metrics, $app1_metrics_info);
   $stats .= "<p style=\"font-size: 0.9rem;\">$app1_string</p>";
   
-  $stats .= "<h4 style=\"margin-top: 20px;\">PONK <span style=\"font-size: 1.1rem\">$VER</span></h4>\n";
  
   if ($ui_language eq 'cs') { 
+    $stats .= "<h4 style=\"margin-top: 20px;\">PONK <span style=\"font-size: 1.1rem\">$VER_cs</span></h4>\n";
     $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - počet vět: $sentences_count, slov (vč. interp.): $tokens_count\n";
   }
   else {
+    $stats .= "<h4 style=\"margin-top: 20px;\">PONK <span style=\"font-size: 1.1rem\">$VER_en</span></h4>\n";
     $stats .= "<p style=\"font-size: 0.9rem; margin-bottom: 0px\"> &nbsp; - number of sentences: $sentences_count, tokens: $tokens_count\n";
   }
 
@@ -1740,8 +1772,17 @@ END_HEAD
     }
   }
   $stats .= "<br/>&nbsp;</p>\n";
- 
-  # $stats .= "$DESC\n";
+
+=item
+
+  if ($ui_language eq 'cs') {
+    $stats .= "$DESC_cs\n";
+  }
+  else {
+    $stats .= "$DESC_en\n";
+  }
+
+=cut
   
   $stats .= "</body>\n";
   $stats .= "</html>\n";

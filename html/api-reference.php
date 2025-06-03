@@ -5,14 +5,14 @@
   </button>
   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="tocDropdown">
     <li><a class="dropdown-item" href="#api_reference">API Reference</a></li>
-    <li><a class="dropdown-item" href="#process"><span class="fa fa-caret-right"></span> <code>process</code></a></li>
+    <li><a class="dropdown-item" href="#api-process"><span class="fa fa-caret-right"></span> <code>process</code></a></li>
+    <li><a class="dropdown-item" href="#api-info"><span class="fa fa-caret-right"></span> <code>info</code></a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="#using_curl">Accessing API using Curl</a></li>
   </ul>
 </div>
 
-<p style="margin-left: 0px; margin-top: 8px; margin-bottom: 5px; margin-right: 5px"><?php echo $lang[$currentLang]['api_service_url']; ?>
-<code>http(s)://quest.ms.mff.cuni.cz/ponk/api/</code>.</p>
+<p style="margin-left: 0px; margin-top: 8px; margin-bottom: 5px; margin-right: 5px"><?php echo $lang[$currentLang]['api_service_url']; ?>&nbsp;<code>http(s)://quest.ms.mff.cuni.cz/ponk/api/</code>.</p>
 
           <?php
             if ($currentLang == 'cs') {

@@ -49,8 +49,10 @@ any '/api/info' => sub {
     my $c = shift;
     my $method = $c->req->method;
 
+    my $uilang = $c->param('uilang') // ''; # UI language
     # Spuštění skriptu ponk.pl s parametrem pro získání info
     my @cmd = ('/usr/bin/perl', "$script_dir/ponk.pl",
+               '--ui-language', $uilang,
                '--info');
     my $stdin_data = '';
     my $result_json;
