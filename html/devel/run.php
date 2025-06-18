@@ -9,6 +9,7 @@
   var app2_stylesheet = null; // inline stylesheet for app2 (lexical surprise)
 
   var app1_rule_active = {}; // an object ("hash") to keep info if individual rules are active
+  var app1_rule_store_deactivated = {}; // an object ("hash") to keep info if individual rules were deactivated to keep selection while re-submitting the text
   var app1_ruleid_highlighted = []; // an array of actually highlighted classes rule_id (when hovering over a span in the results)
   
   var app1_token_ids = []; // an array of ids of tokens in the result (<span>) marked by app1
@@ -51,8 +52,7 @@
 
   function doSubmit() {
     //console.log("doSubmit: Entering the function.");
-    app1_rule_active = {}; // forget previous app1 rules activity statuses
-    var input_text;
+    app1_rule_active = {}; // forget previous app1 rules activity statuses (the info on deactivated rules is kept in app1_rule_store_deactivated)
 
     //var input_format = jQuery('input[name=option_input]:checked').val();
     var input_format = 'txt';
@@ -583,7 +583,8 @@
       if (app1_rule_info.hasOwnProperty(rule_name)) {
         //console.log(`Key: ${rule_name}, Value:`, app1_rule_info[rule_name]);
         let rule = app1_rule_info[rule_name];
-        app1_rule_active[rule_name] = 1; // store the info on activity status of this rule
+	app1_rule_active[rule_name] = 1; // store the info on activity status of this rule
+	app1_rule_store_deactivated[rule_name] = null; // if it was deactivated before, now it is not any more
         if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
           let {red, green, blue} = rule.foreground_color;
           //console.log(`Key: ${rule_name}, RGB Color: rgb(${red}, ${green}, ${blue})`);
@@ -602,7 +603,9 @@
     } else {
       //console.log("Checkbox není zaškrtnutý, class='" + rule_class + "'");
       removeCSSClass(rule_class);
-      app1_rule_active[rule_name] = 0; // store the info on activity status of this rule
+      app1_rule_active[rule_name] = null; // store the info on activity status of this rule
+      app1_rule_store_deactivated[rule_name] = 1; // keep the info that this rule has been deactivated
+      //console.log(`Key: ${rule_name}, keeping info on this being deactivated.`);
     }
     highlightTokensWithMultipleActiveApp1Rules();
   }
@@ -620,23 +623,32 @@
       for (let key in ruleInfo) {
         if (ruleInfo.hasOwnProperty(key)) {
           //console.log(`Key: ${key}, Value:`, ruleInfo[key]);
-	  let rule = ruleInfo[key];
-	  app1_rule_active[key] = 1;
-	  //console.log(`Setting key ${key} activity status to 1`);
-          if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
-            let {red, green, blue} = rule.foreground_color;
-            //console.log(`Key: ${key}, RGB Color: rgb(${red}, ${green}, ${blue})`);
-            let class_name = `app1_class_${key}`;
-            const colorStyle = 'rgb(' + Math.round(red) + ', ' + Math.round(green) + ', ' + Math.round(blue) + ') !important';
-            //console.log('Red:', red, 'Green:', green, 'Blue:', blue);
-            //console.log('Color Style:', colorStyle);
-            //let class_style = { 'color': colorStyle, 'font-weight': 'bold' };
-            let class_style = { 'color': colorStyle, 'text-shadow': '0.02em 0 0 currentColor, -0.02em 0 0 currentColor' };
-            createOrReplaceCSSClass(class_name, class_style);
-            //console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
-          } else {
-            //console.log(`Key: ${key}, Foreground color not available or not an object.`);
+          let rule = ruleInfo[key];
+          if (app1_rule_store_deactivated[key]) { // activate the rule if it not was deactivated before
+            app1_rule_active[key] = null; // unnecessary, as it was not set before
+            let checkbox = document.getElementById(`check_app1_feature_${key}`);
+            if (checkbox) {
+              checkbox.checked = false;
+            }
           }
+	  else {
+            app1_rule_active[key] = 1;
+            //console.log(`Setting key ${key} activity status to 1`);
+            if (typeof rule.foreground_color === 'object' && rule.foreground_color !== null) {
+              let {red, green, blue} = rule.foreground_color;
+              //console.log(`Key: ${key}, RGB Color: rgb(${red}, ${green}, ${blue})`);
+              let class_name = `app1_class_${key}`;
+              const colorStyle = 'rgb(' + Math.round(red) + ', ' + Math.round(green) + ', ' + Math.round(blue) + ') !important';
+              //console.log('Red:', red, 'Green:', green, 'Blue:', blue);
+              //console.log('Color Style:', colorStyle);
+              //let class_style = { 'color': colorStyle, 'font-weight': 'bold' };
+              let class_style = { 'color': colorStyle, 'text-shadow': '0.02em 0 0 currentColor, -0.02em 0 0 currentColor' };
+              createOrReplaceCSSClass(class_name, class_style);
+              //console.log(`Setting class ${class_name} to ${class_style} with color ${colorStyle}`); 
+            } else {
+              //console.log(`Key: ${key}, Foreground color not available or not an object.`);
+            }
+	  }
         }
       }
     } else {
@@ -770,7 +782,7 @@
 	rule.style.outline = '1px solid black';
 	rule.style.outlineOffset = '-1px';
     } else {
-      console.log("No class definition for", app1_rule);
+      //console.log("No class definition for", app1_rule);
     }
   }
 
@@ -820,7 +832,7 @@
         // Nastavení nového cssText
         rule.style.cssText = newCssText;
     } else {
-        console.log("No class definition for", app1_rule);
+        //console.log("No class definition for", app1_rule);
     }
   }
 
@@ -840,7 +852,7 @@
 	//rule.style.marginLeft = '0';
 	rule.style.outline = 'none';
     } else {
-      console.log("No class definition for", app1_rule);
+      //console.log("No class definition for", app1_rule);
     }
   }
 
@@ -1096,6 +1108,7 @@
     document.getElementById('output_stats').innerHTML = '';
     document.getElementById('features_app1').innerHTML = '';
     document.getElementById('features_app2').innerHTML = '';
+    app1_rule_store_deactivated = {}; // forget the list of deactivated rules (as the text changes)
   }
 
   function formatOutput() { 
