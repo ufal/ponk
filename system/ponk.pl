@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.43 20250618'; # version of the program
+my $VER_en = '0.44 20250619'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
@@ -2246,7 +2246,7 @@ sub call_ponk_app1 {
     my $conllu = shift;
 
     # Nastavení URL pro volání REST::API s parametry
-    my $url = "$ponk_app1_service_url/raw?profile=noninstitutional";
+    my $url = "$ponk_app1_service_url/raw?profile=noninstitutional_corrective";
     mylog(2, "Call PONK-APP1: URL=$url\n");
 
     my $ua = LWP::UserAgent->new;
