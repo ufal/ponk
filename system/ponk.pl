@@ -1621,7 +1621,7 @@ sub unify_array_keep_order {
     my %seen;
     my @vysledek;
     
-    for my $item (@_) {
+    for my $item (grep {defined} @_) {
         unless ($seen{$item}) {
             push @vysledek, $item;
             $seen{$item} = 1;
