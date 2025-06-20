@@ -115,7 +115,7 @@
             }
           ?>
 
-    var internal_apps = "app1";
+    var internal_apps = "app1,app2";
     var options = {text: input_text, input: input_format, output: output_format, uilang: ui_lang, apps: internal_apps};
     //console.log("doSubmit: options: ", options);
     // Přidáme parametr "randomize", pokud je checkbox zaškrtnutý

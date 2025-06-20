@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.44 20250619'; # version of the program
+my $VER_en = '0.45 20250620'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
@@ -1806,7 +1806,7 @@ sub get_app1_features_html {
   }
 
   # get only rules actually found in the given text:
-  my @app1_list_of_features = get_app1_list_of_features(@trees);
+  my @app1_list_of_features = sort {$app1_rule_info_orig->{$a}->{order} <=> $app1_rule_info_orig->{$b}->{order}} get_app1_list_of_features(@trees);
 
   # compile the html response
   my $features = "<html>\n";
@@ -2378,7 +2378,7 @@ sub app1_metrics2string {
   my $text = '';
   foreach my $metric (@$refar_metrics) {
     my %h_metric = %$metric;
-    foreach my $name (keys %h_metric) {
+    foreach my $name (sort {$refha_metrics_info->{$a}->{order} <=> $refha_metrics_info->{$b}->{order}} keys %h_metric) {
       my $value = $h_metric{$name} // '';
       if (looks_like_number($value)) {
         $value = round($value * 100) / 100;
