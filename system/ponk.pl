@@ -593,7 +593,7 @@ if ($input_format eq 'md') {
 }
 
 my $input_length = length($input_content);
-mylog(2, "input length: $input_length characterss\n");
+mylog(2, "input length: $input_length characters\n");
 
 
 my $processing_time;
