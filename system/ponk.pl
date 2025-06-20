@@ -1439,7 +1439,7 @@ END_OUTPUT_HEAD_END
           my $tooltip = "";
           foreach my $app1_misc (@app1_miscs) {
             $tooltip .= "\n" if $tooltip;
-            if ($app1_misc =~ /^PonkApp1:([^:]+):[^=]+=(.+)$/) {
+            if ($app1_misc =~ /^PonkApp1:([^:]+):[^=]+=(.+)$/ and $app1_misc !~ /:remove=/) {
               my $rule_name = $1;
               my $rule_name_lang = $app1_rule_info_orig->{$rule_name}->{$app1_lang . '_name'} // $rule_name;
               my $role_name = $2;
