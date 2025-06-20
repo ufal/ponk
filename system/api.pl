@@ -30,6 +30,7 @@
 use strict;
 use warnings;
 use Mojolicious::Lite;
+use Sys::Syslog qw(:standard :macros); # Načtení modulu Sys::Syslog s potřebnými konstantami
 use IPC::Run qw(run);
 use JSON;
 use Encode;
@@ -88,6 +89,16 @@ any '/api/process' => sub {
     my $apps = $c->param('apps') // ''; # a comma-separated list of internal apps to call
     my $uilang = $c->param('uilang') // ''; # UI language
     # my $randomize = defined $c->param('randomize') ? 1 : 0; # randomization
+
+    # Získání hlaviček pro původní informace
+    my $referer = $c->req->headers->referer // 'unknown'; # Standardní referer
+    my $forwarded_for = $c->req->headers->header('X-Forwarded-For') // 'unknown'; # Původní IP klienta
+
+    # Zápis do syslogu
+    syslog(LOG_INFO, 'PONK: API request "process" from: "%s", X-Forwarded-For: "%s", method: "%s"',
+           $referer, $forwarded_for, $method);
+    syslog(LOG_INFO, 'PONK: API parameters: input format: "%s", output format: "%s", apps: "%s", UI language: "%s"',
+           $input_format, $output_format, $apps, $uilang);
 
     # Spuštění skriptu ponk.pl s předáním parametrů a standardního vstupu
     my @cmd = ('/usr/bin/perl', "$script_dir/ponk.pl",
