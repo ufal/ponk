@@ -95,9 +95,9 @@ any '/api/process' => sub {
     my $forwarded_for = $c->req->headers->header('X-Forwarded-For') // 'unknown'; # Původní IP klienta
 
     # Zápis do syslogu
-    syslog(LOG_INFO, 'PONK: API request "process" from: "%s", X-Forwarded-For: "%s", method: "%s"',
+    syslog(LOG_INFO, 'ponk: API request "process" from: "%s", X-Forwarded-For: "%s", method: "%s"',
            $referer, $forwarded_for, $method);
-    syslog(LOG_INFO, 'PONK: API parameters: input format: "%s", output format: "%s", apps: "%s", UI language: "%s"',
+    syslog(LOG_INFO, 'ponk: API parameters: input format: "%s", output format: "%s", apps: "%s", UI language: "%s"',
            $input_format, $output_format, $apps, $uilang);
 
     # Spuštění skriptu ponk.pl s předáním parametrů a standardního vstupu

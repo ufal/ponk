@@ -592,6 +592,8 @@ if ($input_format eq 'md') {
   mylog(0, "$pure_input_content\n");
 }
 
+my $input_length = length($input_content);
+mylog(2, "input length: $input_length characterss\n");
 
 
 my $processing_time;
@@ -610,6 +612,30 @@ my $start_time_udpipe = [gettimeofday];
 
 my $conll_segmented = call_udpipe($input_content, 'segment');
 
+my $sentence_count = 0;
+my $word_count = 0;
+
+# Rozdělíme text na řádky
+my @lines = split /\n/, $conll_segmented;
+
+foreach my $line (@lines) {
+    # Přeskočíme prázdné řádky a komentáře
+    next if $line =~ /^\s*$/ || $line =~ /^#/;
+    
+    # Pokud řádek začíná číslem a tabulátorem, je to slovo
+    if ($line =~ /^\d+\t/) {
+        $word_count++;
+    }
+}
+
+# Počet vět zjistíme podle prázdných řádků nebo komentářů # text
+foreach my $line (@lines) {
+    if ($line =~ /^# text =/) {
+        $sentence_count++;
+    }
+}
+
+mylog(2, "input length: $word_count tokens, $sentence_count sentences\n");
 
 ####################################################################################
 # Let us parse the tokenized and segmented text using UDPipe REST API with UD model
