@@ -253,14 +253,25 @@
     }});
   }
 
-
-  function fix(elementId) {
-      console.log(`Fix called for element ID: ${elementId}`);
-      // Implement your fix logic here
+  function fix(elementId, fixClass) {
+    console.log(`Fix function called with element ID: ${elementId}, fixClass: ${fixClass}`);
+    //alert(`Fix called for element ID: ${elementId}, fixClass: ${fixClass}`);
+    const editable_input_div = document.getElementById('input');
+    const remove_class = fixClass + '_remove';
+    const spans_remove = editable_input_div.querySelectorAll(`span.${remove_class}`);
+    spans_remove.forEach(span => {
+        span.remove();
+    });
+    const add_class = fixClass + '_add';
+    const spans_add = editable_input_div.querySelectorAll(`span.${add_class}`);
+    spans_add.forEach(span => {
+        console.log("Showing span with class: ", add_class);
+        span.style.display='';
+    });
   }
 
 
-// Function to initialize or reinitialize tooltips
+  // Function to initialize or reinitialize tooltips
     function initTooltips(selector = '[data-tooltip]') {
       //console.log('Initializing tooltips for selector:', selector);
       
@@ -281,45 +292,58 @@
 
       // Log each element's tooltip data
       tooltipElements.forEach((el, index) => {
-        const hasFix = el.getAttribute('data-tooltip-fix') === 'true';
+        const fixText = el.getAttribute('data-tooltip-fix');
+        const hasFix = !!fixText; // True if fixText is non-empty
         if (hasFix && !el.id) {
-          console.warn(`Element ${index + 1} has data-tooltip-fix="true" but no ID. Fix button will not work.`);
+          console.warn(`Element ${index + 1} has data-tooltip-fix="${fixText}" but no ID. Fix button will not work.`);
         }
-        //console.log(`Element ${index + 1}: ID=${el.id || 'none'}, data-tooltip="${el.getAttribute('data-tooltip')}", data-tooltip-fix="${el.getAttribute('data-tooltip-fix')}", interactive=${hasFix}`);
+        //console.log(`Element ${index + 1}: ID=${el.id || 'none'}, data-tooltip="${el.getAttribute('data-tooltip')}", data-tooltip-fix="${fixText || 'null'}", interactive=${hasFix}`);
       });
 
       // Initialize Tippy.js for these elements
       try {
-        tippy(selector, {
+      tippy(selector, {
           content(reference) {
             const text = reference.getAttribute('data-tooltip');
-            const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
+            const fixText = reference.getAttribute('data-tooltip-fix');
+            const hasFix = !!fixText; // True if fixText is non-empty
             const elementId = reference.id;
-            //console.log(`Creating tooltip for element ID=${elementId || 'none'}, text="${text}", hasFix=${hasFix}`);
+            //console.log(`Creating tooltip for element ID=${elementId || 'none'}, text="${text}", fixText="${fixText || 'null'}", hasFix=${hasFix}`);
+
+            const container = document.createElement('div');
+            const textDiv = document.createElement('div');
+            textDiv.innerHTML = text; // Render <br> as HTML
+            container.appendChild(textDiv);
 
             if (hasFix && elementId) {
-              const div = document.createElement('div');
-              div.textContent = text;
               const button = document.createElement('button');
               button.textContent = 'Fix';
-              button.onclick = () => fix(elementId);
-              div.appendChild(button);
-              return div;
+              button.onclick = () => fix(elementId, fixText);
+              button.onclick = () => {
+                fix(elementId, fixText);
+                if (reference._tippy) {
+                  reference._tippy.hide(); // Skryje tooltip po kliknutí
+                }
+              };
+	      container.appendChild(button);
             }
-            return text;
+
+            return container;
           },
+
           allowHTML: true, // Enable HTML rendering for <br> and other tags
-          delay: [300, 0], // 0.5s show delay, 0s hide delay
+	  delay: [300, 0], // 0.3s show delay, 0s hide delay
           interactive(reference) {
-            const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
-            return hasFix;
+            const fixText = reference.getAttribute('data-tooltip-fix');
+            return !!fixText; // Interactive if fixText is non-empty
           },
           arrow: false, // No arrow
           placement: 'bottom', // Prefer bottom, auto-adjusts
           boundary: 'viewport', // Keep within viewport
           offset: [0, 2], // 2px gap from element
-          onCreate(instance) {
-            const hasFix = instance.reference.getAttribute('data-tooltip-fix') === 'true';
+	  onCreate(instance) {
+            const fixText = instance.reference.getAttribute('data-tooltip-fix');
+            const hasFix = !!fixText;
             instance.setProps({ interactive: hasFix }); // Explicitly set interactive
             //console.log(`Tooltip created for element ID=${instance.reference.id || 'none'}, interactive=${instance.props.interactive}`);
           },

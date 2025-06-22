@@ -295,21 +295,21 @@
             const text = reference.getAttribute('data-tooltip');
             const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
             const elementId = reference.id;
-            //console.log(`Creating tooltip for element ID=${elementId || 'none'}, text="${text}", hasFix=${hasFix}`);
 
-            if (hasFix && elementId) {
-              const div = document.createElement('div');
-              div.textContent = text;
+            const container = document.createElement('div');
+            const textDiv = document.createElement('div');
+            textDiv.innerHTML = text; // Render <br> as HTML
+            container.appendChild(textDiv);
+            /*if (hasFix && elementId) {
               const button = document.createElement('button');
               button.textContent = 'Fix';
               button.onclick = () => fix(elementId);
-              div.appendChild(button);
-              return div;
-            }
-            return text;
+              container.appendChild(button);
+      }*/
+            return container;
           },
           allowHTML: true, // Enable HTML rendering for <br> and other tags
-          delay: [300, 0], // 0.5s show delay, 0s hide delay
+          delay: [300, 0], // 0.3s show delay, 0s hide delay
           interactive(reference) {
             const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
             return hasFix;

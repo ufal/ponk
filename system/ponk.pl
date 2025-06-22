@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.45 20250620'; # version of the program
+my $VER_en = '0.46 20250622'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
@@ -1387,6 +1387,36 @@ END_OUTPUT_HEAD_END
       $output .= "# text = $text\n" if $text;
     }
 
+    # assemble tokens to be added at each position if a fix button is clicked
+    my %ord2add = (); 
+    if ($format eq 'html') {
+      my $other_comment = attr($root, 'other_comment') // '';
+      # Rozdělení textové proměnné na řádky a zpracování řádku po řádce
+      foreach my $line (split /\n/, $other_comment) {
+        chomp $line;
+        if ($line =~ /^# PonkApp1:([^:]+):([^:]+):add\s*=\s*(\{.*\})/) {
+          my $ruleName = $1;      # Např. RuleTooLongExpressions
+          my $applicationId = $2; # Např. fee552e8
+          my $json_str = $3;      # JSON část
+
+          eval {
+              my $data = decode_json($json_str);
+              my $addAfter = $data->{add_after}; # Např. "3"
+              my $form = $data->{node}{form};    # Např. "Pokud"
+
+              # Sestavení span tagu pomocí konkatenace
+              my $span = '<span style="display: none" class="app1_class_' . $ruleName . '_' . $applicationId . '_add">' . $form . '</span>';
+
+              # Přidání do hashe ord2add pod klíčem $addAfter
+              $ord2add{$addAfter} .= $span;
+          };
+          if ($@) {
+              warn "Chyba při parsování JSON v řádku: $line\n$@";
+          }
+        }
+      }
+    }
+
     # PRINT THE SENTENCE TOKEN BY TOKEN
     my @nodes = sort {attr($a, 'ord') <=> attr($b, 'ord')} descendants($root);
     my $number_of_tokens = scalar(@nodes);
@@ -1463,21 +1493,35 @@ END_OUTPUT_HEAD_END
           }
           # get tooltip:
           my $tooltip = "";
+	  my $fix_button = "";
           foreach my $app1_misc (@app1_miscs) {
             $tooltip .= "\n" if $tooltip;
-            if ($app1_misc =~ /^PonkApp1:([^:]+):[^=]+=(.+)$/ and $app1_misc !~ /:remove=/) {
+            if ($app1_misc =~ /^PonkApp1:([^:]+):[^=]+=(.+)$/) {
               my $rule_name = $1;
               my $rule_name_lang = $app1_rule_info_orig->{$rule_name}->{$app1_lang . '_name'} // $rule_name;
               my $role_name = $2;
               my $role_name_lang = $app1_rule_info_orig->{$rule_name}->{$app1_lang . '_participants'}->{$role_name} // $role_name;
               # $rule_name_lang =~ s/object/predicate/; # a temporary fix for making a screenshot to a paper before info from app1 gets corrected
-              $tooltip .= "$rule_name_lang: $role_name_lang";
+	      if ($app1_misc !~ /:remove=/) {
+                $tooltip .= "$rule_name_lang: $role_name_lang";
+              }
+	      else { 
+	        if ($app1_misc =~ /:([^:]+):remove/) {
+                  my $rule_application_id = $1;
+                  $fix_button = ' data-tooltip-fix="app1_class_' . $rule_name . '_' . $rule_application_id . '"';
+	          # e.g., app1_class_RuleTooLongExpressions_d59d3e8b
+                }
+              }
             }
           }
           my $id = 'app1_token_id_' . $result_token_id_number;
           $result_token_id_number++;
 
-          $span_app1_start = "<span id=\"$id\" class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" data-tooltip=\"$tooltip\">";
+	  if (scalar(grep {$_ !~ /:remove/} @app1_miscs) > 1) { # for now, let us fix only places with one rule
+	    $fix_button = "";
+	  }
+
+          $span_app1_start = "<span id=\"$id\" class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" data-tooltip=\"$tooltip\"$fix_button>";
           $span_app1_end = '</span>';
         }
         
@@ -1520,6 +1564,11 @@ END_OUTPUT_HEAD_END
         }
 
         $output .= "$italics_end$bold_end$space_before$span_app1_start$span_app2_start$bold_start$italics_start$form$span_app2_end$span_app1_end";
+
+	my $add_spans = $ord2add{$token_number} // '';
+	if ($add_spans) {
+          $output .= $add_spans;
+        }
 
         $space_before = ($SpaceAfter eq 'No' or $SpacesAfter) ? '' : ' '; # store info about a space until the next token is about to be printed
         
@@ -1626,14 +1675,20 @@ sub get_app1_miscs {
 
 =item get_app1_rule_name
 
-Given one ponk-app1 value from misc, get the rule name and also the rule name toghether with a unique id of the occurrence (i.e., it returns two values).
+Given one ponk-app1 value from misc, get the rule name and also the rule name together with a unique id of the occurrence; if the rule name also contains ":remove", it also returns the rule name together with the unique id and the "_remove" suffix (i.e., it returns two or three values).
 
 =cut
 
 sub get_app1_rule_name {
   my ($one_app1_misc_value) = @_;
   # mylog(0, "get_app1_rule_name: one app1 mist value: '$one_app1_misc_value'\n");
-  if ($one_app1_misc_value =~ /^PonkApp1:([^:]+):([^:]+)=/) { # rule name and unique id of the occurrence
+  if ($one_app1_misc_value =~ /^PonkApp1:([^:]+):([^:]+):remove=/) { # rule name and unique id of the occurrence, remove flag
+    my $rule_name = $1;
+    my $id = $2;
+    # mylog(0, "get_app1_rule_name:   rule name: '$rule_name'\n");
+    return ($rule_name, $rule_name . "_" . $id, $rule_name . "_" . $id . "_remove");
+  }
+  elsif ($one_app1_misc_value =~ /^PonkApp1:([^:]+):([^:]+)=/) { # rule name and unique id of the occurrence
     my $rule_name = $1;
     my $id = $2;
     # mylog(0, "get_app1_rule_name:   rule name: '$rule_name'\n");
