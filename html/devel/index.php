@@ -50,11 +50,9 @@ $currentLang = $_SESSION['lang'];
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js" type="text/javascript"></script>
   <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
-
   <!-- Load Tippy.js and Popper.js for customized tooltips -->
   <script src="https://unpkg.com/@popperjs/core@2"></script>
   <script src="https://unpkg.com/tippy.js@6"></script>
-
 </head>
 
 <body id="lindat-services">
