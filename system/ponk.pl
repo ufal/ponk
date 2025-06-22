@@ -1483,7 +1483,7 @@ END_OUTPUT_HEAD_END
 
         # INFO FROM PONK-APP1
         #mylog(0, "Going to get app1 miscs for word '$form'\n");
-        my @app1_miscs = get_app1_miscs(attr($node, 'misc')); # array of misc values from ponk-app1
+        my @app1_miscs = grep {$_ !~ /:rebind=/} get_app1_miscs(attr($node, 'misc')); # array of misc values from ponk-app1
         if (@app1_miscs) {
           #my $span_class = 'highlighted-text-app1';
           my $span_class = '';
