@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.46 20250622'; # version of the program
+my $VER_en = '0.47 20250623'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
@@ -1426,7 +1426,8 @@ END_OUTPUT_HEAD_END
 
     my $bold_continuation = 0; # bold text continues from previous tokens (within a single sentence)
     my $italics_continuation = 0; # italics text continues from previous tokens (within a single sentence)
-    
+
+
     foreach my $node (@nodes) {
     
       $token_number++;
@@ -1563,12 +1564,17 @@ END_OUTPUT_HEAD_END
           $output .= $SpacesBefore;          
         }
 
-        $output .= "$italics_end$bold_end$space_before$span_app1_start$span_app2_start$bold_start$italics_start$form$span_app2_end$span_app1_end";
+        $output .= "$italics_end$bold_end$space_before";
 
-	my $add_spans = $ord2add{$token_number} // '';
-	if ($add_spans) {
-          $output .= $add_spans;
+        # add automatic correction tokens that go before the current token; it must go here after $space_before is printed
+        if ($format eq 'html') { 
+          my $add_spans_sent_start = $ord2add{$token_number - 1} // '';
+          if ($add_spans_sent_start) {
+            $output .= $add_spans_sent_start;
+          }
         }
+
+	$output .= "$span_app1_start$span_app2_start$bold_start$italics_start$form$span_app2_end$span_app1_end";
 
         $space_before = ($SpaceAfter eq 'No' or $SpacesAfter) ? '' : ' '; # store info about a space until the next token is about to be printed
         
