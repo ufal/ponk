@@ -595,6 +595,27 @@ if ($input_format eq 'md') {
 my $input_length = length($input_content);
 mylog(2, "input length: $input_length characters\n");
 
+if ($input_length > 10000) { # for the workshop presentation, avoid long texts
+  # 'data' (in output-format)
+  # 'stats' (in html)
+  # 'app1_features' (in html)
+  # 'app1_rule_info' (in json)
+  # 'app2_colours' (in json)
+
+  my $json_data = {
+       data  => $input_content,
+       stats => "<font color=\"red\">Příliš dlouhý text ($input_length znaků, povolené maximum pro dnešní prezentaci je 10 tisíc)!</font>",
+       app1_features => "<font color=\"red\">Příliš dlouhý text ($input_length znaků, povolené maximum pro dnešní prezentaci je 10 tisíc)!</font>",
+       app1_rule_info => "{}",
+       app2_colours => "{}",
+     };
+  # Encode the Perl data structure into a JSON string
+  my $json_string = encode_json($json_data);
+  # Print the JSON string to STDOUT
+  print $json_string;
+
+  exit;
+}
 
 my $processing_time;
 my $processing_time_udpipe;
