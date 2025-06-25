@@ -259,14 +259,18 @@
     const editable_input_div = document.getElementById('input');
     const remove_class = fixClass + '_remove';
     const spans_remove = editable_input_div.querySelectorAll(`span.${remove_class}`);
+    console.log("Removing spans with class: ", remove_class);
     spans_remove.forEach(span => {
+        console.log("Removing span: ", span.textContent);
         span.remove();
     });
     const add_class = fixClass + '_add';
     const spans_add = editable_input_div.querySelectorAll(`span.${add_class}`);
+    console.log("Showing spans with class: ", add_class);
+    console.log("Found spans to show: ", spans_add.length);
     spans_add.forEach(span => {
-        console.log("Showing span with class: ", add_class);
-        span.style.display='';
+        console.log("Showing span: ", span.textContent);
+        span.style.display='inline';
     });
   }
 

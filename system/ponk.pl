@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.47 20250623'; # version of the program
+my $VER_en = '0.48 20250625'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
@@ -1543,6 +1543,7 @@ END_OUTPUT_HEAD_END
 	    $fix_button = "";
 	  }
 
+	  $span_class =~ s/^\s+//;
           $span_app1_start = "<span id=\"$id\" class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" data-tooltip=\"$tooltip\"$fix_button>";
           $span_app1_end = '</span>';
         }
