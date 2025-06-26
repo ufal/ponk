@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.48 20250625'; # version of the program
+my $VER_en = '0.49 20250626'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
@@ -595,7 +595,7 @@ if ($input_format eq 'md') {
 my $input_length = length($input_content);
 mylog(2, "input length: $input_length characters\n");
 
-if ($input_length > 10000) { # for the workshop presentation, avoid long texts
+if ($input_length > 40000) { # for the workshop presentation, avoid long texts
   # 'data' (in output-format)
   # 'stats' (in html)
   # 'app1_features' (in html)
@@ -604,8 +604,8 @@ if ($input_length > 10000) { # for the workshop presentation, avoid long texts
 
   my $json_data = {
        data  => $input_content,
-       stats => "<font color=\"red\">Příliš dlouhý text ($input_length znaků, povolené maximum pro dnešní prezentaci je 10 tisíc)!</font>",
-       app1_features => "<font color=\"red\">Příliš dlouhý text ($input_length znaků, povolené maximum pro dnešní prezentaci je 10 tisíc)!</font>",
+       stats => "<font color=\"red\">Příliš dlouhý text ($input_length znaků, povolené maximum je 40 tisíc)!</font>",
+       app1_features => "<font color=\"red\">Příliš dlouhý text ($input_length znaků, povolené maximum je 40 tisíc)!</font>",
        app1_rule_info => "{}",
        app2_colours => "{}",
      };
@@ -631,7 +631,8 @@ my $processing_time_app2;
 
 my $start_time_udpipe = [gettimeofday];
 
-my $conll_segmented = call_udpipe($input_content, 'segment');
+#my $conll_segmented = call_udpipe($input_content, 'segment');
+my $conll_segmented = call_udpipe($input_content, 'all');
 
 my $sentence_count = 0;
 my $word_count = 0;
@@ -663,8 +664,8 @@ mylog(2, "input length: $word_count tokens, $sentence_count sentences\n");
 # With this model I get UD trees and attributes.
 ####################################################################################
 
-my $conll_data = call_udpipe($conll_segmented, 'parse');
-
+#my $conll_data = call_udpipe($conll_segmented, 'parse');
+my $conll_data = $conll_segmented;
 
 # Store the result to a file (just to have it, not needed for further processing)
 #  open(OUT, '>:encoding(utf8)', "$input_file.conll") or die "Cannot open file '$input_file.conll' for writing: $!";
@@ -2153,7 +2154,7 @@ sub root {
 =item call_udpipe
 
 Calling UDPipe REST API; the input to be processed is passed in the first argument
-The second argument ('segment'/'parse') chooses between the two tasks.
+The second argument ('segment'/'parse'/'all') chooses between the two tasks (or does both).
 Segmentation expects plain text as input, the parsing expects segmented conll-u data.
 Returns the output in UD CONLL format
 
@@ -2211,6 +2212,15 @@ sub call_udpipe {
       $tagger = '&tagger';
       $parser = '&parser';
     
+    }
+    else {
+      $input = 'tokenizer=ranges';
+      if ($input_format eq 'presegmented') {
+        $input .= ';presegmented';
+      }
+      $model = '&model=czech';
+      $tagger = '&tagger';
+      $parser = '&parser';
     }
 
     # Funkční volání metodou POST, i když podivně kombinuje URL-encoded s POST
