@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.49 20250626'; # version of the program
+my $VER_en = '0.50 20250627'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
@@ -1305,10 +1305,10 @@ sub generate_app2_stylesheet {
     my ($haref_colours) = @_;
 
     # Kontrola, zda je vstup platná hash reference
-    #unless (ref($haref_colours) eq 'HASH') {
-    #    carp "Chyba: Očekávána hash reference, obdržen " . (ref($haref_colours) || 'skalár');
-    #    return '/* Chyba při generování stylesheetu: Neplatný vstup */';
-    #}
+    unless (ref($haref_colours) eq 'HASH') {
+        mylog(2, "generate_app2_stylesheet: Expected a hash reference, received " . (ref($haref_colours) || 'scalar'));
+        return '/* Error in stylesheet generation: Wrong input */';
+    }
 
     # Vytvoření CSS pravidel
     my $css = '';
@@ -2650,7 +2650,7 @@ sub call_ponk_app2 {
     } else {
         mylog(2, "call_ponk_app2: URL: $url\n");
         mylog(2, "call_ponk_app2: Error: " . $res->status_line . "\n");
-        return ($conllu, [{"APP2 Error" => $res->status_line}]); 
+        return ($conllu, {"APP2 Error" => $res->status_line}); 
     }
 
 }
