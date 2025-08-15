@@ -50,9 +50,13 @@ $currentLang = $_SESSION['lang'];
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js" type="text/javascript"></script>
   <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
+
   <!-- Load Tippy.js and Popper.js for customized tooltips -->
   <script src="https://unpkg.com/@popperjs/core@2"></script>
   <script src="https://unpkg.com/tippy.js@6"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body id="lindat-services">
@@ -120,6 +124,9 @@ $currentLang = $_SESSION['lang'];
       <div id="serverInfoContent" class="collapse mt-2" role="tabpanel" aria-labelledby="serverInfoHeading">
         <div class="card">
           <div class="card-body">
+            <div class="chart-container">
+              <canvas id="accessChart"></canvas>
+            </div>
             <div id="server_info" class="d-none"></div>
             <?php
             if ($currentLang == 'cs') {
