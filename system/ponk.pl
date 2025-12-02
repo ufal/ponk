@@ -1428,7 +1428,7 @@ END_OUTPUT_HEAD_END
               my $form = $data->{node}{form};    # Např. "Pokud"
 
               # Sestavení span tagu pomocí konkatenace
-              my $span = '<span style="display: none" class="app1_class_' . $ruleName . '_' . $applicationId . '_add">' . $form . '</span>';
+              my $span = '<span style="display: none" class="app1_class_' . $ruleName . '_' . $applicationId . '_add">' . " " . $form . '</span>';
 
               # Přidání do hashe ord2add pod klíčem $addAfter
               $ord2add{$addAfter} .= $span;
@@ -1455,8 +1455,6 @@ END_OUTPUT_HEAD_END
     
       $token_number++;
     
-      # from MasKIT, not needed: next if attr($node, 'hidden'); # do not output hidden nodes (originally parts of multiword expressions such as multiword street names)
-      
       # COLLECT INFO ABOUT THE TOKEN
       my $form = attr($node, 'form');
       my $classes = get_NameTag_marks($node) // '';
@@ -1517,7 +1515,7 @@ END_OUTPUT_HEAD_END
           }
           # get tooltip:
           my $tooltip = "";
-	  my $fix_button = "";
+          my $fix_button = "";
           foreach my $app1_misc (@app1_miscs) {
             $tooltip .= "\n" if $tooltip;
             if ($app1_misc =~ /^PonkApp1:([^:]+):[^=]+=(.+)$/) {
@@ -1526,14 +1524,14 @@ END_OUTPUT_HEAD_END
               my $role_name = $2;
               my $role_name_lang = $app1_rule_info_orig->{$rule_name}->{$app1_lang . '_participants'}->{$role_name} // $role_name;
               # $rule_name_lang =~ s/object/predicate/; # a temporary fix for making a screenshot to a paper before info from app1 gets corrected
-	      if ($app1_misc !~ /:remove=/) {
+              if ($app1_misc !~ /:remove=/) {
                 $tooltip .= "$rule_name_lang: $role_name_lang";
               }
-	      else { 
-	        if ($app1_misc =~ /:([^:]+):remove/) {
+              else { 
+                if ($app1_misc =~ /:([^:]+):remove/) {
                   my $rule_application_id = $1;
                   $fix_button = ' data-tooltip-fix="app1_class_' . $rule_name . '_' . $rule_application_id . '"';
-	          # e.g., app1_class_RuleTooLongExpressions_d59d3e8b
+                  # e.g., app1_class_RuleTooLongExpressions_d59d3e8b
                 }
               }
             }
@@ -1541,11 +1539,11 @@ END_OUTPUT_HEAD_END
           my $id = 'app1_token_id_' . $result_token_id_number;
           $result_token_id_number++;
 
-	  if (scalar(grep {$_ !~ /:remove/} @app1_miscs) > 1) { # for now, let us fix only places with one rule
-	    $fix_button = "";
-	  }
+          if (scalar(grep {$_ !~ /:remove/} @app1_miscs) > 1) { # for now, let us fix only places with one rule
+            $fix_button = "";
+          }
 
-	  $span_class =~ s/^\s+//;
+          $span_class =~ s/^\s+//;
           $span_app1_start = "<span id=\"$id\" class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" data-tooltip=\"$tooltip\"$fix_button>";
           $span_app1_end = '</span>';
         }
@@ -1588,7 +1586,7 @@ END_OUTPUT_HEAD_END
           $output .= $SpacesBefore;          
         }
 
-        $output .= "$italics_end$bold_end$space_before";
+        $output .= "$italics_end$bold_end";
 
         # add automatic correction tokens that go before the current token; it must go here after $space_before is printed
         if ($format eq 'html') { 
@@ -1598,7 +1596,7 @@ END_OUTPUT_HEAD_END
           }
         }
 
-	$output .= "$span_app1_start$span_app2_start$bold_start$italics_start$form$span_app2_end$span_app1_end";
+        $output .= "$span_app1_start$span_app2_start$space_before$bold_start$italics_start$form$span_app2_end$span_app1_end";
 
         $space_before = ($SpaceAfter eq 'No' or $SpacesAfter) ? '' : ' '; # store info about a space until the next token is about to be printed
         
