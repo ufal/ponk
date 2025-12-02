@@ -1544,7 +1544,9 @@ END_OUTPUT_HEAD_END
           }
 
           $span_class =~ s/^\s+//;
-          $span_app1_start = "<span id=\"$id\" class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\" data-tooltip=\"$tooltip\"$fix_button>";
+	  my $data_tooltip = $tooltip ? " data-tooltip=\"$tooltip\"" : ""; # do not print empty tooltip (happens at items to be removed and replaced, e.g., without a spaceafter (e.g., at 'až' in "až v případě, že" -> "až, pokud"))
+	  $fix_button = '' if !$data_tooltip;
+          $span_app1_start = "<span id=\"$id\" class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\"$data_tooltip$fix_button>";
           $span_app1_end = '</span>';
         }
         
