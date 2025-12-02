@@ -27,7 +27,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.51 20250815'; # version of the program
+my $VER_en = '0.52 20251202'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
@@ -99,7 +99,7 @@ my $OUTPUT_FORMAT_DEFAULT = 'html';
 # default input format
 my $UI_LANGUAGE_DEFAULT = 'en';
 # default list of internal applications to call
-my $APPS_DEFAULT = 'app1';
+my $APPS_DEFAULT = 'app1,app2';
 
 # variables for arguments
 my $input_file;
@@ -775,6 +775,36 @@ if ($input_format eq 'md') {
 ##################################################################
 ##################################################################
 
+# We call PONK-APP2 first because it messed up the output of PONK-APP1 (it randomly deleted comments with same "id" before sentences used to send info for automatic fixes).
+
+
+#################################################
+# Calling PONK-APP2
+#################################################
+
+my $start_time_app2 = [gettimeofday];
+
+my ($app2_conllu, $app2_colours);
+
+my $conll_for_ponk_app2 = get_output('conllu', $ui_language);
+
+if ($apps =~ /\bapp2\b/) {
+  ($app2_conllu, $app2_colours) = call_ponk_app2($conll_for_ponk_app2);
+  # print STDERR "app2_colours: '$app2_colours'\n";
+}
+else {
+  ($app2_conllu, $app2_colours) = ($conll_for_ponk_app2, {"APP2 Info" => "APP2 not called"});
+}
+
+# Measure time spent by ponk-app2 
+my $end_time_app2 = [gettimeofday];
+$processing_time_app2 = tv_interval($start_time_app2, $end_time_app2);
+
+# Export the modified trees to a file (for debugging, not needed for further processing)
+# open(OUT, '>:encoding(utf8)', "$input_file.export_app2.conllu") or die "Cannot open file '$input_file.export_app2.conllu' for writing: $!";
+# print OUT $app2_conllu;
+# close(OUT);
+
 
 #################################################
 # Calling PONK-APP1
@@ -782,16 +812,14 @@ if ($input_format eq 'md') {
 
 my $start_time_app1 = [gettimeofday];
 
-my $conll_for_ponk_app1 = get_output('conllu', $ui_language);
-
 my ($app1_conllu, $app1_metrics, $app1_metrics_info, $app1_rule_info_orig);
 
 if ($apps =~ /\bapp1\b/) {
-  ($app1_conllu, $app1_metrics, $app1_metrics_info, $app1_rule_info_orig) = call_ponk_app1($conll_for_ponk_app1);
+  ($app1_conllu, $app1_metrics, $app1_metrics_info, $app1_rule_info_orig) = call_ponk_app1($app2_conllu);
   # print STDERR "app1_rule_info_orig: '$app1_rule_info_orig'\n";
 }
 else {
-  ($app1_conllu, $app1_metrics, $app1_metrics_info, $app1_rule_info_orig) = ($conll_for_ponk_app1, [{"APP1 Info" => "APP1 not called"}], {"APP1 Info" => "APP1 not called"}, {"APP1 Info" => "APP1 not called"});
+  ($app1_conllu, $app1_metrics, $app1_metrics_info, $app1_rule_info_orig) = ($app2_conllu, [{"APP1 Info" => "APP1 not called"}], {"APP1 Info" => "APP1 not called"}, {"APP1 Info" => "APP1 not called"});
 }
 
 # Measure time spent by ponk-app1 
@@ -808,39 +836,12 @@ $processing_time_app1 = tv_interval($start_time_app1, $end_time_app1);
 # close(OUT);
 
 
-#################################################
-# Calling PONK-APP2
-#################################################
-
-my $start_time_app2 = [gettimeofday];
-
-my ($app2_conllu, $app2_colours);
-
-if ($apps =~ /\bapp2\b/) {
-  ($app2_conllu, $app2_colours) = call_ponk_app2($app1_conllu);
-  # print STDERR "app2_colours: '$app2_colours'\n";
-}
-else {
-  ($app2_conllu, $app2_colours) = ($app1_conllu, {"APP2 Info" => "APP2 not called"});
-}
-
-# Measure time spent by ponk-app2 
-my $end_time_app2 = [gettimeofday];
-$processing_time_app2 = tv_interval($start_time_app2, $end_time_app2);
-
-# Export the modified trees to a file (for debugging, not needed for further processing)
-# open(OUT, '>:encoding(utf8)', "$input_file.export_app2.conllu") or die "Cannot open file '$input_file.export_app2.conllu' for writing: $!";
-# print OUT $app2_conllu;
-# close(OUT);
-
-
-
 ################################################
 # Parse the CoNLL-U from PONK-APP1 and PONK-APP2
 ################################################
 
 
-($ref_ha_start_offset2node, @trees) = parse_conllu($app2_conllu);
+($ref_ha_start_offset2node, @trees) = parse_conllu($app1_conllu);
 %start_offset2node = %$ref_ha_start_offset2node;
 
 
