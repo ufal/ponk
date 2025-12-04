@@ -105,7 +105,7 @@ $dataJson = json_encode($data);
 	  
       getInfo();
       createAccessCountChart();
-
+ 
       const text_input = document.getElementById('input');
       let originalValue = text_input.innerHTML;
 
@@ -393,13 +393,113 @@ $dataJson = json_encode($data);
   }
 
 
-  function fix(elementId) {
-      console.log(`Fix called for element ID: ${elementId}`);
-      // Implement your fix logic here
+  function fix(elementId, fixClass) {
+    const editable = document.getElementById('input');
+    if (!editable) return;
+
+    editable.focus();
+    const selection = window.getSelection();
+
+    // Záloha pozice kurzoru
+    const originalRange = selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
+
+    // === 1. Shromáždíme všechny uzly k odstranění a přidání ===
+    const remove_class = fixClass + '_remove';
+    const add_class = fixClass + '_add';
+
+    const toRemove = Array.from(editable.querySelectorAll(`span.${remove_class}`));
+    const toShow = Array.from(editable.querySelectorAll(`span.${add_class}`)).filter(span => {
+        const style = getComputedStyle(span);
+        return span.style.display === 'none' || style.display === 'none';
+    });
+
+    if (toRemove.length === 0 && toShow.length === 0) return;
+
+    // === 2. Vytvoříme jeden velký Range, který obalí všechny dotčené uzly ===
+    const fullRange = document.createRange();
+    let startNode = null, endNode = null;
+
+    // Najdeme nejlevější a nejpravější uzel
+    const allNodes = [...toRemove, ...toShow].sort((a, b) => {
+        return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+    });
+
+    if (allNodes.length === 0) return;
+
+    startNode = allNodes[0];
+    endNode = allNodes[allNodes.length - 1];
+
+    // Rozšíříme range od začátku prvního po konec posledního
+    fullRange.setStartBefore(startNode);
+    fullRange.setEndAfter(endNode);
+
+    // === 3. Vytvoříme nový HTML obsah (s úpravami) ===
+    const fragment = fullRange.cloneContents(); // kopie DOM fragmentu
+    const tempDiv = document.createElement('div');
+    tempDiv.appendChild(fragment.cloneNode(true));
+
+    // --- Odstraníme _remove spany ---
+    tempDiv.querySelectorAll(`span.${remove_class}`).forEach(span => {
+        span.parentNode.removeChild(span);
+    });
+
+    // --- Zviditelníme _add spany ---
+    tempDiv.querySelectorAll(`span.${add_class}`).forEach(span => {
+        span.style.display = '';
+        span.removeAttribute('style'); // nebo jen odstranit display:none
+        // Odstraníme třídu _add, pokud už není potřeba
+        span.classList.remove(add_class);
+    });
+
+    const newHTML = tempDiv.innerHTML;
+    // === 4. Provedeme insertHTML (jeden undo krok) ===
+    selection.removeAllRanges();
+    selection.addRange(fullRange);
+    document.execCommand('insertHTML', false, newHTML);
+
+    // === 5. Po mikroúloze: zrušíme výběr + kurzor na konec + odstraníme třídy ===
+        // Kurzor na konec
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            const cursor = document.createRange();
+            cursor.setStart(range.endContainer, range.endOffset);
+            cursor.setEnd(range.endContainer, range.endOffset);
+            sel.removeAllRanges();
+            sel.addRange(cursor);
+        }
+
+        // Odstraníme _add a _remove třídy
+        editable.querySelectorAll(`span.${fixClass}_add, span.${fixClass}_remove`).forEach(s => {
+            s.classList.remove(fixClass + '_add', fixClass + '_remove');
+        });
   }
 
+/*
+  function fix(elementId, fixClass) {
+    console.log(`Fix function called with element ID: ${elementId}, fixClass: ${fixClass}`);
+    //alert(`Fix called for element ID: ${elementId}, fixClass: ${fixClass}`);
+    const editable_input_div = document.getElementById('input');
+    const remove_class = fixClass + '_remove';
+    const spans_remove = editable_input_div.querySelectorAll(`span.${remove_class}`);
+    console.log("Removing spans with class: ", remove_class);
+    spans_remove.forEach(span => {
+        console.log("Removing span: ", span.textContent);
+        span.remove();
+    });
+    const add_class = fixClass + '_add';
+    const spans_add = editable_input_div.querySelectorAll(`span.${add_class}`);
+    console.log("Showing spans with class: ", add_class);
+    console.log("Found spans to show: ", spans_add.length);
+    spans_add.forEach(span => {
+        console.log("Showing span: ", span.textContent);
+        span.style.display='inline';
+    });
+  }
+ */
 
-// Function to initialize or reinitialize tooltips
+
+  // Function to initialize or reinitialize tooltips
     function initTooltips(selector = '[data-tooltip]') {
       //console.log('Initializing tooltips for selector:', selector);
       
@@ -420,54 +520,60 @@ $dataJson = json_encode($data);
 
       // Log each element's tooltip data
       tooltipElements.forEach((el, index) => {
-        const hasFix = el.getAttribute('data-tooltip-fix') === 'true';
+        const fixText = el.getAttribute('data-tooltip-fix');
+        const hasFix = !!fixText; // True if fixText is non-empty
         if (hasFix && !el.id) {
-          console.warn(`Element ${index + 1} has data-tooltip-fix="true" but no ID. Fix button will not work.`);
+          console.warn(`Element ${index + 1} has data-tooltip-fix="${fixText}" but no ID. Fix button will not work.`);
         }
-        //console.log(`Element ${index + 1}: ID=${el.id || 'none'}, data-tooltip="${el.getAttribute('data-tooltip')}", data-tooltip-fix="${el.getAttribute('data-tooltip-fix')}", interactive=${hasFix}`);
+        //console.log(`Element ${index + 1}: ID=${el.id || 'none'}, data-tooltip="${el.getAttribute('data-tooltip')}", data-tooltip-fix="${fixText || 'null'}", interactive=${hasFix}`);
       });
 
       // Initialize Tippy.js for these elements
       try {
-        tippy(selector, {
+      tippy(selector, {
           content(reference) {
             const text = reference.getAttribute('data-tooltip');
-            const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
+            const fixText = reference.getAttribute('data-tooltip-fix');
+            const hasFix = !!fixText; // True if fixText is non-empty
             const elementId = reference.id;
+            //console.log(`Creating tooltip for element ID=${elementId || 'none'}, text="${text}", fixText="${fixText || 'null'}", hasFix=${hasFix}`);
 
             const container = document.createElement('div');
             const textDiv = document.createElement('div');
             textDiv.innerHTML = text; // Render <br> as HTML
             container.appendChild(textDiv);
-            /*if (hasFix && elementId) {
+
+            if (hasFix && elementId) {
               const button = document.createElement('button');
               button.textContent = 'Fix';
-              button.onclick = () => fix(elementId);
-              container.appendChild(button);
-      }*/
+              button.onclick = () => fix(elementId, fixText);
+              button.onclick = () => {
+                fix(elementId, fixText);
+                if (reference._tippy) {
+                  reference._tippy.hide(); // Skryje tooltip po kliknutí
+                }
+              };
+	      container.appendChild(button);
+            }
+
             return container;
           },
+
           allowHTML: true, // Enable HTML rendering for <br> and other tags
-          delay: [300, 0], // 0.3s show delay, 0s hide delay
-          interactive(reference) {
-            const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
-            return hasFix;
-          },
+	  delay: [300, 0], // 0.3s show delay, 0s hide delay; will be changed for interactive in onCreate
+          interactive: false, // will be changed for interactive in onCreate
           arrow: false, // No arrow
           placement: 'bottom', // Prefer bottom, auto-adjusts
           boundary: 'viewport', // Keep within viewport
           offset: [0, 2], // 2px gap from element
-          onCreate(instance) {
-            const hasFix = instance.reference.getAttribute('data-tooltip-fix') === 'true';
-            instance.setProps({ interactive: hasFix }); // Explicitly set interactive
-            //console.log(`Tooltip created for element ID=${instance.reference.id || 'none'}, interactive=${instance.props.interactive}`);
+	  onCreate(instance) {
+            const fixText = instance.reference.getAttribute('data-tooltip-fix');
+	    const hasFix = !!fixText;
+            if (hasFix) {   
+	      instance.setProps({ interactive: true }); // Explicitly set interactive
+	      instance.setProps({ delay: [300, 300] });
+	    }
           },
-          //onShow(instance) {
-            //console.log(`Tooltip showing for element ID=${instance.reference.id || 'none'}, interactive=${instance.props.interactive}`);
-          //},
-          //onHide(instance) {
-            //console.log(`Tooltip hiding for element ID=${instance.reference.id || 'none'}, interactive=${instance.props.interactive}`);
-          //}
         });
         //console.log('Tooltips initialized successfully');
       } catch (error) {
@@ -475,76 +581,6 @@ $dataJson = json_encode($data);
       }
     }
 
-
-// Function to initialize or reinitialize tooltips
-    function initTooltips2(selector = '[data-tooltip]') {
-      console.log('Initializing tooltips for selector:', selector);
-      
-      // Check if Tippy.js is loaded
-      if (typeof tippy === 'undefined') {
-        console.error('Tippy.js is not loaded.');
-        return;
-      }
-
-      // Find elements with data-tooltip
-      const tooltipElements = document.querySelectorAll(selector);
-      console.log(`Found ${tooltipElements.length} elements with data-tooltip attribute`);
-
-      if (tooltipElements.length === 0) {
-        console.warn('No elements with data-tooltip attribute found.');
-        return;
-      }
-
-      // Log each element's tooltip data
-      tooltipElements.forEach((el, index) => {
-        const hasFix = el.getAttribute('data-tooltip-fix') === 'true';
-        console.log(`Element ${index + 1}: ID=${el.id}, data-tooltip="${el.getAttribute('data-tooltip')}", data-tooltip-fix="${el.getAttribute('data-tooltip-fix')}", interactive=${hasFix}`);
-      });
-
-      // Initialize Tippy.js for these elements
-      try {
-        tippy(selector, {
-          content(reference) {
-            const text = reference.getAttribute('data-tooltip');
-            const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
-            const elementId = reference.id;
-            console.log(`Creating tooltip for element ID=${elementId}, text="${text}", hasFix=${hasFix}`);
-
-            if (hasFix && elementId) {
-              const div = document.createElement('div');
-              div.textContent = text;
-              const button = document.createElement('button');
-              button.textContent = 'Fix';
-              button.onclick = () => fix(elementId);
-              div.appendChild(button);
-              return div;
-            }
-            return text;
-          },
-          delay: [500, 0], // 0.5s show delay, 0s hide delay
-          interactive: function(reference) {
-            const hasFix = reference.getAttribute('data-tooltip-fix') === 'true';
-            return hasFix; // Interactive only if hasFix is true
-          },
-          arrow: false, // No arrow
-          placement: 'bottom', // Prefer bottom, auto-adjusts
-          boundary: 'viewport', // Keep within viewport
-          offset: [0, 2], // 2px gap from element
-          onCreate(instance) {
-            console.log(`Tooltip created for element ID=${instance.reference.id}, interactive=${instance.props.interactive}`);
-          },
-          onShow(instance) {
-            console.log(`Tooltip showing for element ID=${instance.reference.id}, interactive=${instance.props.interactive}`);
-          },
-          onHide(instance) {
-            console.log(`Tooltip hiding for element ID=${instance.reference.id}, interactive=${instance.props.interactive}`);
-          }
-        });
-        console.log('Tooltips initialized successfully');
-      } catch (error) {
-        console.error('Error initializing tooltips:', error);
-      }
-    }
 
   function isTabActive(panelId) {
     try {
