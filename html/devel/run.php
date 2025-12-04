@@ -394,6 +394,89 @@ $dataJson = json_encode($data);
 
 
   function fix(elementId, fixClass) {
+    const editable = document.getElementById('input');
+    if (!editable) return;
+
+    editable.focus();
+    const selection = window.getSelection();
+
+    // Záloha pozice kurzoru
+    const originalRange = selection.rangeCount > 0 ? selection.getRangeAt(0).cloneRange() : null;
+
+    // === 1. Shromáždíme všechny uzly k odstranění a přidání ===
+    const remove_class = fixClass + '_remove';
+    const add_class = fixClass + '_add';
+
+    const toRemove = Array.from(editable.querySelectorAll(`span.${remove_class}`));
+    const toShow = Array.from(editable.querySelectorAll(`span.${add_class}`)).filter(span => {
+        const style = getComputedStyle(span);
+        return span.style.display === 'none' || style.display === 'none';
+    });
+
+    if (toRemove.length === 0 && toShow.length === 0) return;
+
+    // === 2. Vytvoříme jeden velký Range, který obalí všechny dotčené uzly ===
+    const fullRange = document.createRange();
+    let startNode = null, endNode = null;
+
+    // Najdeme nejlevější a nejpravější uzel
+    const allNodes = [...toRemove, ...toShow].sort((a, b) => {
+        return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+    });
+
+    if (allNodes.length === 0) return;
+
+    startNode = allNodes[0];
+    endNode = allNodes[allNodes.length - 1];
+
+    // Rozšíříme range od začátku prvního po konec posledního
+    fullRange.setStartBefore(startNode);
+    fullRange.setEndAfter(endNode);
+
+    // === 3. Vytvoříme nový HTML obsah (s úpravami) ===
+    const fragment = fullRange.cloneContents(); // kopie DOM fragmentu
+    const tempDiv = document.createElement('div');
+    tempDiv.appendChild(fragment.cloneNode(true));
+
+    // --- Odstraníme _remove spany ---
+    tempDiv.querySelectorAll(`span.${remove_class}`).forEach(span => {
+        span.parentNode.removeChild(span);
+    });
+
+    // --- Zviditelníme _add spany ---
+    tempDiv.querySelectorAll(`span.${add_class}`).forEach(span => {
+        span.style.display = '';
+        span.removeAttribute('style'); // nebo jen odstranit display:none
+        // Odstraníme třídu _add, pokud už není potřeba
+        span.classList.remove(add_class);
+    });
+
+    const newHTML = tempDiv.innerHTML;
+    // === 4. Provedeme insertHTML (jeden undo krok) ===
+    selection.removeAllRanges();
+    selection.addRange(fullRange);
+    document.execCommand('insertHTML', false, newHTML);
+
+    // === 5. Po mikroúloze: zrušíme výběr + kurzor na konec + odstraníme třídy ===
+        // Kurzor na konec
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            const cursor = document.createRange();
+            cursor.setStart(range.endContainer, range.endOffset);
+            cursor.setEnd(range.endContainer, range.endOffset);
+            sel.removeAllRanges();
+            sel.addRange(cursor);
+        }
+
+        // Odstraníme _add a _remove třídy
+        editable.querySelectorAll(`span.${fixClass}_add, span.${fixClass}_remove`).forEach(s => {
+            s.classList.remove(fixClass + '_add', fixClass + '_remove');
+        });
+  }
+
+/*
+  function fix(elementId, fixClass) {
     console.log(`Fix function called with element ID: ${elementId}, fixClass: ${fixClass}`);
     //alert(`Fix called for element ID: ${elementId}, fixClass: ${fixClass}`);
     const editable_input_div = document.getElementById('input');
@@ -413,6 +496,7 @@ $dataJson = json_encode($data);
         span.style.display='inline';
     });
   }
+ */
 
 
   // Function to initialize or reinitialize tooltips
