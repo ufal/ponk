@@ -20,6 +20,13 @@ use Encode;
 use Data::Dumper;
 use Scalar::Util qw(looks_like_number);
 
+use FindBin qw($Bin);  # $Bin je adresář, kde je skript
+use lib "$Bin/lib";    # Absolutní cesta k lib
+
+use UD v1.6.0;
+use mylog v1.0.0;
+$mylog::name = 'PONK';
+
 # STDIN and STDOUT in UTF-8
 binmode STDIN, ':encoding(UTF-8)';
 binmode STDOUT, ':encoding(UTF-8)';
@@ -27,7 +34,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.53 20251204'; # version of the program
+my $VER_en = '0.54 20251209'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
@@ -632,7 +639,7 @@ my $processing_time_app2;
 my $start_time_udpipe = [gettimeofday];
 
 #my $conll_segmented = call_udpipe($input_content, 'segment');
-my $conll_segmented = call_udpipe($input_content, 'all');
+my $conll_segmented = call_udpipe($input_content, 'cs', 'txt', 'all');
 
 my $sentence_count = 0;
 my $word_count = 0;
@@ -699,10 +706,16 @@ $processing_time_nametag = tv_interval($start_time_nametag, $end_time_nametag);
 # Let us parse the CoNLL-U format into Tree::Simple tree structures (one tree per sentence)
 ###################################################################################
 
-my ($ref_ha_start_offset2node, @trees) = parse_conllu($conll_data_ne);
-my %start_offset2node = %$ref_ha_start_offset2node;
+my @trees = parse_conllu($conll_data_ne);
 
-
+# compile a hash pointing from an offset to a node that starts at that offset
+my %start_offset2node = ();
+foreach my $root (@trees) {
+  foreach my $node (descendants($root)) {
+    my $start = attr($node, 'start') // -1;
+    $start_offset2node{$start} = $node;
+  }
+}
 
 ###############################################
 # Now we have dependency trees of the sentences
@@ -841,8 +854,7 @@ $processing_time_app1 = tv_interval($start_time_app1, $end_time_app1);
 ################################################
 
 
-($ref_ha_start_offset2node, @trees) = parse_conllu($app1_conllu);
-%start_offset2node = %$ref_ha_start_offset2node;
+@trees = parse_conllu($app1_conllu);
 
 
 #####################################################
@@ -905,167 +917,6 @@ if ($store_format) { # log the anonymized text in the given format in a file
 ################################################################
 ########################## FINISHED ############################
 ################################################################
-
-=item log
-
-A function to print log (debug) info based on $logging_level (0=full, 1=limited, 2=anonymous).
-The message only gets printed (to STDERR) if given $level is greater than or equal to global $logging_level.
-
-=cut
-
-sub mylog {
-  my ($level, $msg) = @_;
-  if ($level >= $logging_level) {
-    print STDERR "ponk: $msg";
-  }
-}
-
-
-sub parse_conllu {
-  my $conllu = shift;
-
-  my @lines = split("\n", $conllu);
-
-  my @trees = (); # array of trees in the document
-
-  my $root; # a single root
-
-  my $min_start = 10000; # from indexes of the tokens, we will get indexes of the sentence
-  my $max_end = 0;
-
-  my $multiword = ''; # store a multiword line to keep with the following token
-
-  my %start_offset_to_node = (); # a hash for mapping an offset to a node that starts at the position
-
-  # the following cycle for reading UD CoNLL is modified from Jan Štěpánek's UD TrEd extension
-  foreach my $line (@lines) {
-      chomp($line);
-      #mylog(0, "Line: $line\n");
-      if ($line =~ /^#/ && !$root) {
-          $root = Tree::Simple->new({}, Tree::Simple->ROOT);
-          #mylog(0, "Beginning of a new sentence!\n");
-      }
-
-      if ($line =~ /^#\s*newdoc/) { # newdoc
-          set_attr($root, 'newdoc', $line); # store the whole line incl. e.g. id = ...
-      } elsif ($line =~ /^#\s*newpar/) { # newpar
-          set_attr($root, 'newpar', $line); # store the whole line incl. e.g. id = ...
-      } elsif ($line =~ /^#\s*sent_id\s=\s*(\S+)/) {
-          my $sent_id = $1; # substr $sent_id, 0, 0, 'PML-' if $sent_id =~ /^(?:[0-9]|PML-)/;
-          set_attr($root, 'id', $sent_id);
-      } elsif ($line =~ /^#\s*text\s*=\s*(.*)/) {
-          set_attr($root, 'text', $1);
-          #mylog(0, "Reading sentence '$1'\n");
-      } elsif ($line =~ /^#\s*ponk\s*=\s*(.*)/) {
-          set_attr($root, 'ponk', $1);
-          #mylog(0, "Ponk properties of the sentence: '$1'\n");
-      } elsif ($line =~ /^#/) { # other comment, store it as well (all other comments in one attribute other_comment with newlines included)
-          my $other_comment_so_far = attr($root, 'other_comment') // '';
-          set_attr($root, 'other_comment', $other_comment_so_far . $line . "\n");
-          
-      } elsif ($line =~ /^$/) { # empty line, i.e. end of a sentence
-          _create_structure($root);
-          set_attr($root, 'start', $min_start);
-          set_attr($root, 'end', $max_end);
-          $min_start = 10000;
-          $max_end = 0;
-          push(@trees, $root);
-          #mylog(0, "End of sentence id='" . attr($root, 'id') . "'.\n\n");
-          $root = undef;
-
-      } else { # a token
-          my ($n, $form, $lemma, $upos, $xpos, $feats, $head, $deprel,
-              $deps, $misc) = split (/\t/, $line);
-          $_ eq '_' and undef $_
-              for $xpos, $feats, $deps, $misc;
-
-          # $misc = 'Treex::PML::Factory'->createList( [ split /\|/, ($misc // "") ]);
-          #if ($n =~ /-/) {
-          #    _create_multiword($n, $root, $misc, $form);
-          #    next
-          #}
-          if ($n =~ /-/) { # a multiword line, store it to keep with the next token
-            $multiword = $line;
-            next;
-          }
-          
-          #$feats = _create_feats($feats);
-          #$deps = [ map {
-          #    my ($parent, $func) = split /:/;
-          #    'Treex::PML::Factory'->createContainer($parent,
-          #                                            {func => $func});
-          #} split /\|/, ($deps // "") ];
-
-          my $node = Tree::Simple->new({});
-          set_attr($node, 'ord', $n);
-          set_attr($node, 'form', $form);
-          set_attr($node, 'lemma', $lemma);
-          set_attr($node, 'deprel', $deprel);
-          set_attr($node, 'upostag', $upos);
-          set_attr($node, 'xpostag', $xpos);
-          set_attr($node, 'feats', $feats);
-          set_attr($node, 'deps', $deps); # 'Treex::PML::Factory'->createList($deps),
-          set_attr($node, 'misc', $misc);
-          set_attr($node, 'head', $head);
-          
-          if ($multiword) { # the previous line was a multiword, store it at the current token
-            set_attr($node, 'multiword', $multiword);
-            $multiword = '';
-          }
-          
-          if ($misc and $misc =~ /TokenRange=(\d+):(\d+)\b/) {
-            my ($start, $end) = ($1, $2);
-            set_attr($node, 'start', $start);
-            set_attr($node, 'end', $end);
-            $start_offset_to_node{$start} = $node;
-            $min_start = $start if $start < $min_start;
-            $max_end = $end if $end > $max_end;          
-          }
-          
-          $root->addChild($node);
-          
-      }
-  }
-  # If there wasn't an empty line at the end of the file, we need to process the last tree here:
-  if ($root) {
-      _create_structure($root);
-      set_attr($root, 'start', $min_start);
-      set_attr($root, 'end', $max_end);
-      push(@trees, $root);
-      #mylog(0, "End of sentence id='" . attr($root, 'id') . "'.\n\n");
-      $root = undef;
-      #warn "Emtpy line missing at the end of input\n";
-  }
-  # end of Jan Štěpánek's modified cycle for reading UD CoNLL
-
-  # Now let us add pointers to immediately left and right nodes in the sentence surface order
-  # And also pointers at roots to left and right neigbouring trees
-  my $prev_tree = undef;
-  foreach my $tree (@trees) {
-    # pointers to left and right trees at roots
-    if ($prev_tree) {
-      set_attr($prev_tree, 'right', $tree);
-      set_attr($tree, 'left', $prev_tree);
-    }
-    $prev_tree = $tree;
-    # pointers at nodes to left and right nodes
-    my @ordered_nodes = sort {attr($a, 'ord') <=> attr($b, 'ord')} descendants($tree);
-    my $prev_node = undef;
-    foreach my $node (@ordered_nodes) {
-      set_attr($node, 'left', $prev_node);
-      if ($prev_node) {
-        set_attr($prev_node, 'right', $node);
-      }
-      $prev_node = $node;
-    }
-    if (@ordered_nodes) { # not an empty tree
-      set_attr($ordered_nodes[-1], 'right', undef);
-    }
-  }
-
-  return (\%start_offset_to_node, @trees);
-}
-
 
 
 =item get_NameTag_marks
@@ -1194,7 +1045,7 @@ Returns an array of NameTag marks assigned to the given node in attribute misc
 
 sub get_NE_values {
   my $node = shift;
-  my $ne = get_misc_value($node, 'NE') // '';
+  my $ne = misc_property($node, 'NE') // '';
   my @values = ();
   if ($ne) {
     @values = $ne =~ /([A-Za-z][a-z_]?)_[0-9]+/g; # get an array of the classes
@@ -1202,50 +1053,6 @@ sub get_NE_values {
   return @values;
 }
 
-
-=item set_property
-
-In the given attribute at the given node (e.g., 'misc'), it sets the value of the given property.
-
-=cut
-
-sub set_property {
-  my ($node, $attr, $property, $value) = @_;
-  # mylog(0, "set_property: '$attr', '$property', '$value'\n");
-  my $orig_value = attr($node, $attr) // '';
-  # mylog(0, "set_property: orig_value: '$orig_value'\n");
-  my @values = grep {$_ !~ /^$property\b/} grep {$_ ne ''} grep {defined} split('\|', $orig_value);
-  push(@values, "$property=$value");
-  my @sorted = sort @values;
-  my $new_value = join('|', @sorted);
-  set_attr($node, $attr, $new_value);
-}
-
-
-=item get_property
-
-From the given attribute at the given node (e.g., 'misc'), it gets the value of the given property (or undef if not set).
-
-=cut
-
-sub get_property {
-  my ($node, $attr, $property) = @_;
-  # mylog(0, "get_property: '$attr', '$property', '$value'\n");
-  my $attr_value = attr($node, $attr);
-  return undef if !$attr_value;
-  # mylog(0, "get_property: attr_value: '$attr_value'\n");
-  my @attr_properties = grep {$_ =~ /^$property\b/} grep {$_ ne ''} grep {defined} split('\|', $attr_value);
-  return undef if !scalar(@attr_properties);
-  my $attr_property = $attr_properties[0]; # expect each property to appear only once
-  if ($attr_property =~ /$property=(.+)/) {
-    my $value = $1;
-    return $value;
-  }
-  return undef;
-}
-
-
-=item
 
 
 =item has_child_with_lemma
@@ -1262,44 +1069,6 @@ sub has_child_with_lemma {
   return 0;
 }
 
-
-
-=item get_misc_value
-
-Returns a value of the given property from the misc attribute. Or undef.
-
-=cut
-
-sub get_misc_value {
-  my ($node, $property) = @_;
-  my $misc = attr($node, 'misc') // '';
-  # mylog(0, "get_misc_value: token='" . attr($node, 'form') . "', misc=$misc\n");
-  if ($misc =~ /$property=([^|]+)/) {
-    my $value = $1;
-    # mylog(0, "get_misc_value: $property=$value\n");
-    return $value;
-  }
-  return undef;
-}  
-
-
-=item get_feat_value
-
-Returns a value of the given property from the feats attribute. Or undef.
-
-=cut
-
-sub get_feat_value {
-  my ($node, $property) = @_;
-  my $feats = attr($node, 'feats') // '';
-  # mylog(0, "get_feat_value: feats=$feats\n");
-  if ($feats =~ /$property=([^|]+)/) {
-    my $value = $1;
-    # mylog(0, "get_feat_value: $property=$value\n");
-    return $value;
-  }
-  return undef;
-}  
 
 
 sub generate_app2_stylesheet {
@@ -1469,7 +1238,7 @@ END_OUTPUT_HEAD_END
       my $bold_start = '';
       my $bold_end = '';
 
-      my $is_bold = get_misc_value($node, 'PonkBold') // '';
+      my $is_bold = misc_property($node, 'PonkBold') // '';
       if ($bold_continuation and !$is_bold) { # end of bold before this token
         $bold_continuation = 0;
         if ($format eq 'html') {
@@ -1487,7 +1256,7 @@ END_OUTPUT_HEAD_END
       my $italics_start = '';
       my $italics_end = '';
 
-      my $is_italics = get_misc_value($node, 'PonkItalics') // '';
+      my $is_italics = misc_property($node, 'PonkItalics') // '';
       if ($italics_continuation and !$is_italics) { # end of italics before this token
         $italics_continuation = 0;
         if ($format eq 'html') {
@@ -1551,7 +1320,7 @@ END_OUTPUT_HEAD_END
         }
         
         # INFO FROM PONK-APP2
-        my $lexical_surprise = get_misc_value($node, 'PonkApp2:Surprisal') // '';
+        my $lexical_surprise = misc_property($node, 'PonkApp2:Surprisal') // '';
         if ($lexical_surprise) {
           $span_app2_start = "<span class=\"app2_class_$lexical_surprise\">";
           $span_app2_end = '</span>';
@@ -1561,9 +1330,9 @@ END_OUTPUT_HEAD_END
 
       # PRINT THE TOKEN
       if ($format =~ /^(txt|html)$/) {
-        my $SpaceAfter = get_misc_value($node, 'SpaceAfter') // '';
-        my $SpacesAfter = get_misc_value($node, 'SpacesAfter') // ''; # newlines etc. in the original text
-        my $SpacesBefore = get_misc_value($node, 'SpacesBefore') // ''; # newlines etc. in the original text; seems to be sometimes used with presegmented input
+        my $SpaceAfter = misc_property($node, 'SpaceAfter') // '';
+        my $SpacesAfter = misc_property($node, 'SpacesAfter') // ''; # newlines etc. in the original text
+        my $SpacesBefore = misc_property($node, 'SpacesBefore') // ''; # newlines etc. in the original text; seems to be sometimes used with presegmented input
 
         # handle extra spaces and newlines in SpaceBefore (seems to be sometimes used with presegmented input)
         if ($SpacesBefore =~ /(\\s|\\r|\\n|\\t)/) { # SpacesBefore informs that there were newlines or extra spaces in the original text here
@@ -1596,6 +1365,21 @@ END_OUTPUT_HEAD_END
           if ($add_spans_sent_start) {
             $output .= $add_spans_sent_start;
           }
+        }
+
+        # Check if this is the first (or another) part of a multiword - use the original form and ignore the other parts
+        my $multiword = attr($node, 'multiword');
+        my $multiword_part = attr($node, 'multiword_part');
+        if ($multiword) {
+          my ($n_multi, $form_multi, $lemma_multi, $upos_multi, $xpos_multi, $feats_multi, $head_multi, $deprel_multi,
+              $deps_multi, $misc_multi) = split (/\t/, $multiword);
+          $form = $form_multi; # use the original multiword form
+          if ($misc_multi =~ /SpaceAfter=No/) {
+            $SpaceAfter = 'No'; # use SpaceAfter from the multiword line
+          }
+        }
+        elsif ($multiword_part) { # if this is the second or a further part of a multiword - ignore
+          next;
         }
 
         $output .= "$span_app1_start$span_app2_start$space_before$bold_start$italics_start$form$span_app2_end$span_app1_end";
@@ -1783,8 +1567,8 @@ sub surface_text {
   foreach my $token (@ord_sorted) {
     # mylog(0, "surface_text: processing token " . attr($token, 'form') . "\n");
     $text .= $space_before . attr($token, 'form');
-    my $SpaceAfter = get_misc_value($token, 'SpaceAfter') // '';
-    my $SpaceAfterOrig = get_misc_value($token, 'SpaceAfterOrig') // '';
+    my $SpaceAfter = misc_property($token, 'SpaceAfter') // '';
+    my $SpaceAfterOrig = misc_property($token, 'SpaceAfterOrig') // '';
     $space_before = ($SpaceAfter eq 'No' and $SpaceAfterOrig ne 'Yes') ? '' : ' ';
   }
   return $text;
@@ -2107,245 +1891,11 @@ sub print_children {
     foreach my $child (@children) {
         my $ord = attr($child, 'ord') // 'no_ord';
         my $form = attr($child, 'form') // 'no_form';
-	mylog(0, "$ord$pre$form\n");
+        mylog(0, "$ord$pre$form\n");
         print_children($child, $pre . "\t");
     }
 }
 
-######### Simple::Tree METHODS #########
-
-sub set_attr {
-  my ($node, $attr, $value) = @_;
-  my $refha_props = $node->getNodeValue();
-  $$refha_props{$attr} = $value;
-}
-
-sub attr {
-  my ($node, $attr) = @_;
-  my $refha_props = $node->getNodeValue();
-  return $$refha_props{$attr};
-}
-
-sub descendants {
-  my $node = shift;
-  my @children = $node->getAllChildren;
-  foreach my $child ($node->getAllChildren) {
-    push (@children, descendants($child));
-  }
-  return @children;
-}
-  
-sub root {
-  my $node = shift;
-
-  my $parent = $node->getParent;
-#  while ($parent and $parent ne 'root' and $parent ne 'ROOT') { # to be sure - the documentation says 'ROOT', in practice its 'root'
-  while ($parent and $parent ne 'root' and $parent ne 'ROOT') { # to be sure - the documentation says 'ROOT', in practice its 'root'
-    # mylog(0, "root: found a parent\n");
-    $node = $parent;
-    $parent = $node->getParent;
-  }
-  return $node;
-
-}
-
-
-######### PARSING THE TEXT WITH UDPIPE #########
-
-=item call_udpipe
-
-Calling UDPipe REST API; the input to be processed is passed in the first argument
-The second argument ('segment'/'parse'/'all') chooses between the two tasks (or does both).
-Segmentation expects plain text as input, the parsing expects segmented conll-u data.
-Returns the output in UD CONLL format
-
-=cut
-
-sub call_udpipe {
-    my ($text, $task) = @_;
-
-=item
-
-    # Nefunkční pokus o volání metodou POST
-
-    # Nastavení URL pro volání REST::API
-    my $url = 'http://lindat.mff.cuni.cz/services/udpipe/api/process';
-
-    # Připravení dat pro POST požadavek
-    my %post_data = (
-        tokenizer => 'ranges',
-        tagger => 1,
-        parser => 1,
-        data => uri_escape_utf8($text)
-    );
-
-    if ($input_format eq 'presegmented') {
-        $post_data{tokenizer} .= ';presegmented';
-    }
-
-    # Vytvoření instance LWP::UserAgent
-    my $ua = LWP::UserAgent->new;
-
-    # Vytvoření POST požadavku s daty jako JSON
-    my $req = HTTP::Request->new('POST', $url);
-    $req->header('Content-Type' => 'application/json');
-    $req->content(encode_json(\%post_data));
-
-=cut
-
-    my $model;
-    my $input;
-    my $tagger;
-    my $parser;
-
-    if ($task eq 'segment') {
-      $input = 'tokenizer=ranges';
-      if ($input_format eq 'presegmented') {
-        $input .= ';presegmented';
-      }
-      $model = '&model=czech-pdtc1.0';
-      $tagger = '';
-      $parser = '';
-    }
-    elsif ($task eq 'parse') {
-      $input = 'input=conllu';
-      $model = '&model=czech';
-      $tagger = '&tagger';
-      $parser = '&parser';
-    
-    }
-    else {
-      $input = 'tokenizer=ranges';
-      if ($input_format eq 'presegmented') {
-        $input .= ';presegmented';
-      }
-      $model = '&model=czech';
-      $tagger = '&tagger';
-      $parser = '&parser';
-    }
-
-    # Funkční volání metodou POST, i když podivně kombinuje URL-encoded s POST
-
-    # Nastavení URL pro volání REST::API s parametry
-    #my $url = "http://lindat.mff.cuni.cz/services/udpipe/api/process?$input$model$tagger$parser";
-    my $url = "$udpipe_service_url/process?$input$model$tagger$parser";
-    mylog(2, "Call UDPipe: URL=$url\n");
-    
-    my $ua = LWP::UserAgent->new;
-
-    # Define the data to be sent in the POST request
-    my $data = "data=" . uri_escape_utf8($text);
-
-    my $req = HTTP::Request->new('POST', $url);
-    $req->header('Content-Type' => 'application/x-www-form-urlencoded');
-    $req->content($data);
-
-
-    # Odeslání požadavku a získání odpovědi
-    my $res = $ua->request($req);
-
-    # Zkontrolování, zda byla odpověď úspěšná
-    if ($res->is_success) {
-        # Získání odpovědi v JSON formátu
-        my $json_response = decode_json($res->content);
-        # Zpracování odpovědi
-        my $result = $json_response->{result};
-        # print STDERR "UDPipe result:\n$result\n";
-        mylog(2, "Call UDPipe: Success.\n");
-        return $result;
-    } else {
-        mylog(2, "call_udpipe: URL: $url\n");
-        mylog(1, "call_udpipe: Text: $text\n");
-        mylog(2, "call_udpipe: Chyba: " . $res->status_line . "\n");
-        return '';
-    }
-}
-
-######### NAMED ENTITIES WITH NAMETAG #########
-
-=item call_nametag
-
-Calling NameTag REST API; the text to be searched is passed in the argument in UD CONLL format
-Returns the text in UD CONLL-NE format.
-This function just splits the input conll format to individual sentences (or a few of sentences if $max_sentences is set to a larger number than 1) and calls function call_nametag_part on this part of the input, to avoid the NameTag error caused by a too large argument.
-
-=cut
-
-sub call_nametag {
-    my $conll = shift;
-    
-    my $result = '';
-    
-    # Let us call NameTag api for each X sentences separately, as too large input produces an error.
-    my $max_sentences = 1000; # 5 was too large at first attempt, so let us hope 1 is safe enough.
-    
-    my $conll_part = '';
-    my $sent_count = 0;
-    foreach my $line (split /\n/, $conll) {
-      #mylog(0, "Processing line $line\n");
-      $conll_part .= $line . "\n";
-      if ($line =~ /^\s*$/) { # empty line means end of sentence
-        #mylog(0, "Found an empty line.\n");
-        $sent_count++;
-        if ($sent_count eq $max_sentences) {
-          $result .= call_nametag_part($conll_part);
-          $conll_part = '';
-          $sent_count = 0;
-        }
-      }
-    }
-    if ($conll_part) { # We need to call NameTag one more time
-      $result .= call_nametag_part($conll_part);    
-    }
-    return $result;
-}
-
-=item call_nametag_part
-
-Now actually calling NameTag REST API for a small part of the input (to avoid error caused by a long argument).
-!!! This splitting to small parts is no longer needed, as POST is used !!!
-Returns the text in UD CONLL-NE format.
-If an error occurs, the function just returns the input conll text unchanged.
-
-=cut
-
-sub call_nametag_part {
-    my $conll = shift;
-
-    # Funkční volání metodou POST, i když podivně kombinuje URL-encoded s POST
-
-    # Nastavení URL pro volání REST::API s parametry
-    my $url = "$nametag_service_url/recognize?input=conllu&output=conllu-ne";
-    mylog(2, "Call NameTag: URL=$url\n");
-
-    my $ua = LWP::UserAgent->new;
-
-    # Define the data to be sent in the POST request
-    my $data = "data=" . uri_escape_utf8($conll);
-
-    my $req = HTTP::Request->new('POST', $url);
-    $req->header('Content-Type' => 'application/x-www-form-urlencoded');
-    $req->content($data);
-
-
-    # Odeslání požadavku a získání odpovědi
-    my $res = $ua->request($req);
-
-    # Zkontrolování, zda byla odpověď úspěšná
-    if ($res->is_success) {
-        # Získání odpovědi v JSON formátu
-        my $json_response = decode_json($res->content);
-        # Zpracování odpovědi
-        my $result = $json_response->{result};
-        # mylog(0, "NameTag result:\n$result\n");
-        mylog(2, "Call NameTag: Success.\n");
-        return $result;
-    } else {
-        mylog(2, "call_nametag_part: URL: $url\n");
-        mylog(2, "call_nametag_part: Chyba: " . $res->status_line . "\n");
-        return $conll; 
-    }
-}
 
 
 ######### CALLING PONK-APP1 #########
