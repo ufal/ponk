@@ -244,10 +244,18 @@ $dataJson = json_encode($data);
           //console.log("Looking for app1_features");
 	  if ("app1_features" in json) {
             let output_app1_features = json.app1_features;
-	    //console.log("Found 'app1_features' in return message:", output_app1_features);
-            // Vytvoření úvodní informace
+	    // console.log("Found 'app1_features' in return message:", output_app1_features);
             let html = "<h4 class=\"mt-0 pt-0\"><?php echo $lang[$currentLang]['run_output_app1_rules_label']; ?></h4>";
-            html += "<p style=\"font-size: 0.9rem;\"><?php echo $lang[$currentLang]['run_output_app1_rules_info']; ?>";
+            if (output_app1_features.includes("<div>")) {
+              // Řetězec obsahuje "<div>"
+              // console.log("Obsahuje <div>");
+              html += "<p style=\"font-size: 0.9rem;\"><?php echo $lang[$currentLang]['run_output_app1_rules_info']; ?>";
+            } else {
+              // Neobsahuje
+              // console.log("Neobsahuje <div>");
+              html += "<p style=\"font-size: 0.9rem;\"><?php echo $lang[$currentLang]['run_output_app1_rules_info_empty']; ?>";
+            }
+            // Vytvoření úvodní informace
             html += " <?php echo $lang[$currentLang]['run_output_app1_rules_documentation']; ?></p>";
 	    // přidání seznamu pravidel
             html += output_app1_features;
