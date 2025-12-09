@@ -1553,27 +1553,6 @@ sub get_app1_list_of_features {
   return keys(%features);
 }
 
-=item surface_text
-
-Given array of nodes, give surface text they represent
-
-=cut
-
-sub surface_text {
-  my @nodes = @_;
-  my @ord_sorted = sort {attr($a, 'ord') <=> attr($b, 'ord')} @nodes;
-  my $text = '';
-  my $space_before = '';
-  foreach my $token (@ord_sorted) {
-    # mylog(0, "surface_text: processing token " . attr($token, 'form') . "\n");
-    $text .= $space_before . attr($token, 'form');
-    my $SpaceAfter = misc_property($token, 'SpaceAfter') // '';
-    my $SpaceAfterOrig = misc_property($token, 'SpaceAfterOrig') // '';
-    $space_before = ($SpaceAfter eq 'No' and $SpaceAfterOrig ne 'Yes') ? '' : ' ';
-  }
-  return $text;
-}
-
 
 =item get_stats_html
 
