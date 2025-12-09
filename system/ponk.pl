@@ -1864,26 +1864,6 @@ sub get_sentence {
 }
 
 
-# the following function is modified from Jan Štěpánek's UD TrEd extension
-sub _create_structure {
-    my ($root) = @_;
-    my %node_by_ord = map +(attr($_, 'ord') => $_), $root->getAllChildren;
-    # mylog(0, "_create_structure: \%node_by_ord:\n");
-    foreach my $ord (sort {$a <=> $b} keys(%node_by_ord)) {
-      # mylog(0, "_create_structure:   - $ord: " . attr($node_by_ord{$ord}, 'form') . "\n");
-    }
-    foreach my $node ($root->getAllChildren) {
-        my $head = attr($node, 'head');
-        # mylog(0, "_create_structure: head $head\n");
-        if ($head) { # i.e., head is not 0, meaning this node should not be a child of the technical root
-            my $parent = $node->getParent();
-            $parent->removeChild($node);
-            my $new_parent = $node_by_ord{$head};
-            $new_parent->addChild($node);
-        }
-    }
-}
-
 # print children recursively
 sub print_children {
     my ($node, $pre) = @_;
