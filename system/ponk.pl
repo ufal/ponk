@@ -74,15 +74,13 @@ my $logging_level = 2; # default log level, can be changed using the -ll paramet
 
 my %logging_level_label = (0 => 'full', 1 => 'limited', 2 => 'anonymous');
 
-my $udpipe_service_url = 'http://lindat.mff.cuni.cz/services/udpipe/api';
-my $nametag_service_url = 'http://lindat.mff.cuni.cz/services/nametag/api'; 
 my $ponk_app1_service_url = 'http://quest.ms.mff.cuni.cz/ponk-app1';
 my $ponk_app2_service_url = 'http://quest.ms.mff.cuni.cz/ponk-app2';
 
 my $hostname = hostname;
 if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe and nametag that do not log texts
-  $udpipe_service_url = 'http://udpipe:11001';
-  $nametag_service_url = 'http://udpipe:11002';
+  $UD::udpipe_service_url = 'http://udpipe:11001';
+  $UD::nametag_service_url = 'http://udpipe:11002';
   $ponk_app1_service_url = 'http://ponk-app1:8000'; # for now, in practice no difference from the original URL
   # not working: $ponk_app2_service_url = 'http://ponk-app2:8000'; # for now, in practice no difference from the original URL
   $VER_cs .= ' (bez ukládání textů)';
