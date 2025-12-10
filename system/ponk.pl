@@ -34,7 +34,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.55 20251210'; # version of the program
+my $VER_en = '0.56 20251210'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
@@ -1822,8 +1822,9 @@ sub get_app2_colours_json {
   my $json = JSON->new;
 
   # Konverze Perlového hashe na JSON string
-  my $app2_colours_json = $json->encode($app2_colours);
-
+  # my $app2_colours_json = $json->encode($app2_colours);
+  my $app2_colours_json = $json->encode({ colours => $app2_colours });
+  
   return $app2_colours_json;
 }
 

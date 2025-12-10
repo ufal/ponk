@@ -279,7 +279,7 @@ $dataJson = json_encode($data);
 	  }
 
 	  if ("app2_colours" in json) {
-            app2_colours_json_string = json.app2_colours;
+            app2_colours_json_string = json.app2_colours.colours;
 	    //console.log("Found 'app2_colours' in return message:", app2_colours_json_string);
 	    let app2_colours_html = generateApp2ColoursTable();
 	    jQuery('#features_app2').html(app2_colours_html);
