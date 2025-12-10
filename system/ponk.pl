@@ -898,6 +898,7 @@ else { # statistics should be a part of output, i.e. output will be JSON with se
        app1_rule_info => $app1_rule_info_json,
        app2_colours => $app2_colours_json,
      };
+  # mylog(0, "JSON app2_colours:\n" . Dumper($app2_colours_json) . "\n");
   # Encode the Perl data structure into a JSON string
   my $json_string = encode_json($json_data);
   # Print the JSON string to STDOUT
