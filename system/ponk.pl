@@ -1178,6 +1178,7 @@ END_OUTPUT_HEAD_END
     }
 
     # assemble tokens to be added at each position if a fix button is clicked
+    my @nodes_with_root = sort {(attr($a, 'ord') // 0) <=> (attr($b, 'ord') // 0)} descendants($root, {include_root => 1}); # root seems to be without ord; we need the root as a fake prev_node of the firts token in the sentence
     my %ord2add = (); 
     if ($format eq 'html') {
       my $other_comment = attr($root, 'other_comment') // '';
@@ -1192,10 +1193,18 @@ END_OUTPUT_HEAD_END
           eval {
               my $data = decode_json($json_str);
               my $addAfter = $data->{add_after}; # Např. "3"
+              my $prev_node = $nodes_with_root[$addAfter];
+              my $prev_SpaceAfter = misc_property($prev_node, 'SpaceAfter') // '';
+              my $space_before = ' ';
+              if ($prev_SpaceAfter eq 'No' and !defined($ord2add{$addAfter})) {
+                $space_before = '';
+              }
               my $form = $data->{node}{form};    # Např. "Pokud"
+              my $prev_node_form = attr($prev_node, 'form') // '';
+              # mylog(0, "get_output: compile replacements: form: '$form', prev_node_form: '$prev_node_form', prev_SpaceAfter: '$prev_SpaceAfter'\n");
 
               # Sestavení span tagu pomocí konkatenace
-              my $span = '<span style="display: none" class="app1_class_' . $ruleName . '_' . $applicationId . '_add">' . " " . $form . '</span>';
+              my $span = '<span style="display: none" class="app1_class_' . $ruleName . '_' . $applicationId . '_add">' . $space_before . $form . '</span>';
 
               # Přidání do hashe ord2add pod klíčem $addAfter
               $ord2add{$addAfter} .= $span;
