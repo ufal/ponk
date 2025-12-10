@@ -671,10 +671,10 @@ $dataJson = json_encode($data);
   function generateApp2ColoursTable() {
     try {
         // Parsování JSON řetězce na objekt
-        const data = JSON.parse(app2_colours_json_string);
+        const data = JSON.parse(app2_colours_json_string).colours;
         
         // Extrakce klíčů a seřazení numericky
-        const sortedKeys = Object.keys(data.colours).sort((a, b) => Number(a) - Number(b));
+        const sortedKeys = Object.keys(data).sort((a, b) => Number(a) - Number(b));
         
 	// Vytvoření úvodní informace a HTML tabulky
         let html = "<h4 class=\"mt-0 pt-0\"><?php echo $lang[$currentLang]['run_output_app2_label']; ?></h4>";
@@ -896,13 +896,13 @@ $dataJson = json_encode($data);
     }
     try {
         // Parsování JSON řetězce na objekt
-        const data = JSON.parse(app2_colours_json_string);
+        const data = JSON.parse(app2_colours_json_string).colours;
         
         // Vytvoření CSS pravidel
         let css = '';
         
 	// Generování třídy pro každý klíč (číselná úroveň překvapení)
-	for (const key in data.colours) {
+	for (const key in data) {
             if (Number(key) >= Number(min_surprise_level)) {
                 if (data.hasOwnProperty(key)) {
                     const backgroundColor = data[key];
