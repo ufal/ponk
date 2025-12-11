@@ -93,7 +93,7 @@ $dataJson = json_encode($data);
   
   var app1_token_ids = []; // an array of ids of tokens in the result (<span>) marked by app1
 
-  var app2_colours_json_string = null;
+  var app2_json_string = null;
   var app2_min_surprise = 0; // minimum level of surprise to be highlighted
 
   // Inicializace Turndown pro převod html do markdownu
@@ -279,8 +279,8 @@ $dataJson = json_encode($data);
 	  }
 
 	  if ("app2_colours" in json) {
-            app2_colours_json_string = json.app2_colours;
-	    //console.log("Found 'app2_colours' in return message:", app2_colours_json_string);
+            app2_json_string = json.app2_colours;
+	    console.log("Found 'app2_colours' in return message:", app2_json_string);
 	    let app2_colours_html = generateApp2ColoursTable();
 	    jQuery('#features_app2').html(app2_colours_html);
 	    generateApp2Stylesheet(app2_min_surprise);
@@ -667,11 +667,90 @@ $dataJson = json_encode($data);
   }
 
 
-  // Převede globální JSON s definicí barev app2 (app2_colours_json_string) na html tabulku
-  function generateApp2ColoursTable() {
+  // Převede globální JSON s definicí a distribucí barev app2 (app2_json_string) na html tabulku
+
+function generateApp2ColoursTable() {
+    try {
+        const json = JSON.parse(app2_json_string);
+        const colours = json.colours || {};
+        const distribution = json.distribution || {};
+
+        // Seřazení klíčů numericky
+        const sortedKeys = Object.keys(colours).sort((a, b) => Number(a) - Number(b));
+
+        // Najdeme maximum v distribution pro normalizaci výšky grafu
+        const distValues = Object.values(distribution).map(Number);
+        const maxDist = distValues.length > 0 ? Math.max(...distValues) : 1;
+        const maxBarHeight = 100; // px – maximální výška sloupce
+
+        let html = `<h4 class="mt-0 pt-0"><?php echo $lang[$currentLang]['run_output_app2_label']; ?></h4>`;
+        html += `<p style="font-size: 0.9rem;"><?php echo $lang[$currentLang]['run_output_app2_info']; ?>`;
+        html += ` <?php echo $lang[$currentLang]['run_output_app2_documentation']; ?></p>`;
+
+        // === SLOUPCOVÝ GRAF ===
+        html += `<div style="display: flex; justify-content: space-around; align-items: flex-end; height: ${maxBarHeight + 30}px; margin: 20px 0; gap: 4px; flex-wrap: wrap;">`;
+        
+        sortedKeys.forEach(key => {
+            const count = distribution[key] || 0;
+            const height = count > 0 ? (count / maxDist) * maxBarHeight : 0;
+            const backgroundColor = colours[key] || '#ccc';
+
+            html += `
+                <div style="text-align: center; width: 40px;">
+                    <div style="font-size: 0.7rem; font-weight: bold; margin-bottom: 2px;">${count}</div>
+                    <div 
+                        style="
+                            width: 100%; 
+                            height: ${height}px; 
+                            background-color: ${backgroundColor}; 
+                            border: 1px solid #ccc;
+                            transition: height 0.3s ease;
+                        "
+                        title="Barva ${key}: ${count}x"
+                    ></div>
+                    <div style="font-size: 0.65rem; margin-top: 4px;">${key}</div>
+                </div>`;
+        });
+        
+        html += `</div>`;
+
+        // === TABULKA ===
+        html += `<table style="width: 100%; border-collapse: collapse; margin-top: 20px;">`;
+        
+        sortedKeys.forEach(key => {
+            html += `
+                <tr>
+                    <td 
+                        class="app2_class_${key}" 
+                        style="
+                            width: 100%; 
+                            padding: 3px; 
+                            text-align: center; 
+                            line-height: 1.1; 
+                            font-size: 0.8rem;
+                            background-color: ${colours[key]};
+                            cursor: pointer;
+                        " 
+                        onclick="generateApp2Stylesheet(${key})"
+                    >
+                        ${key}
+                    </td>
+                </tr>`;
+        });
+        
+        html += `</table>`;
+
+        return html;
+    } catch (error) {
+        console.error('Chyba při parsování JSON:', error);
+        return '<p>Chyba při generování tabulky: Neplatný JSON formát</p>';
+    }
+}
+ 
+  function generateApp2ColoursTable2() {
     try {
         // Parsování JSON řetězce na objekt
-        const data = JSON.parse(app2_colours_json_string).colours;
+        const data = JSON.parse(app2_json_string).colours;
         
         // Extrakce klíčů a seřazení numericky
         const sortedKeys = Object.keys(data).sort((a, b) => Number(a) - Number(b));
@@ -896,7 +975,7 @@ $dataJson = json_encode($data);
     }
     try {
         // Parsování JSON řetězce na objekt
-        const data = JSON.parse(app2_colours_json_string).colours;
+        const data = JSON.parse(app2_json_string).colours;
         
         // Vytvoření CSS pravidel
         let css = '';
