@@ -18,6 +18,8 @@ use IPC::Run qw(run);
 use MIME::Base64;
 use Encode;
 use Data::Dumper;
+$Data::Dumper::Sortkeys = 1;
+$Data::Dumper::Indent   = 1;
 use Scalar::Util qw(looks_like_number);
 
 use FindBin qw($Bin);  # $Bin je adresář, kde je skript
@@ -34,7 +36,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.56 20251210'; # version of the program
+my $VER_en = '0.57 20251211'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
@@ -607,10 +609,12 @@ if ($input_length > 40000) { # for the workshop presentation, avoid long texts
   # 'app1_rule_info' (in json)
   # 'app2_colours' (in json)
 
+  my $text_too_long = $ui_language eq 'cs' ? "´š dlouhý text ($input_length znaků, povolené maximum je 40 tisíc)!"
+                                           : "The text is too long ($input_length characters, the allowed maximum is 40 thousand)!";
   my $json_data = {
        data  => $input_content,
-       stats => "<font color=\"red\">Příliš dlouhý text ($input_length znaků, povolené maximum je 40 tisíc)!</font>",
-       app1_features => "<font color=\"red\">Příliš dlouhý text ($input_length znaků, povolené maximum je 40 tisíc)!</font>",
+       stats => "<font color=\"red\">$text_too_long</font>",
+       app1_features => "<font color=\"red\">$text_too_long</font>",
        app1_rule_info => "{}",
        app2_colours => "{}",
      };
@@ -869,13 +873,13 @@ $processing_time = tv_interval($start_time, $end_time_total);
 my $stats;
 my $app1_features_html;
 my $app1_rule_info_json;
-my $app2_colours_json;
+my $app2_json;
 
 if ($store_statistics or $output_statistics) { # we need to calculate statistics
   $stats = get_stats_html();
   $app1_features_html = get_app1_features_html($ui_language);
   $app1_rule_info_json = get_app1_rule_info_json();
-  $app2_colours_json = get_app2_colours_json();
+  $app2_json = get_app2_json();
 }
 
 # print the input text with marked sources in the selected output format to STDOUT
@@ -896,9 +900,9 @@ else { # statistics should be a part of output, i.e. output will be JSON with se
        stats => $stats,
        app1_features => $app1_features_html,
        app1_rule_info => $app1_rule_info_json,
-       app2_colours => $app2_colours_json,
+       app2_colours => $app2_json,
      };
-  # mylog(0, "JSON app2_colours:\n" . Dumper($app2_colours_json) . "\n");
+  # mylog(0, "JSON app2_colours:\n" . Dumper($app2_json) . "\n");
   # Encode the Perl data structure into a JSON string
   my $json_string = encode_json($json_data);
   # Print the JSON string to STDOUT
@@ -1557,7 +1561,7 @@ sub get_app1_list_of_features {
       }
     }
   }
-  mylog(0, "get_app1_list_of_features: " . join(', ', keys(%features)) . "\n");
+  # mylog(0, "get_app1_list_of_features: " . join(', ', keys(%features)) . "\n");
   return keys(%features);
 }
 
@@ -1812,21 +1816,36 @@ sub get_app1_rule_info_json {
 }
 
 
-=item get_app2_colours_json
+=item get_app2_json
 
-Returns a JSON string of a Perl hash with app2 colours.
+Returns a JSON string with app2 colours (key colours) and surprise distribution (key distribution).
 
 =cut
 
-sub get_app2_colours_json {
+sub get_app2_json {
+
+  # Collect distribution of lexical surprise from each token
+  my %surprise_distrib = ();
+  foreach my $root (@trees) {
+    foreach my $node (descendants($root)) {
+      my $surprise = misc_property($node, 'PonkApp2:Surprisal') // 'NA';
+      if ($surprise ne 'NA') {
+        $surprise_distrib{$surprise}++;
+        #mylog(0, "get_app2_json: surprise $surprise\n");
+      }
+    }
+  }
+  #mylog(0, "get_app2_json: surprise distribution:\n");
+  #mylog(0, Dumper(\%surprise_distrib));
+
   # Vytvoření JSON objektu
   my $json = JSON->new;
 
   # Konverze Perlového hashe na JSON string
-  # my $app2_colours_json = $json->encode($app2_colours);
-  my $app2_colours_json = $json->encode({ colours => $app2_colours });
+  my $app2_json = $json->encode({colours => $app2_colours,
+                                 distribution => \%surprise_distrib});
   
-  return $app2_colours_json;
+  return $app2_json;
 }
 
 
@@ -2137,21 +2156,6 @@ sub call_ponk_app2 {
     my $request = HTTP::Request->new(POST => $url);
     $request->header('Content-Type' => 'text/plain; charset=UTF-8');
     $request->content($conllu_bytes);
-
-=item
-
-    # Vytvoření POST požadavku s obsahem z proměnné $conllu_bytes
-    my $request = POST $url,
-        Content_Type => 'form-data',
-        Content => [
-          file => [
-            undef,                  # undef znamená, že LWP::UserAgent vygeneruje název souboru
-            'data.conllu',     # Jméno souboru na straně serveru - bez toho to nefunguje
-            Content => $conllu_bytes     # Obsah souboru
-          ]
-        ];
-
-=cut
 
     # Odeslání požadavku
     my $res = $ua->request($request);
