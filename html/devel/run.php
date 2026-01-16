@@ -615,20 +615,32 @@ $dataJson = json_encode($data);
     toggleStylesheet('app1_stylesheet', 0);
     //console.log("Going to disactivate app2_stylesheet\n");
     toggleStylesheet('app2_stylesheet', 0);
+    //console.log("Going to disactivate app3_stylesheet\n");
+    toggleStylesheet('app3_stylesheet', 0);
   }
 
   function featuresApp1Activated() {
     //console.log("Going to activate app1_stylesheet\n");
     toggleStylesheet('app1_stylesheet', 1);
-    //console.log("Going to disactivate app2_stylesheet\n");
+    //console.log("Going to disactivate app2_stylesheet and app3_stylesheet\n");
     toggleStylesheet('app2_stylesheet', 0);
+    toggleStylesheet('app3_stylesheet', 0);
   }
 
   function featuresApp2Activated() {
     //console.log("Going to activate app2_stylesheet\n");
     toggleStylesheet('app2_stylesheet', 1);
-    //console.log("Going to disactivate app1_stylesheet\n");
+    //console.log("Going to disactivate app1_stylesheet and app3_stylesheet\n");
     toggleStylesheet('app1_stylesheet', 0);
+    toggleStylesheet('app3_stylesheet', 0);
+  }
+
+  function featuresApp3Activated() {
+    //console.log("Going to activate app3_stylesheet\n");
+    toggleStylesheet('app3_stylesheet', 1);
+    //console.log("Going to disactivate app1_stylesheet and app2_stylesheet\n");
+    toggleStylesheet('app1_stylesheet', 0);
+    toggleStylesheet('app2_stylesheet', 0);
   }
 
   // Aktivuje (při activate === 1) či deaktivuje daný stylesheet (app1_stylesheet či app2_stylesheet)
@@ -1589,6 +1601,10 @@ html += `</table>`;
         <span><?php echo $lang[$currentLang]['run_output_app2']; ?></span>
       </a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link d-flex align-items-center" href="#features_app3" data-bs-toggle="tab" onclick="featuresApp3Activated()">
+        <span><?php echo $lang[$currentLang]['run_output_app3']; ?></span>
+      </a>
   </ul>
 
   <!-- Panely pro pravou část -->
@@ -1596,6 +1612,7 @@ html += `</table>`;
     <div class="tab-pane fade h-100" id="output_stats" style="width: 100%;"></div>
     <div id="features_app1" class="tab-pane active show fade h-100" style="width: 100%; white-space: normal; word-wrap: break-word;"></div>
     <div id="features_app2" class="tab-pane fade h-100" style="width: 100%;"></div>
+    <div id="features_app3" class="tab-pane fade h-100" style="width: 100%;"></div>
   </div>
 </div>
 
