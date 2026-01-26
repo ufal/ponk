@@ -842,9 +842,9 @@ my $end_time_app1 = [gettimeofday];
 $processing_time_app1 = tv_interval($start_time_app1, $end_time_app1);
 
 # Export the modified trees to a file (for debugging, not needed for further processing)
-# open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
-# print OUT $app1_conllu;
-# close(OUT);
+open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
+print OUT $app1_conllu;
+close(OUT);
 # Export the metrics (for debugging, not needed for further processing)
 # open(OUT, '>:encoding(utf8)', "$input_file.export_app1.metrics") or die "Cannot open file '$input_file.export_app1.metrics' for writing: $!";
 # print OUT app1_metrics2string('txt', $app1_metrics, $app1_metrics_info);
@@ -900,12 +900,14 @@ my $stats;
 my $app1_features_html;
 my $app1_rule_info_json;
 my $app2_json;
+my $app3_json;
 
 if ($store_statistics or $output_statistics) { # we need to calculate statistics
   $stats = get_stats_html();
   $app1_features_html = get_app1_features_html($ui_language);
   $app1_rule_info_json = get_app1_rule_info_json();
   $app2_json = get_app2_json();
+  $app3_json = get_app3_json();
 }
 
 # print the input text with marked sources in the selected output format to STDOUT
@@ -920,6 +922,7 @@ else { # statistics should be a part of output, i.e. output will be JSON with se
  # 'app1_features' (in html)
  # 'app1_rule_info' (in json)
  # 'app2_colours' (in json)
+ # 'app3_colours' (in json)
  
   my $json_data = {
        data  => $output,
@@ -927,8 +930,10 @@ else { # statistics should be a part of output, i.e. output will be JSON with se
        app1_features => $app1_features_html,
        app1_rule_info => $app1_rule_info_json,
        app2_colours => $app2_json,
+       app3_colours => $app3_json,
      };
   # mylog(0, "JSON app2_colours:\n" . Dumper($app2_json) . "\n");
+  # mylog(0, "JSON app3_colours:\n" . Dumper($app3_json) . "\n");
   # Encode the Perl data structure into a JSON string
   my $json_string = encode_json($json_data);
   # Print the JSON string to STDOUT
@@ -1882,6 +1887,24 @@ sub get_app2_json {
                                  distribution => \%surprise_distrib});
   
   return $app2_json;
+}
+
+
+=item get_app3_json
+
+Returns a JSON string with app3 colours (key colours).
+
+=cut
+
+sub get_app3_json {
+
+  # Vytvoření JSON objektu
+  my $json = JSON->new;
+
+  # Konverze Perlového hashe na JSON string
+  my $app3_json = $json->encode({colours => $app3_colours});
+  
+  return $app3_json;
 }
 
 
