@@ -158,6 +158,7 @@ any '/api/process' => sub {
     my $app1_features = $json_data->{'app1_features'} // '';
     my $app1_rule_info = $json_data->{'app1_rule_info'} // '';
     my $app2_colours = $json_data->{'app2_colours'} // '';
+    my $app3_colours = $json_data->{'app3_colours'} // '';
 
     # Read them as UTF-8
     my $result_utf8 = decode_utf8($result);
@@ -165,6 +166,7 @@ any '/api/process' => sub {
     my $app1_features_utf8 = decode_utf8($app1_features);
     my $app1_rule_info_utf8 = decode_utf8($app1_rule_info);
     my $app2_colours_utf8 = decode_utf8($app2_colours);
+    my $app3_colours_utf8 = decode_utf8($app3_colours);
 
     # Compile the answer
     $c->res->headers->content_type('application/json; charset=UTF-8');
@@ -173,7 +175,8 @@ any '/api/process' => sub {
                 stats => "$stats_utf8",
                 app1_features => "$app1_features_utf8",
                 app1_rule_info => "$app1_rule_info_utf8",
-                app2_colours => "$app2_colours_utf8"
+                app2_colours => "$app2_colours_utf8",
+                app3_colours => "$app3_colours_utf8"
                };
     # print STDERR Dumper($data);
     return $c->render(json => $data);

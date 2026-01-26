@@ -36,11 +36,11 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.58 20251212'; # version of the program
+my $VER_en = '0.59 20260126'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
-my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení');
-my @features_en = ('overall text measures', 'grammatical rules', 'lexical surprise');
+my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení', 'řečové akty');
+my @features_en = ('overall text measures', 'grammatical rules', 'lexical surprise', 'speech acts');
 
 my $FEATS_cs = join(' • ', @features_cs); 
 my $FEATS_en = join(' • ', @features_en); 
@@ -60,7 +60,6 @@ $DESC_cs .= <<END_DESC_cs;
 </ul>
 <h5>Plánované vlastnosti:</h5>
 <ul>
-<li>Podpora ponk-app3 (zatím ve vývoji)
 </ul>
 END_DESC_cs
 
@@ -68,7 +67,6 @@ $DESC_en .= <<END_DESC_en;
 </ul>
 <h5>Planned features:</h5>
 <ul>
-<li>Support for ponk-app3 (not yet available)
 </ul>
 END_DESC_en
 
@@ -78,6 +76,7 @@ my %logging_level_label = (0 => 'full', 1 => 'limited', 2 => 'anonymous');
 
 my $ponk_app1_service_url = 'http://quest.ms.mff.cuni.cz/ponk-app1';
 my $ponk_app2_service_url = 'http://quest.ms.mff.cuni.cz/ponk-app2';
+my $ponk_app3_service_url = 'http://quest.ms.mff.cuni.cz/ponk-app3';
 
 my $hostname = hostname;
 if ($hostname eq 'ponk') { # if running at this server, use versions of udpipe and nametag that do not log texts
@@ -106,7 +105,7 @@ my $OUTPUT_FORMAT_DEFAULT = 'html';
 # default input format
 my $UI_LANGUAGE_DEFAULT = 'en';
 # default list of internal applications to call
-my $APPS_DEFAULT = 'app1,app2';
+my $APPS_DEFAULT = 'app1,app2,app3';
 
 # variables for arguments
 my $input_file;
@@ -133,7 +132,7 @@ GetOptions(
     'uil|ui-language=s'      => \$ui_language, # localize the response whenever possible to the given language: en (default), cs
     'sf|store-format=s'      => \$store_format, # log the result in the given format: txt, html, conllu
     'ss|store-statistics'    => \$store_statistics, # should statistics be logged as an HTML file?
-    'ap|apps=s'              => \$apps, # a comma-separated list of internal apps to call, possible values: app1 (default), app2
+    'ap|apps=s'              => \$apps, # a comma-separated list of internal apps to call, possible values: app1, app2, app3 (all being default)
     'll|logging-level=s'     => \$logging_level_override, # override the default (anonymous) logging level (0=full, 1=limited, 2=anonymous)
     'v|version'              => \$version, # print the version of the program and exit
     'n|info'                 => \$info, # print the info (program version and supported features) as JSON and exit
@@ -191,7 +190,7 @@ options:  -i|--input-file [input text file name]
         -uil|--ui-language [language: localize the response whenever possible to the given language: en (default), cs]
 	 -sf|--store-format [format: log the output in the given format: html, conllu]
          -ss|--store-statistics (log statistics to an HTML file)
-         -ap|--apps [a comma-separated list of internal apps to call, possible values: app1 (default), app2]
+         -ap|--apps [a comma-separated list of internal apps to call, possible values: app1, app2, app3 (all being default)]
          -ll|--logging-level (override the default (anonymous) logging level (0=full, 1=limited, 2=anonymous))
           -v|--version (prints the version of the program and ends)
           -n|--info (prints the program version and supported features as JSON and ends)
@@ -281,7 +280,7 @@ if (!defined $apps) {
   mylog(0, " - internal sub-applications to call: not specified, set to default '$APPS_DEFAULT'\n");
   $apps = $APPS_DEFAULT;
 }
-elsif ($apps !~ /^(app1|app2)(,(app1|app2))?$/) {
+elsif ($apps !~ /^(app1|app2|app3)(,(app1|app2|app3))*$/) {
   mylog(0, " - internal sub-applications to call: unknown ($apps), set to default '$APPS_DEFAULT'\n");
   $apps = $APPS_DEFAULT;
 }
@@ -631,6 +630,7 @@ my $processing_time_udpipe;
 my $processing_time_nametag;
 my $processing_time_app1;
 my $processing_time_app2;
+my $processing_time_app3;
 
 
 ############################################################################################
@@ -851,12 +851,38 @@ $processing_time_app1 = tv_interval($start_time_app1, $end_time_app1);
 # close(OUT);
 
 
-################################################
-# Parse the CoNLL-U from PONK-APP1 and PONK-APP2
-################################################
+#################################################
+# Calling PONK-APP3
+#################################################
+
+my $start_time_app3 = [gettimeofday];
+
+my ($app3_conllu, $app3_colours);
+
+if ($apps =~ /\bapp3\b/) {
+  ($app3_conllu, $app3_colours) = call_ponk_app3($app1_conllu);
+}
+else {
+  ($app3_conllu, $app3_colours) = ($app1_conllu, {"APP3 Info" => "APP3 not called"});
+}
+
+# Measure time spent by ponk-app1 
+my $end_time_app3 = [gettimeofday];
+$processing_time_app3 = tv_interval($start_time_app3, $end_time_app3);
+
+# Export the modified trees to a file (for debugging, not needed for further processing)
+open(OUT, '>:encoding(utf8)', "$input_file.export_app3.conllu") or die "Cannot open file '$input_file.export_app3.conllu' for writing: $!";
+print OUT $app3_conllu;
+close(OUT);
 
 
-@trees = parse_conllu($app1_conllu);
+
+############################################################
+# Parse the CoNLL-U from PONK-APP1, PONK-APP2 and PONK-APP3
+############################################################
+
+
+@trees = parse_conllu($app3_conllu);
 
 
 #####################################################
@@ -1576,6 +1602,7 @@ $processing_time_udpipe;
 $processing_time_nametag;
 $processing_time_app1;
 $processing_time_app2;
+$processing_time_app3;
 
 =cut
 
@@ -1633,6 +1660,7 @@ END_HEAD
   my $rounded_time_nametag = sprintf("%.1f", $processing_time_nametag);
   my $rounded_time_app1 = sprintf("%.1f", $processing_time_app1);
   my $rounded_time_app2 = sprintf("%.1f", $processing_time_app2);
+  my $rounded_time_app3 = sprintf("%.1f", $processing_time_app3);
   if ($ui_language eq 'cs') { 
     $stats .= "<p style=\"font-size: 0.9rem; margin-top: 5px; margin-bottom: 0px\">Doba zpracování: $rounded_time s</p>\n";
   }
@@ -1655,6 +1683,14 @@ END_HEAD
     }
     else {
       $stats .= "<br/> &nbsp; - Lexical surprise: $rounded_time_app2 s\n";
+    }
+  }
+  if ($apps =~ /\bapp3\b/) {
+    if ($ui_language eq 'cs') { 
+      $stats .= "<br/> &nbsp; - Řečové akty: $rounded_time_app3 s\n";
+    }
+    else {
+      $stats .= "<br/> &nbsp; - Speech acts: $rounded_time_app3 s\n";
     }
   }
   $stats .= "<br/>&nbsp;</p>\n";
@@ -2176,4 +2212,82 @@ sub call_ponk_app2 {
         return ($conllu, {"APP2 Error" => $res->status_line}); 
     }
 
+}
+
+
+######### CALLING PONK-APP3 #########
+
+=item call_ponk_app3
+
+Calling PONK-APP3 REST API (speech acts annotation service); 
+the text to be processed is passed in the argument in UD CoNLL-U format.
+
+The function sends the CoNLL-U text as JSON payload to the /api/annotate endpoint
+and returns an array with two main members:
+ - the annotated text in UD CoNLL-U format (with PonkApp3:... annotations in MISC column)
+ - hashref with colour definitions for the different speech act categories 
+   (keys = category names like "03_Postup", values = hex colours like "#FFF3E0")
+
+If an error occurs, the function returns:
+ - the original (unchanged) input CoNLL-U text
+ - a simple hashref with an error message (as the colours part)
+
+=cut
+
+sub call_ponk_app3 {
+    my $conllu = shift;
+
+    # Nastavení URL pro volání ponk-app3
+    my $url = "https://quest.ms.mff.cuni.cz/ponk-app3/api/annotate";
+    mylog(2, "Call PONK-APP3: URL=$url\n");
+
+    my $ua = LWP::UserAgent->new;
+
+    # Převedení CoNLL-U na UTF-8 bajty (pro jistotu)
+    my $conllu_bytes = encode("UTF-8", $conllu);
+
+    # Vytvoření JSON payloadu
+    my $json_payload = encode_json({
+        result => $conllu_bytes   # služba očekává string, ale pro jistotu posíláme jako UTF-8
+    });
+
+    # Vytvoření POST požadavku
+    my $request = POST $url,
+        Content_Type => 'application/json; charset=utf-8',
+        Content      => $json_payload;
+
+    # Odeslání požadavku
+    my $res = $ua->request($request);
+
+    # Zkontrolování, zda byla odpověď úspěšná
+    if ($res->is_success) {
+        # Získání odpovědi v JSON formátu
+        my $json_response = decode_json($res->decoded_content(charset => 'utf-8'));
+
+        # Extrakce potřebných polí
+        my $modified_conllu   = $json_response->{result}   // $conllu;
+        my $colours_json      = $json_response->{colours}  // {};
+
+        # Log úspěchu
+        mylog(2, "Call PONK-APP3: Success.\n");
+
+        # Návratová hodnota – upravena podle potřeb ponk_app3
+        # (pokud chceš vracet i colours, přidej je do návratu)
+        return (
+            $modified_conllu,          # anotovaný CoNLL-U text
+            $colours_json,             # slovník barev (pro tvorbu legendy apod.)
+            # případně další pole, pokud bys je v budoucnu potřeboval
+        );
+    }
+    else {
+        mylog(2, "call_ponk_app3: URL: $url\n");
+        mylog(2, "call_ponk_app3: Error: " . $res->status_line . "\n");
+
+        # Chybový návrat – konzistentní s ponk_app1
+        return (
+            $conllu,
+            [{"APP3 Error" => $res->status_line}],
+            {"APP3 Error" => $res->status_line}
+        );
+    }
 }
