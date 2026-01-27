@@ -1189,7 +1189,7 @@ html += `</table>`;
                     css += `.app3_class_${safeClassName} {\n`;
                     css += `    background-color: ${backgroundColor} !important;\n`;
                     css += `    color: ${isLightColor(backgroundColor) ? '#000' : '#fff'} !important;\n`;
-                    css += `    padding: 2px 4px;\n`;
+                    //css += `    padding: 2px 4px;\n`;
                     css += `    border-radius: 3px;\n`;
                     css += `}\n`;
                 }

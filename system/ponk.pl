@@ -842,9 +842,9 @@ my $end_time_app1 = [gettimeofday];
 $processing_time_app1 = tv_interval($start_time_app1, $end_time_app1);
 
 # Export the modified trees to a file (for debugging, not needed for further processing)
-open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
-print OUT $app1_conllu;
-close(OUT);
+# open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
+# print OUT $app1_conllu;
+# close(OUT);
 # Export the metrics (for debugging, not needed for further processing)
 # open(OUT, '>:encoding(utf8)', "$input_file.export_app1.metrics") or die "Cannot open file '$input_file.export_app1.metrics' for writing: $!";
 # print OUT app1_metrics2string('txt', $app1_metrics, $app1_metrics_info);
@@ -871,9 +871,9 @@ my $end_time_app3 = [gettimeofday];
 $processing_time_app3 = tv_interval($start_time_app3, $end_time_app3);
 
 # Export the modified trees to a file (for debugging, not needed for further processing)
-open(OUT, '>:encoding(utf8)', "$input_file.export_app3.conllu") or die "Cannot open file '$input_file.export_app3.conllu' for writing: $!";
-print OUT $app3_conllu;
-close(OUT);
+# open(OUT, '>:encoding(utf8)', "$input_file.export_app3.conllu") or die "Cannot open file '$input_file.export_app3.conllu' for writing: $!";
+# print OUT $app3_conllu;
+# close(OUT);
 
 
 
@@ -1374,12 +1374,12 @@ END_OUTPUT_HEAD_END
 
         # INFO FROM PONK-APP3
         my $misc = attr($node, 'misc');
-        mylog(0, "token='" . attr($node, 'form') . "', misc=$misc\n");
+	# mylog(0, "token='" . attr($node, 'form') . "', misc=$misc\n");
         my @app3_miscs = grep {/PonkApp3/} split(/\|/, $misc);
         foreach my $app3_misc (@app3_miscs) {
           if ($app3_misc =~ /PonkApp3:([^:]+):([^=]+)=(start|end)/) { # PonkApp3:03_Postup:30d15740=start/end
             my ($speech_act, $speech_act_id, $event) = ($1, $2, $3);
-            mylog(0, "speech_act: $speech_act, speech_act_id: $speech_act_id, event: $event\n");
+	    # mylog(0, "speech_act: $speech_act, speech_act_id: $speech_act_id, event: $event\n");
             if ($speech_act) {
               if ($event eq 'start') {
                 $speech_act =~ s/[^a-zA-Z0-9]/_/g; # client: class="app3_class_${key.replace(/[^a-zA-Z0-9]/g, '_')}"
