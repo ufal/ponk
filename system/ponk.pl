@@ -36,7 +36,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.59 20260126'; # version of the program
+my $VER_en = '0.60 20260127'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení', 'řečové akty');
