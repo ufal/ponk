@@ -1277,6 +1277,9 @@ END_OUTPUT_HEAD_END
       my $span_app2_start = ''; # for lexical surprise
       my $span_app2_end = '';
 
+      my $span_app3_start = ''; # for speech acts
+      my $span_app3_end = '';
+
       # take care of BOLD text
       my $bold_start = '';
       my $bold_end = '';
@@ -1356,8 +1359,8 @@ END_OUTPUT_HEAD_END
           }
 
           $span_class =~ s/^\s+//;
-	  my $data_tooltip = $tooltip ? " data-tooltip=\"$tooltip\"" : ""; # do not print empty tooltip (happens at items to be removed and replaced, e.g., without a spaceafter (e.g., at 'až' in "až v případě, že" -> "až, pokud"))
-	  $fix_button = '' if !$data_tooltip;
+          my $data_tooltip = $tooltip ? " data-tooltip=\"$tooltip\"" : ""; # do not print empty tooltip (happens at items to be removed and replaced, e.g., without a spaceafter (e.g., at 'až' in "až v případě, že" -> "až, pokud"))
+          $fix_button = '' if !$data_tooltip;
           $span_app1_start = "<span id=\"$id\" class=\"$span_class\" onmouseover=\"app1SpanHoverStart(this)\" onmouseout=\"app1SpanHoverEnd(this)\"$data_tooltip$fix_button>";
           $span_app1_end = '</span>';
         }
@@ -1368,7 +1371,27 @@ END_OUTPUT_HEAD_END
           $span_app2_start = "<span class=\"app2_class_$lexical_surprise\">";
           $span_app2_end = '</span>';
         }
-  
+
+        # INFO FROM PONK-APP3
+        my $misc = attr($node, 'misc');
+        mylog(0, "token='" . attr($node, 'form') . "', misc=$misc\n");
+        my @app3_miscs = grep {/PonkApp3/} split(/\|/, $misc);
+        foreach my $app3_misc (@app3_miscs) {
+          if ($app3_misc =~ /PonkApp3:([^:]+):([^=]+)=(start|end)/) { # PonkApp3:03_Postup:30d15740=start/end
+            my ($speech_act, $speech_act_id, $event) = ($1, $2, $3);
+            mylog(0, "speech_act: $speech_act, speech_act_id: $speech_act_id, event: $event\n");
+            if ($speech_act) {
+              if ($event eq 'start') {
+                $speech_act =~ s/[^a-zA-Z0-9]/_/g; # client: class="app3_class_${key.replace(/[^a-zA-Z0-9]/g, '_')}"
+                $span_app3_start = "<span class=\"app3_class_$speech_act\">";
+              }
+              else {
+                $span_app3_end = '</span>';
+              }
+            }
+          }
+        }
+
       }
 
       # PRINT THE TOKEN
@@ -1425,7 +1448,8 @@ END_OUTPUT_HEAD_END
           next;
         }
 
-        $output .= "$span_app1_start$span_app2_start$space_before$bold_start$italics_start$form$span_app2_end$span_app1_end";
+        $output .= $span_app3_end; # the end info is at the subsequent token
+        $output .= "$span_app3_start$span_app1_start$span_app2_start$space_before$bold_start$italics_start$form$span_app2_end$span_app1_end";
 
         $space_before = ($SpaceAfter eq 'No' or $SpacesAfter) ? '' : ' '; # store info about a space until the next token is about to be printed
         
