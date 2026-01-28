@@ -842,9 +842,9 @@ my $end_time_app1 = [gettimeofday];
 $processing_time_app1 = tv_interval($start_time_app1, $end_time_app1);
 
 # Export the modified trees to a file (for debugging, not needed for further processing)
-open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
-print OUT $app1_conllu;
-close(OUT);
+# open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
+# print OUT $app1_conllu;
+# close(OUT);
 # Export the metrics (for debugging, not needed for further processing)
 # open(OUT, '>:encoding(utf8)', "$input_file.export_app1.metrics") or die "Cannot open file '$input_file.export_app1.metrics' for writing: $!";
 # print OUT app1_metrics2string('txt', $app1_metrics, $app1_metrics_info);
@@ -871,9 +871,9 @@ my $end_time_app3 = [gettimeofday];
 $processing_time_app3 = tv_interval($start_time_app3, $end_time_app3);
 
 # Export the modified trees to a file (for debugging, not needed for further processing)
-open(OUT, '>:encoding(utf8)', "$input_file.export_app3.conllu") or die "Cannot open file '$input_file.export_app3.conllu' for writing: $!";
-print OUT $app3_conllu;
-close(OUT);
+# open(OUT, '>:encoding(utf8)', "$input_file.export_app3.conllu") or die "Cannot open file '$input_file.export_app3.conllu' for writing: $!";
+# print OUT $app3_conllu;
+# close(OUT);
 
 
 
