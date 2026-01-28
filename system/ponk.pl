@@ -36,7 +36,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.60 20260127'; # version of the program
+my $VER_en = '0.61 20260128'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení', 'řečové akty');
@@ -842,9 +842,9 @@ my $end_time_app1 = [gettimeofday];
 $processing_time_app1 = tv_interval($start_time_app1, $end_time_app1);
 
 # Export the modified trees to a file (for debugging, not needed for further processing)
-# open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
-# print OUT $app1_conllu;
-# close(OUT);
+open(OUT, '>:encoding(utf8)', "$input_file.export_app1.conllu") or die "Cannot open file '$input_file.export_app1.conllu' for writing: $!";
+print OUT $app1_conllu;
+close(OUT);
 # Export the metrics (for debugging, not needed for further processing)
 # open(OUT, '>:encoding(utf8)', "$input_file.export_app1.metrics") or die "Cannot open file '$input_file.export_app1.metrics' for writing: $!";
 # print OUT app1_metrics2string('txt', $app1_metrics, $app1_metrics_info);
@@ -871,9 +871,9 @@ my $end_time_app3 = [gettimeofday];
 $processing_time_app3 = tv_interval($start_time_app3, $end_time_app3);
 
 # Export the modified trees to a file (for debugging, not needed for further processing)
-# open(OUT, '>:encoding(utf8)', "$input_file.export_app3.conllu") or die "Cannot open file '$input_file.export_app3.conllu' for writing: $!";
-# print OUT $app3_conllu;
-# close(OUT);
+open(OUT, '>:encoding(utf8)', "$input_file.export_app3.conllu") or die "Cannot open file '$input_file.export_app3.conllu' for writing: $!";
+print OUT $app3_conllu;
+close(OUT);
 
 
 
@@ -2290,12 +2290,9 @@ sub call_ponk_app3 {
 
     my $ua = LWP::UserAgent->new;
 
-    # Převedení CoNLL-U na UTF-8 bajty (pro jistotu)
-    my $conllu_bytes = encode("UTF-8", $conllu);
-
     # Vytvoření JSON payloadu
     my $json_payload = encode_json({
-        result => $conllu_bytes   # služba očekává string, ale pro jistotu posíláme jako UTF-8
+        result => $conllu
     });
 
     # Vytvoření POST požadavku
