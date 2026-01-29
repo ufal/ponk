@@ -21,7 +21,7 @@
       <td>Jiří Mírovský, Barbora Hladká, Michal Kuk, Silvie Cinková
       <br><?php echo $lang[$currentLang]['info_basic_authors_subapplication']; ?> 1 (<?php echo $lang[$currentLang]['info_basic_authors_app1_label']; ?>): Ivan Kraus, Arnold Stanovský
       <br><?php echo $lang[$currentLang]['info_basic_authors_subapplication']; ?> 2 (<?php echo $lang[$currentLang]['info_basic_authors_app2_label']; ?>): Jan Černý, Ivana Kvapilíková
-      <!--br><?php echo $lang[$currentLang]['info_basic_authors_subapplication']; ?> 3: Silvie Cinková, ...-->
+      <br><?php echo $lang[$currentLang]['info_basic_authors_subapplication']; ?> 3 (<?php echo $lang[$currentLang]['info_basic_authors_app3_label']; ?>): Tomáš Polák, Silvie Cinková
       </td>
   </tr>
   <tr>

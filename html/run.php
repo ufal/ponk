@@ -86,6 +86,7 @@ $dataJson = json_encode($data);
   var app1_rule_info = null; // json converted to object with info about app1 rules
   var app1_stylesheet = null; // inline stylesheet for app1 (rules)
   var app2_stylesheet = null; // inline stylesheet for app2 (lexical surprise)
+  var app3_stylesheet = null; // inline stylesheet for app3 (speech acts)
 
   var app1_rule_active = {}; // an object ("hash") to keep info if individual rules are active
   var app1_rule_store_deactivated = {}; // an object ("hash") to keep info if individual rules were deactivated to keep selection while re-submitting the text
@@ -95,6 +96,10 @@ $dataJson = json_encode($data);
 
   var app2_json_string = null;
   var app2_min_surprise = 0; // minimum level of surprise to be highlighted
+
+  var app3_json_string = null;
+  let app3_active_categories = new Set(); // které kategorie jsou aktuálně zvýrazněné
+
 
   // Inicializace Turndown pro převod html do markdownu
   const turndownService = new TurndownService();
@@ -195,7 +200,7 @@ $dataJson = json_encode($data);
             }
           ?>
 
-    var internal_apps = "app1,app2";
+    var internal_apps = "app1,app2,app3";
     var options = {text: input_text, input: input_format, output: output_format, uilang: ui_lang, apps: internal_apps};
     //console.log("doSubmit: options: ", options);
     // Přidáme parametr "randomize", pokud je checkbox zaškrtnutý
@@ -216,6 +221,7 @@ $dataJson = json_encode($data);
     jQuery('#output_stats').empty();
     jQuery('#features_app1').empty();
     jQuery('#features_app2').empty();
+    jQuery('#features_app3').empty();
     //jQuery('#submit').html('<span class="fa fa-cog"></span>&nbsp;<?php echo $lang[$currentLang]['run_process_input_processing']; ?>&nbsp;<span class="fa fa-cog"></span>');
     jQuery('#submit').html('<span class="spinner-border spinner-border-sm" style="width: 1.2rem; height: 1.2rem;" role="status" aria-hidden="true"></span>&nbsp;<?php echo $lang[$currentLang]['run_process_input_processing']; ?>&nbsp;<span class="spinner-border spinner-border-sm" style="width: 1.2rem; height: 1.2rem; animation-direction: reverse;" role="status" aria-hidden="true"></span>');
     jQuery('#submit').prop('disabled', true);
@@ -285,12 +291,24 @@ $dataJson = json_encode($data);
 	    jQuery('#features_app2').html(app2_colours_html);
 	    generateApp2Stylesheet(app2_min_surprise);
 	  }
+
+	  if ("app3_colours" in json) {
+            app3_json_string = json.app3_colours;
+            initApp3Colours(); // defaultně budou všechny barvy aktivní
+	    console.log("Found 'app3_colours' in return message:", app3_json_string);
+	    let app3_colours_html = generateApp3ColoursTable();
+	    jQuery('#features_app3').html(app3_colours_html);
+	    generateApp3Stylesheet();
+	  }
+
           //console.log("Going to check features_app1 tab\n");
 	  if (isTabActive('features_app1')) {
             //console.log("Going to activate app1_stylesheet\n");
             toggleStylesheet('app1_stylesheet', 1);
             //console.log("Going to disactivate app2_stylesheet\n");
             toggleStylesheet('app2_stylesheet', 0);
+            //console.log("Going to disactivate app3_stylesheet\n");
+            toggleStylesheet('app3_stylesheet', 0);
           }
           //console.log("... after checking features_app1 tab\n");
           //console.log("Going to check features_app2 tab\n");
@@ -299,14 +317,29 @@ $dataJson = json_encode($data);
             toggleStylesheet('app2_stylesheet', 1);
             //console.log("Going to disactivate app1_stylesheet\n");
             toggleStylesheet('app1_stylesheet', 0);
+            //console.log("Going to disactivate app3_stylesheet\n");
+            toggleStylesheet('app3_stylesheet', 0);
           }
           //console.log("... after checking features_app2 tab\n");
-
-	  if (isTabActive('output_stats')) {
-            //console.log("Going to disactivate app2_stylesheet\n");
-            toggleStylesheet('app2_stylesheet', 0);
+          //console.log("Going to check features_app3 tab\n");
+	  if (isTabActive('features_app3')) {
+            //console.log("Going to activate app3_stylesheet\n");
+            toggleStylesheet('app3_stylesheet', 1);
             //console.log("Going to disactivate app1_stylesheet\n");
             toggleStylesheet('app1_stylesheet', 0);
+            //console.log("Going to disactivate app2_stylesheet\n");
+            toggleStylesheet('app2_stylesheet', 0);
+          }
+          //console.log("... after checking features_app3 tab\n");
+
+
+	  if (isTabActive('output_stats')) {
+            //console.log("Going to disactivate app1_stylesheet\n");
+            toggleStylesheet('app1_stylesheet', 0);
+            //console.log("Going to disactivate app2_stylesheet\n");
+            toggleStylesheet('app2_stylesheet', 0);
+            //console.log("Going to disactivate app3_stylesheet\n");
+            toggleStylesheet('app3_stylesheet', 0);
 	  }
 
 	  if ("stats" in json) {
@@ -615,20 +648,32 @@ $dataJson = json_encode($data);
     toggleStylesheet('app1_stylesheet', 0);
     //console.log("Going to disactivate app2_stylesheet\n");
     toggleStylesheet('app2_stylesheet', 0);
+    //console.log("Going to disactivate app3_stylesheet\n");
+    toggleStylesheet('app3_stylesheet', 0);
   }
 
   function featuresApp1Activated() {
     //console.log("Going to activate app1_stylesheet\n");
     toggleStylesheet('app1_stylesheet', 1);
-    //console.log("Going to disactivate app2_stylesheet\n");
+    //console.log("Going to disactivate app2_stylesheet and app3_stylesheet\n");
     toggleStylesheet('app2_stylesheet', 0);
+    toggleStylesheet('app3_stylesheet', 0);
   }
 
   function featuresApp2Activated() {
     //console.log("Going to activate app2_stylesheet\n");
     toggleStylesheet('app2_stylesheet', 1);
-    //console.log("Going to disactivate app1_stylesheet\n");
+    //console.log("Going to disactivate app1_stylesheet and app3_stylesheet\n");
     toggleStylesheet('app1_stylesheet', 0);
+    toggleStylesheet('app3_stylesheet', 0);
+  }
+
+  function featuresApp3Activated() {
+    //console.log("Going to activate app3_stylesheet\n");
+    toggleStylesheet('app3_stylesheet', 1);
+    //console.log("Going to disactivate app1_stylesheet and app2_stylesheet\n");
+    toggleStylesheet('app1_stylesheet', 0);
+    toggleStylesheet('app2_stylesheet', 0);
   }
 
   // Aktivuje (při activate === 1) či deaktivuje daný stylesheet (app1_stylesheet či app2_stylesheet)
@@ -853,6 +898,80 @@ html += `</table>`;
   }
 
 
+  // Převede globální JSON s definicí barev app3 (app3_colours_json_string) na HTML tabulku
+  function generateApp3ColoursTable() {
+    try {
+        const json = JSON.parse(app3_json_string);
+        const colours = json.colours || {};  // nebo přímo json, pokud už je to jen objekt barev
+
+        // Seřazení klíčů podle číselné části (01_, 02_, ..., 09_)
+        const sortedKeys = Object.keys(colours).sort((a, b) => {
+            const numA = parseInt(a.split('_')[0], 10);
+            const numB = parseInt(b.split('_')[0], 10);
+            return numA - numB;
+        });
+
+        let html = `<h4 class="mt-0 pt-0"><?php echo $lang[$currentLang]['run_output_app3_label']; ?></h4>`;
+        html += `<p style="font-size: 0.9rem;"><?php echo $lang[$currentLang]['run_output_app3_info']; ?>`;
+        html += ` <?php echo $lang[$currentLang]['run_output_app3_documentation']; ?></p>`;
+
+        // === TABULKA ===
+        html += `<table style="
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #ddd;
+            margin-top: 15px;
+        ">`;
+
+        // Řádky
+        sortedKeys.forEach(key => {
+            const color = colours[key];
+            const displayText = key.replace(/^.*_/g, ''); // např. "03_Postup" → "Postup"
+            html += `
+              <tr>
+                <td
+                  class="app3_class_${key.replace(/[^a-zA-Z0-9]/g, '_')}"
+                  onclick="toggleApp3Category('${key}')"
+		  title="${key}"
+		  style="
+                            width: 100%;
+                            padding: 6px 8px;
+                            text-align: left;
+                            line-height: 1.3;
+                            font-size: 0.85rem;
+                            border: 1px solid #ddd;
+                            cursor: pointer;
+                        "
+                >
+                 <strong>${displayText}</strong>
+                 <!--br><small style="opacity: 0.8;">${color}</small-->
+                </td>
+              </tr>`;
+        });
+
+	html += `</table>`;
+	//console.log('table app3 colours: ', html);
+
+        return html;
+    } catch (error) {
+        console.error('Chyba při parsování JSON barev app3:', error);
+        return '<p>Chyba při generování tabulky barev APP3: Neplatný formát JSON</p>';
+    }
+  }
+
+  // Pomocná funkce – zjistí, jestli je barva světlá (pro černý/bílý text)
+  function isLightColor(hex) {
+    if (!hex) return true;
+    hex = hex.replace('#', '');
+    const r = parseInt(hex.substr(0,2), 16);
+    const g = parseInt(hex.substr(2,2), 16);
+    const b = parseInt(hex.substr(4,2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 128;
+  }
+
+
+
   function app1RuleCheckboxToggled(checkbox_id) {
     //console.log("app1RuleCheckboxToggled:", checkbox_id);
     let rule_name = checkbox_id.replace(/^check_app1_feature_/, '');
@@ -1022,6 +1141,91 @@ html += `</table>`;
     }
   }
 
+
+
+  // Funkce pro přepínání (toggle) zvýraznění dané kategorie
+  function toggleApp3Category(category) {
+    if (app3_active_categories.has(category)) {
+        app3_active_categories.delete(category);
+    } else {
+        app3_active_categories.add(category);
+    }
+    generateApp3Stylesheet();  // překreslíme stylesheet podle aktuálního stavu
+  }
+
+
+  // generuje / aktualizuje stylesheet pro všechny aktivní kategorie
+  function generateApp3Stylesheet() {
+    // Vytvoření inline stylesheetu, pokud ještě neexistuje
+    if (!app3_stylesheet) {
+        const styleElement = document.createElement('style');
+        styleElement.id = 'app3_stylesheet';
+        styleElement.type = 'text/css';
+        document.head.appendChild(styleElement);
+        app3_stylesheet = styleElement.sheet;
+    }
+
+    try {
+        // Parsování JSONu s barvami
+        const data = JSON.parse(app3_json_string);
+        const colours = data.colours || data; // pro případ, že už je to přímo objekt barev
+
+        let css = '';
+
+        // Pokud není žádná kategorie aktivní → můžeme nechat prázdné nebo přidat ztlumení (volitelné)
+        if (app3_active_categories.size === 0) {
+            css = '/* Žádná speech act kategorie není zvýrazněna */';
+            // Alternativa: lehce ztlumit všechny anotace
+            // css = '[class*="app3_class_"] { opacity: 0.35; }';
+        } else {
+            // Pro každou aktivní kategorii vytvoříme CSS pravidlo
+            app3_active_categories.forEach(category => {
+                if (colours.hasOwnProperty(category)) {
+                    const backgroundColor = colours[category];
+
+                    // Bezpečný název třídy (nahradíme ne-alfanumerické znaky podtržítkem)
+                    const safeClassName = category.replace(/[^a-zA-Z0-9]/g, '_');
+
+                    css += `.app3_class_${safeClassName} {\n`;
+                    css += `    background-color: ${backgroundColor} !important;\n`;
+                    css += `    color: ${isLightColor(backgroundColor) ? '#000' : '#fff'} !important;\n`;
+                    //css += `    padding: 2px 4px;\n`;
+                    css += `    border-radius: 3px;\n`;
+                    css += `}\n`;
+                }
+            });
+        }
+
+        // Aktualizujeme obsah stylesheetu
+        const styleElement = document.getElementById('app3_stylesheet');
+        styleElement.textContent = css;
+
+    } catch (error) {
+        console.error('Chyba při generování stylesheetu pro APP3:', error);
+        const styleElement = document.getElementById('app3_stylesheet');
+        styleElement.textContent = '/* Chyba při generování stylesheetu APP3: Neplatný JSON formát */';
+    }
+  }
+
+
+  // === Inicializace – zavolat po načtení dat z ponk_app3 ===
+  function initApp3Colours() {
+    try {
+        const data = JSON.parse(app3_json_string);
+        const colours = data.colours || data;
+
+        // Naplníme množinu všemi kategoriemi (klíči z objektu colours)
+        Object.keys(colours).forEach(category => {
+            app3_active_categories.add(category);
+        });
+
+        // A hned vygenerujeme stylesheet se všemi kategoriemi
+        generateApp3Stylesheet();
+
+    } catch (error) {
+        console.error('Chyba při inicializaci barev APP3:', error);
+    }
+  }
 
 
   function removeCSSClass(className) {
@@ -1589,6 +1793,10 @@ html += `</table>`;
         <span><?php echo $lang[$currentLang]['run_output_app2']; ?></span>
       </a>
     </li>
+    <li class="nav-item">
+      <a class="nav-link d-flex align-items-center" href="#features_app3" data-bs-toggle="tab" onclick="featuresApp3Activated()">
+        <span><?php echo $lang[$currentLang]['run_output_app3']; ?></span>
+      </a>
   </ul>
 
   <!-- Panely pro pravou část -->
@@ -1596,6 +1804,7 @@ html += `</table>`;
     <div class="tab-pane fade h-100" id="output_stats" style="width: 100%;"></div>
     <div id="features_app1" class="tab-pane active show fade h-100" style="width: 100%; white-space: normal; word-wrap: break-word;"></div>
     <div id="features_app2" class="tab-pane fade h-100" style="width: 100%;"></div>
+    <div id="features_app3" class="tab-pane fade h-100" style="width: 100%;"></div>
   </div>
 </div>
 
