@@ -36,7 +36,7 @@ binmode STDERR, ':encoding(UTF-8)';
 
 my $start_time = [gettimeofday];
 
-my $VER_en = '0.61 20260128'; # version of the program
+my $VER_en = '0.62 20260320'; # version of the program
 my $VER_cs = $VER_en; # version of the program
 
 my @features_cs = ('celkové míry', 'gramatická pravidla', 'lexikální překvapení', 'řečové akty');
@@ -608,7 +608,7 @@ if ($input_length > 40000) { # for the workshop presentation, avoid long texts
   # 'app1_rule_info' (in json)
   # 'app2_colours' (in json)
 
-  my $text_too_long = $ui_language eq 'cs' ? "´š dlouhý text ($input_length znaků, povolené maximum je 40 tisíc)!"
+  my $text_too_long = $ui_language eq 'cs' ? "Příliš dlouhý text ($input_length znaků, povolené maximum je 40 tisíc)!"
                                            : "The text is too long ($input_length characters, the allowed maximum is 40 thousand)!";
   my $json_data = {
        data  => $input_content,
