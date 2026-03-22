@@ -700,7 +700,7 @@ sub call_nametag {
     my $result = '';
     
     # Let us call NameTag api for each X sentences separately, as too large input produces an error.
-    my $max_sentences = 1000;
+    my $max_sentences = 500; # 1000 was sometimes too long (resulting in error 400 bad request)
     
     my $conll_part = '';
     my $sent_count = 0;
