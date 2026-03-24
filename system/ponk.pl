@@ -601,15 +601,15 @@ if ($input_format eq 'md') {
 my $input_length = length($input_content);
 mylog(2, "input length: $input_length characters\n");
 
-if ($input_length > 40000) { # for the workshop presentation, avoid long texts
+if ($input_length > 50000) { # originally for the workshop presentation to avoid long texts; now because of app3
   # 'data' (in output-format)
   # 'stats' (in html)
   # 'app1_features' (in html)
   # 'app1_rule_info' (in json)
   # 'app2_colours' (in json)
 
-  my $text_too_long = $ui_language eq 'cs' ? "Příliš dlouhý text ($input_length znaků, povolené maximum je 40 tisíc)!"
-                                           : "The text is too long ($input_length characters, the allowed maximum is 40 thousand)!";
+  my $text_too_long = $ui_language eq 'cs' ? "Příliš dlouhý text ($input_length znaků, povolené maximum je 50 tisíc)!"
+                                           : "The text is too long ($input_length characters, the allowed maximum is 50 thousand)!";
   my $json_data = {
        data  => $input_content,
        stats => "<font color=\"red\">$text_too_long</font>",
