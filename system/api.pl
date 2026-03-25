@@ -83,6 +83,7 @@ any '/api/info' => sub {
 # Endpoint pro process
 any '/api/process' => sub {
     my $c = shift;
+    $c->inactivity_timeout(300); # timeout na 5 minut
     my $method = $c->req->method;
 
     my $text = $c->param('text'); # input text
